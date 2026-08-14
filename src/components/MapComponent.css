@@ -1,0 +1,55 @@
+.map-container {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--rv-surface-2);
+}
+
+.maplibre-map {
+  width: 100%;
+  height: 100%;
+}
+
+.maplibre-map .maplibregl-canvas {
+  outline: none;
+}
+
+.maplibre-map .maplibregl-ctrl-group {
+  border: 1px solid var(--rv-line) !important;
+  background: rgba(255, 255, 255, 0.97) !important;
+  box-shadow: var(--rv-shadow) !important;
+}
+
+.maplibre-map .maplibregl-ctrl-group button {
+  color: var(--rv-blue) !important;
+}
+
+.maplibre-map .maplibregl-ctrl-group button:hover {
+  background: var(--rv-surface-3) !important;
+}
+
+.maplibre-map .maplibregl-ctrl-attrib {
+  background: rgba(255, 255, 255, 0.94) !important;
+  color: var(--rv-ink-2) !important;
+  font-family: var(--rv-font-body);
+  font-size: 10px;
+}
+
+.maplibre-map .maplibregl-ctrl-attrib a {
+  color: var(--rv-blue) !important;
+}
+
+@media (max-width: 768px) {
+  .map-container {
+    border-radius: 0;
+    min-height: 400px;
+  }
+}
+
+@media (max-width: 480px) {
+  .map-container {
+    min-height: 300px;
+  }
+}

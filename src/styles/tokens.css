@@ -1,0 +1,64 @@
+/* River Eye design tokens — light "river" theme.
+   Every component CSS should pull from these rather than hardcoding colours. */
+
+:root {
+  /* ---- Surfaces ---------------------------------------------------- */
+  --rv-canvas: #e9f1f7;          /* app background behind panels */
+  --rv-surface: #ffffff;         /* every panel / card */
+  --rv-surface-2: #f4f9fc;       /* insets, table stripes, chart plots */
+  --rv-surface-3: #e6f0f8;       /* chips, tracks, hover fills */
+  --rv-line: #d5e3ee;            /* default border */
+  --rv-line-strong: #b8cfe0;     /* emphasised border / axis */
+
+  /* ---- Ink --------------------------------------------------------- */
+  --rv-ink: #0d2436;             /* primary text */
+  --rv-ink-2: #3a5c73;           /* secondary text */
+  --rv-muted: #6b8798;           /* labels, captions */
+  --rv-faint: #93aebe;           /* axis ticks, disabled */
+
+  /* ---- Water blues (primary family) -------------------------------- */
+  --rv-deep: #0f2540;            /* darkest structural blue */
+  --rv-blue: #1668b3;            /* primary accent */
+  --rv-blue-dark: #0d4d88;       /* pressed / strong text on light */
+  --rv-blue-soft: #e2eefb;       /* tinted accent fill */
+  --rv-azure: #2f9bd6;           /* bright water highlight */
+  --rv-azure-soft: #dcf0fb;
+
+  /* ---- Teal (secondary — live/observed data) ------------------------ */
+  --rv-teal: #0e8f9c;
+  --rv-teal-dark: #0a6f7a;
+  --rv-teal-soft: #dcf3f5;
+
+  /* ---- Forecast / projection accent -------------------------------- */
+  --rv-sand: #b3761a;
+  --rv-sand-soft: #fbf0dc;
+
+  /* ---- Header (intentionally kept dark) ---------------------------- */
+  --rv-header-bg: #1a1f3a;
+  --rv-header-ink: #ffffff;
+  --rv-header-muted: #8aa3b8;
+  --rv-header-line: rgba(148, 190, 224, 0.22);
+
+  /* ---- Status ------------------------------------------------------ */
+  --rv-safe: #1c8a55;
+  --rv-safe-soft: #e0f4ea;
+  --rv-watch: #b8860b;
+  --rv-watch-soft: #fbf1d6;
+  --rv-warning: #d2701a;
+  --rv-warning-soft: #fdeddc;
+  --rv-danger: #c2372a;
+  --rv-danger-soft: #fbe5e2;
+
+  /* ---- Type -------------------------------------------------------- */
+  --rv-font-display: 'Lora', Georgia, 'Times New Roman', serif;
+  --rv-font-body: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --rv-font-mono: 'JetBrains Mono', ui-monospace, Consolas, 'SF Mono', monospace;
+
+  /* ---- Elevation & shape ------------------------------------------- */
+  --rv-shadow-sm: 0 1px 2px rgba(15, 37, 64, 0.06), 0 1px 3px rgba(15, 37, 64, 0.07);
+  --rv-shadow: 0 4px 16px rgba(15, 37, 64, 0.1);
+  --rv-shadow-lg: 0 14px 36px rgba(15, 37, 64, 0.16);
+  --rv-radius-sm: 8px;
+  --rv-radius: 12px;
+  --rv-radius-lg: 16px;
+}

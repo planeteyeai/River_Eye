@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+  <Document>
+    <name>Godavari Water Body - Rajahmundry Stretch</name>
+    <description>Representative Godavari river water-surface / width polygon near Rajahmundry-Dowleswaram (approx. water body area). For production satellite NDWI extracts, generate from GEE/QGIS for a specific date.</description>
+    <Style id="waterPoly">
+      <LineStyle><color>ffb87814</color><width>2</width></LineStyle>
+      <PolyStyle><color>4014b8a6</color></PolyStyle>
+    </Style>
+    <Placemark>
+      <name>Godavari Water Surface</name>
+      <styleUrl>#waterPoly</styleUrl>
+      <Polygon>
+        <outerBoundaryIs>
+          <LinearRing>
+            <coordinates>81.700000,17.015000,0 81.720000,17.025000,0 81.740000,17.035000,0 81.760000,17.040000,0 81.780000,17.042000,0 81.800000,17.038000,0 81.820000,17.030000,0 81.840000,17.028000,0 81.860000,17.032000,0 81.880000,17.038000,0 81.900000,17.035000,0 81.920000,17.028000,0 81.940000,17.020000,0 81.960000,17.012000,0 81.960000,16.955000,0 81.940000,16.948000,0 81.920000,16.942000,0 81.900000,16.938000,0 81.880000,16.935000,0 81.860000,16.932000,0 81.840000,16.930000,0 81.820000,16.935000,0 81.800000,16.942000,0 81.780000,16.948000,0 81.760000,16.950000,0 81.740000,16.948000,0 81.720000,16.952000,0 81.700000,16.960000,0 81.700000,17.015000,0</coordinates>
+          </LinearRing>
+        </outerBoundaryIs>
+      </Polygon>
+    </Placemark>
+  </Document>
+</kml>

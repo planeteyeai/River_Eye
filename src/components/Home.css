@@ -1,0 +1,925 @@
+/* Landing page. Structure follows the PlanetEye/Adani landing (fixed navbar,
+   full-height aurora hero with orbit visual, stats band, feature grid, footer);
+   the palette stays on this project's river tokens.
+
+   The three --lp-* tints below are the only new colours: they are lightened
+   --rv-azure / --rv-teal / --rv-blue, needed because the token blues fail
+   contrast as text on the navy hero. */
+
+.lp {
+  --lp-tint-azure: #6cc6ef;
+  --lp-tint-teal: #5fd9d2;
+  --lp-tint-blue: #9dc4f2;
+
+  background: var(--rv-canvas);
+  color: var(--rv-ink);
+  font-family: var(--rv-font-body);
+  overflow-x: hidden;
+}
+
+.lp a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.lp :focus-visible {
+  outline: 2px solid var(--rv-azure);
+  outline-offset: 3px;
+  border-radius: 8px;
+}
+
+/* ---- Shared bits ------------------------------------------------------ */
+
+.lp-gradient-text {
+  background: linear-gradient(
+    100deg,
+    var(--lp-tint-teal) 0%,
+    var(--lp-tint-azure) 52%,
+    var(--lp-tint-blue) 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* On the light sections the deeper tokens read better than the tints. */
+.lp-section .lp-gradient-text,
+.lp-stats .lp-gradient-text {
+  background: linear-gradient(100deg, var(--rv-teal) 0%, var(--rv-blue) 60%, var(--rv-blue-dark) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
+.lp-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 190, 224, 0.28);
+  background: rgba(255, 255, 255, 0.07);
+  font-family: var(--rv-font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.6px;
+  color: #cfe4f5;
+  white-space: nowrap;
+}
+
+.lp-chip-icon {
+  display: grid;
+  place-items: center;
+  width: 14px;
+  height: 14px;
+  color: var(--lp-tint-teal);
+}
+
+.lp-chip-icon svg {
+  width: 14px;
+  height: 14px;
+}
+
+.lp-chip.is-light {
+  border-color: var(--rv-line);
+  background: var(--rv-surface);
+  color: var(--rv-blue);
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  font-size: 10.5px;
+  font-weight: 700;
+}
+
+.lp-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  font-family: var(--rv-font-body);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+
+.lp-btn.is-primary {
+  background: linear-gradient(135deg, var(--rv-azure), var(--rv-blue));
+  color: #fff;
+  box-shadow: 0 6px 20px rgba(22, 104, 179, 0.34);
+}
+
+.lp-btn.is-primary:hover {
+  transform: translateY(-1px);
+  background: linear-gradient(135deg, #46abe0, var(--rv-blue-dark));
+  box-shadow: 0 10px 26px rgba(22, 104, 179, 0.42);
+}
+
+.lp-btn.is-large {
+  padding: 14px 28px;
+  font-size: 15px;
+}
+
+.lp-btn.is-block {
+  width: 100%;
+}
+
+.lp-btn-icon {
+  display: grid;
+  place-items: center;
+}
+
+.lp-btn-icon svg {
+  width: 16px;
+  height: 16px;
+  transition: transform 0.15s ease;
+}
+
+.lp-btn:hover .lp-btn-icon svg {
+  transform: translateX(3px);
+}
+
+/* ---- Brand mark ------------------------------------------------------- */
+
+.lp-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 11px;
+}
+
+.lp-mark {
+  position: relative;
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.lp-mark-ring {
+  position: absolute;
+  inset: 0;
+  border: 2.4px solid var(--rv-azure);
+  border-radius: 50%;
+  box-shadow: 0 0 16px rgba(47, 155, 214, 0.4);
+}
+
+.lp-mark-eye {
+  position: relative;
+  z-index: 1;
+  width: 26px;
+  height: 15px;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(135deg, #f4f9fc, #cfe3f2);
+  border: 1.5px solid var(--rv-azure);
+  border-radius: 50%;
+}
+
+.lp-mark-pupil {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--rv-azure), var(--rv-blue-dark));
+}
+
+.lp-brand-text {
+  font-family: var(--rv-font-display);
+  font-size: 21px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  color: #fff;
+}
+
+.lp-brand-accent {
+  color: var(--lp-tint-teal);
+}
+
+/* ---- Navbar ----------------------------------------------------------- */
+
+.lp-header {
+  position: fixed;
+  inset: 0 0 auto 0;
+  z-index: 50;
+  transition: background 0.25s ease, border-color 0.25s ease, backdrop-filter 0.25s ease;
+  border-bottom: 1px solid transparent;
+}
+
+.lp-header.is-scrolled {
+  background: rgba(11, 29, 51, 0.82);
+  backdrop-filter: blur(16px);
+  border-bottom-color: rgba(148, 190, 224, 0.2);
+}
+
+.lp-header-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  height: 68px;
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 0 clamp(18px, 4vw, 32px);
+}
+
+.lp-nav {
+  display: flex;
+  align-items: center;
+  gap: 26px;
+}
+
+.lp-nav-link {
+  padding: 5px 2px;
+  border-bottom: 1.5px solid transparent;
+  font-size: 14px;
+  font-weight: 500;
+  color: #e6f0f9;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.lp-nav-link:hover {
+  color: #fff;
+  border-bottom-color: var(--lp-tint-teal);
+}
+
+.lp-nav-link.is-quiet {
+  border-bottom: 0;
+}
+
+.lp-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.lp-burger {
+  display: none;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  border: 1px solid rgba(148, 190, 224, 0.28);
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff;
+  cursor: pointer;
+}
+
+.lp-burger svg {
+  width: 20px;
+  height: 20px;
+}
+
+.lp-mobile-menu {
+  display: none;
+  flex-direction: column;
+  gap: 14px;
+  padding: 18px clamp(18px, 4vw, 32px) 22px;
+  background: rgba(11, 29, 51, 0.97);
+  border-top: 1px solid rgba(148, 190, 224, 0.2);
+}
+
+/* ---- Hero ------------------------------------------------------------- */
+
+.lp-hero {
+  position: relative;
+  min-height: 100vh;
+  background: linear-gradient(165deg, var(--rv-deep) 0%, #16375c 52%, #0b1d33 100%);
+  color: #fff;
+  overflow: hidden;
+}
+
+.lp-hero-aurora,
+.lp-hero-grid,
+.lp-hero-fade {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.lp-hero-aurora {
+  background:
+    radial-gradient(60% 50% at 18% 8%, rgba(14, 143, 156, 0.32), transparent 62%),
+    radial-gradient(50% 50% at 88% 18%, rgba(47, 155, 214, 0.3), transparent 62%),
+    radial-gradient(60% 60% at 60% 100%, rgba(95, 217, 210, 0.16), transparent 62%);
+}
+
+.lp-hero-grid {
+  opacity: 0.4;
+  background-image:
+    linear-gradient(rgba(95, 217, 210, 0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(95, 217, 210, 0.07) 1px, transparent 1px);
+  background-size: 44px 44px;
+}
+
+.lp-hero-fade {
+  background: linear-gradient(180deg, transparent 45%, rgba(11, 29, 51, 0.55) 78%, #0b1d33 100%);
+}
+
+.lp-hero-inner {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: center;
+  gap: clamp(32px, 5vw, 64px);
+  min-height: 100vh;
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 116px clamp(18px, 4vw, 32px) 72px;
+}
+
+.lp-hero-copy h1 {
+  margin: 20px 0 0;
+  font-family: var(--rv-font-display);
+  font-size: clamp(34px, 4.6vw, 58px);
+  font-weight: 700;
+  line-height: 1.06;
+  letter-spacing: -0.6px;
+  color: #fff;
+}
+
+.lp-hero-copy p {
+  margin-top: 22px;
+  max-width: 52ch;
+  font-size: clamp(14.5px, 1.15vw, 17px);
+  line-height: 1.68;
+  color: rgba(216, 232, 246, 0.84);
+}
+
+.lp-hero-cta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 32px;
+}
+
+.lp-hero-points {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 24px;
+  margin-top: 32px;
+  font-size: 13.5px;
+  color: rgba(196, 216, 234, 0.8);
+}
+
+.lp-hero-points span {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.lp-point-icon {
+  display: grid;
+  place-items: center;
+  color: var(--lp-tint-teal);
+}
+
+.lp-point-icon svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* Hero entrance — one shot on load, staggered by an inline animation-delay. */
+.lp-anim {
+  animation: lp-rise 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes lp-rise {
+  from {
+    opacity: 0;
+    transform: translateY(22px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ---- Hero orbit visual ------------------------------------------------ */
+
+.lp-hero-visual {
+  justify-self: end;
+  width: 100%;
+  max-width: 520px;
+}
+
+.lp-orb {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+}
+
+.lp-orb-glow {
+  position: absolute;
+  inset: 8%;
+  border-radius: 50%;
+  background: rgba(47, 155, 214, 0.22);
+  filter: blur(58px);
+}
+
+.lp-orb-svg {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.lp-orb-trace {
+  fill: none;
+  stroke-dasharray: 260;
+  animation: lp-trace 2.6s ease-in-out infinite alternate;
+}
+
+@keyframes lp-trace {
+  from {
+    stroke-dashoffset: 260;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.lp-orb-sat {
+  transform-origin: 200px 200px;
+  animation: lp-spin 18s linear infinite;
+}
+
+@keyframes lp-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.lp-float {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 13px;
+  border-radius: 12px;
+  border: 1px solid rgba(148, 190, 224, 0.26);
+  background: rgba(13, 36, 54, 0.72);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 10px 28px rgba(6, 18, 32, 0.45);
+  animation: lp-bob 5s ease-in-out infinite;
+}
+
+.lp-float.is-one {
+  top: 16%;
+  left: -6%;
+}
+
+.lp-float.is-two {
+  top: 36%;
+  right: -5%;
+  animation-delay: 0.6s;
+}
+
+.lp-float.is-three {
+  bottom: 11%;
+  left: 5%;
+  animation-delay: 1.2s;
+}
+
+.lp-float-icon {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  background: rgba(95, 217, 210, 0.14);
+  color: var(--lp-tint-teal);
+}
+
+.lp-float-icon svg {
+  width: 17px;
+  height: 17px;
+}
+
+.lp-float-copy strong {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: #fff;
+}
+
+.lp-float-copy small {
+  display: block;
+  margin-top: 1px;
+  font-size: 10px;
+  color: rgba(186, 209, 229, 0.78);
+}
+
+@keyframes lp-bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+/* ---- Stats band ------------------------------------------------------- */
+
+.lp-stats {
+  border-block: 1px solid var(--rv-line);
+  background: var(--rv-surface-2);
+}
+
+.lp-stats-inner {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 32px;
+  max-width: 1060px;
+  margin: 0 auto;
+  padding: 52px clamp(18px, 4vw, 32px);
+}
+
+.lp-stat {
+  text-align: center;
+}
+
+.lp-stat-value {
+  font-family: var(--rv-font-mono);
+  font-size: clamp(30px, 3.4vw, 44px);
+  font-weight: 800;
+  line-height: 1;
+}
+
+.lp-stat-value em {
+  font-style: normal;
+  font-size: 0.46em;
+  margin-left: 4px;
+}
+
+.lp-stat-label {
+  margin-top: 10px;
+  font-size: 13px;
+  color: var(--rv-muted);
+}
+
+/* ---- Sections --------------------------------------------------------- */
+
+.lp-section {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: clamp(64px, 8vw, 100px) clamp(18px, 4vw, 32px);
+}
+
+.lp-section.is-inset {
+  max-width: none;
+  background: var(--rv-surface-2);
+  border-top: 1px solid var(--rv-line);
+}
+
+.lp-section.is-inset > * {
+  max-width: 1240px;
+  margin-inline: auto;
+}
+
+.lp-section-head {
+  max-width: 60ch;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.lp-section-head.is-left {
+  max-width: 68ch;
+  margin-inline: 0;
+  text-align: left;
+}
+
+.lp-section-title {
+  margin: 16px 0 0;
+  font-family: var(--rv-font-display);
+  font-size: clamp(26px, 3.2vw, 38px);
+  font-weight: 700;
+  line-height: 1.16;
+  letter-spacing: -0.3px;
+}
+
+.lp-section-head p {
+  margin-top: 16px;
+  font-size: 15px;
+  line-height: 1.7;
+  color: var(--rv-ink-2);
+}
+
+/* ---- Monitoring theme cards ------------------------------------------- */
+
+.lp-themes {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+  margin-top: 44px;
+}
+
+.lp-theme {
+  padding: 22px 24px 24px;
+  border-radius: var(--rv-radius);
+  background: var(--rv-surface-3);
+}
+
+.lp-theme-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.lp-theme-num {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--rv-blue);
+  color: #fff;
+  font-family: var(--rv-font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.lp-theme h3 {
+  font-family: var(--rv-font-body);
+  font-size: 15.5px;
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--rv-blue-dark);
+}
+
+.lp-theme p {
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--rv-ink-2);
+}
+
+/* ---- Data & limits ---------------------------------------------------- */
+
+.lp-limits {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 20px;
+  margin-top: 48px;
+}
+
+.lp-limits-card {
+  padding: 26px 26px 22px;
+  border-radius: var(--rv-radius-lg);
+  border: 1px solid var(--rv-line);
+  background: var(--rv-surface);
+  box-shadow: var(--rv-shadow-sm);
+}
+
+.lp-limits-card h3 {
+  margin-bottom: 14px;
+  font-family: var(--rv-font-display);
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.lp-limits-card ol,
+.lp-limits-card ul {
+  display: grid;
+  gap: 10px;
+  padding-left: 20px;
+}
+
+.lp-limits-card li {
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--rv-ink-2);
+}
+
+.lp-limits-card li strong {
+  color: var(--rv-ink);
+}
+
+.lp-limits-card ol li::marker {
+  font-family: var(--rv-font-mono);
+  font-weight: 700;
+  color: var(--rv-azure);
+}
+
+.lp-limits-card.is-caution {
+  border-color: rgba(179, 118, 26, 0.32);
+  background: var(--rv-sand-soft);
+}
+
+.lp-limits-card.is-caution h3 {
+  color: #8a5a12;
+}
+
+.lp-limits-card.is-caution li {
+  color: #6f4a12;
+}
+
+.lp-limits-card.is-caution ul li::marker {
+  color: var(--rv-sand);
+}
+
+.lp-limits-card.is-caution > p {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(179, 118, 26, 0.24);
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: #6f4a12;
+}
+
+.lp-limits-card code {
+  padding: 2px 6px;
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.6);
+  font-family: var(--rv-font-mono);
+  font-size: 12px;
+}
+
+/* ---- Scroll reveal ---------------------------------------------------- */
+
+.lp-reveal {
+  opacity: 0;
+  transform: translateY(22px);
+  transition: opacity 0.55s ease, transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.lp-reveal.is-in {
+  opacity: 1;
+  transform: none;
+}
+
+/* ---- Footer ----------------------------------------------------------- */
+
+.lp-footer {
+  border-top: 1px solid rgba(148, 190, 224, 0.18);
+  background: var(--rv-header-bg);
+  color: var(--rv-header-ink);
+}
+
+.lp-footer-inner {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  gap: 40px;
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 56px clamp(18px, 4vw, 32px);
+}
+
+.lp-footer-inner > div > p {
+  margin-top: 18px;
+  max-width: 46ch;
+  font-size: 13.5px;
+  line-height: 1.65;
+  color: var(--rv-header-muted);
+}
+
+.lp-footer-col h4 {
+  margin-bottom: 16px;
+  font-family: var(--rv-font-body);
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+}
+
+.lp-footer-col ul {
+  display: grid;
+  gap: 10px;
+  list-style: none;
+  font-size: 13.5px;
+  color: var(--rv-header-muted);
+}
+
+.lp-footer-col a:hover {
+  color: var(--lp-tint-teal);
+}
+
+.lp-footer-bottom {
+  padding: 22px clamp(18px, 4vw, 32px) 26px;
+  border-top: 1px solid rgba(148, 190, 224, 0.14);
+  text-align: center;
+  font-size: 11.5px;
+  line-height: 1.7;
+  color: var(--rv-header-muted);
+}
+
+/* ---- Responsive ------------------------------------------------------- */
+/* Ordered widest to narrowest. The nav keeps its links down to 860px — a
+   Windows laptop at 125% scaling reports ~1024px, so collapsing there hid the
+   links on ordinary desktops. */
+
+@media (max-width: 1140px) {
+  .lp-nav {
+    gap: 18px;
+  }
+
+  .lp-header-actions {
+    gap: 12px;
+  }
+
+  .lp-nav-link {
+    font-size: 13px;
+  }
+
+  .lp-btn {
+    padding: 9px 16px;
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .lp-hero-inner {
+    grid-template-columns: minmax(0, 1fr);
+    min-height: 0;
+    padding-top: 108px;
+    padding-bottom: 84px;
+  }
+
+  .lp-hero-visual {
+    justify-self: center;
+    max-width: 430px;
+  }
+
+  .lp-stats-inner {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 28px;
+  }
+}
+
+@media (max-width: 900px) {
+  .lp-themes {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 860px) {
+  .lp-nav,
+  .lp-header-actions {
+    display: none;
+  }
+
+  .lp-burger {
+    display: grid;
+  }
+
+  .lp-mobile-menu {
+    display: flex;
+  }
+}
+
+@media (max-width: 720px) {
+  .lp-hero {
+    min-height: 0;
+  }
+}
+
+@media (max-width: 520px) {
+  .lp-themes {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .lp-stats-inner {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .lp-footer-inner {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 32px;
+  }
+
+  .lp-hero-cta .lp-btn {
+    width: 100%;
+  }
+
+  .lp-float.is-one,
+  .lp-float.is-two,
+  .lp-float.is-three {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lp-anim,
+  .lp-orb-trace,
+  .lp-orb-sat,
+  .lp-float {
+    animation: none;
+  }
+
+  .lp-reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+
+  .lp-btn {
+    transition: none;
+  }
+
+  .lp-btn.is-primary:hover {
+    transform: none;
+  }
+}

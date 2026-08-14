@@ -1,0 +1,84 @@
+@import './styles/tokens.css';
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+body {
+  font-family: var(--rv-font-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: var(--rv-canvas);
+  color: var(--rv-ink);
+  overflow-x: hidden;
+  width: 100%;
+  max-width: 100%;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--rv-font-display);
+  font-weight: 600;
+  color: var(--rv-ink);
+}
+
+code {
+  font-family: var(--rv-font-mono);
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--rv-surface-3);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--rv-line-strong);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--rv-azure);
+}
+
+/* Date Picker Calendar Styling */
+input[type='date'] {
+  color-scheme: light;
+}
+
+@supports (-webkit-appearance: none) {
+  input[type='date'] {
+    color-scheme: light;
+  }
+}
+
+/* Global Responsive Styles */
+@media (max-width: 768px) {
+  body {
+    font-size: 14px;
+  }
+
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
+@media (max-width: 480px) {
+  body {
+    font-size: 13px;
+  }
+}

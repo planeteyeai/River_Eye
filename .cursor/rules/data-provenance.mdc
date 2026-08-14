@@ -1,0 +1,38 @@
+---
+description: Keep DATA_SOURCES.txt in step with every data source change
+alwaysApply: true
+---
+
+# Data provenance
+
+`DATA_SOURCES.txt` at the repo root is the single record of where every number,
+geometry and map tile comes from. It must never go stale.
+
+## Update it in the same change
+
+Whenever you add, remove, re-point or re-label a data source, edit
+`DATA_SOURCES.txt` in the same change. That includes:
+
+- a new or changed API endpoint, query parameter, or base URL
+- a new bundled asset under `public/asset/` (KML, JSON, HTML panel)
+- a new basemap, label or DEM tile provider
+- a figure hard-coded from a publication (add it to section 5 with a source URL
+  and your confidence in that source)
+- a change to a derived calculation, its constants, or its output values
+  (update section 6 so drift is visible)
+- resolving any "TO CONFIRM" item
+
+Always append a dated line to the CHANGE LOG at the end of the file.
+
+## Record these fields
+
+What the data is · exact endpoint or file path · which source file consumes it ·
+auth and attribution · the UI provenance label · the caveats.
+
+## Be honest about quality
+
+Distinguish measured, modelled, derived and synthetic data. The UI labels are
+`Live · GloFAS`, `Live · ECMWF`, `Model`, `Estimated` and `Demo/Synthetic`; use
+the same vocabulary in the file. If something is synthetic or unvalidated, say
+so plainly rather than softening it — several parts of this app are demo data,
+and section 8 lists claims that must not be made about the flood zones.

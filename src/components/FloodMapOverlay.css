@@ -1,0 +1,662 @@
+.flood-map-overlays {
+  position: absolute;
+  inset: 0;
+  z-index: 1100;
+  pointer-events: none;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) minmax(268px, 320px);
+}
+
+.flood-live-card {
+  min-width: 0;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid var(--rv-line);
+  background: var(--rv-surface);
+}
+
+.flood-live-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.flood-live-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 2px;
+}
+
+.flood-live-section-head h4 {
+  margin: 0;
+  font-family: var(--rv-font-display);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--rv-ink);
+}
+
+.flood-live-section-head small {
+  display: block;
+  font-family: var(--rv-font-body);
+  font-size: 10px;
+  color: var(--rv-muted);
+  font-weight: 400;
+}
+
+.flood-live-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.flood-live-head strong {
+  font-family: var(--rv-font-display);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--rv-ink);
+}
+
+.flood-provenance {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 7px;
+  border-radius: 999px;
+  border: 1px solid var(--rv-line);
+  background: var(--rv-surface-2);
+  font-family: var(--rv-font-mono);
+  font-size: 8.5px;
+  font-weight: 700;
+  letter-spacing: 0.7px;
+  text-transform: uppercase;
+  color: var(--rv-muted);
+  white-space: nowrap;
+}
+
+.flood-provenance.is-live {
+  color: var(--rv-teal-dark, #0a6f7a);
+  border-color: rgba(14, 143, 156, 0.35);
+  background: var(--rv-teal-soft, #dcf3f5);
+}
+
+.flood-provenance.is-model {
+  color: var(--rv-blue-dark);
+  border-color: rgba(22, 104, 179, 0.3);
+  background: var(--rv-blue-soft);
+}
+
+.flood-provenance.is-derived {
+  color: #8a5a12;
+  border-color: rgba(179, 118, 26, 0.35);
+  background: #fbf0dc;
+}
+
+.flood-zone-pills {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.flood-zone-pills button {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 9px;
+  border-radius: 999px;
+  border: 1px solid var(--rv-line);
+  background: var(--rv-surface);
+  color: var(--rv-muted);
+  font-family: var(--rv-font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+
+.flood-zone-pills button:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+
+.flood-zone-pills button.is-on {
+  background: var(--rv-surface-2);
+}
+
+.flood-zone-pills .sw,
+.flood-zone-row .sw {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  border-radius: 99px;
+  flex-shrink: 0;
+}
+
+.flood-zone-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.flood-zone-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10.5px;
+  color: var(--rv-muted);
+}
+
+.flood-zone-row strong {
+  font-family: var(--rv-font-display);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--rv-ink);
+  min-width: 54px;
+}
+
+.flood-zone-row em {
+  font-style: normal;
+  font-family: var(--rv-font-mono);
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--rv-ink-2);
+}
+
+.flood-zone-caveat {
+  font-size: 9.5px;
+  line-height: 1.35;
+  color: var(--rv-muted);
+}
+
+.flood-live-value {
+  font-family: var(--rv-font-mono);
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--rv-ink);
+}
+
+.flood-live-value small {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--rv-muted);
+}
+
+.flood-live-meta {
+  margin-top: 2px;
+  font-size: 10.5px;
+  color: var(--rv-muted);
+}
+
+.flood-live-spark {
+  width: 100%;
+  height: 58px;
+  display: block;
+  margin-top: 4px;
+}
+
+.flood-rain-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  margin-top: 2px;
+}
+
+.flood-rain-grid span {
+  padding: 4px 6px;
+  border-radius: 7px;
+  background: var(--rv-surface-2);
+  border: 1px solid var(--rv-line);
+  font-family: var(--rv-font-mono);
+  font-size: 13px;
+  font-weight: 650;
+  color: var(--rv-ink);
+}
+
+.flood-rain-grid em {
+  display: block;
+  font-style: normal;
+  font-family: var(--rv-font-body);
+  font-size: 8.5px;
+  letter-spacing: 0.7px;
+  text-transform: uppercase;
+  color: var(--rv-muted);
+  font-weight: 500;
+  margin-bottom: 1px;
+}
+
+.dashboard.is-fullscreen .flood-map-overlays,
+:fullscreen .flood-map-overlays {
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 360px);
+}
+
+.flood-map-panel,
+.flood-map-ribbon {
+  pointer-events: auto;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.97) 0%, rgba(244, 249, 252, 0.96) 100%);
+  backdrop-filter: blur(14px);
+  border: 1px solid var(--rv-line);
+  color: var(--rv-ink);
+  font-family: var(--rv-font-body);
+  box-shadow: var(--rv-shadow-lg);
+}
+
+.flood-map-panel {
+  grid-row: 1;
+  grid-column: 2;
+  z-index: 1;
+  min-height: 0;
+  min-width: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding: 12px 14px 10px;
+  border-radius: 14px 0 0 0;
+  border-right: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.flood-panel-divider {
+  height: 1px;
+  background: var(--rv-line);
+  margin: 2px 0;
+  flex-shrink: 0;
+}
+
+.flood-panel-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.flood-map-panel h3,
+.flood-ribbon-head h2,
+.flood-detail-panel h3 {
+  font-family: var(--rv-font-display);
+  font-weight: 500;
+  margin: 0;
+  color: var(--rv-ink);
+}
+
+.flood-map-panel h3 {
+  font-size: 15px;
+  line-height: 1.2;
+}
+
+.flood-map-panel h3 small,
+.flood-detail-panel h3 small {
+  display: block;
+  margin-top: 3px;
+  font-family: var(--rv-font-body);
+  color: var(--rv-muted);
+  font-weight: 400;
+  font-size: 11px;
+}
+
+.flood-status-pill,
+.flood-mode-pill,
+.flood-status-chip {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  padding: 3px 9px;
+  border-radius: 999px;
+  border: 1px solid var(--rv-line);
+  background: var(--rv-surface-2);
+  font-family: var(--rv-font-mono);
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.9px;
+}
+
+.flood-mode-pill {
+  margin-left: auto;
+}
+
+.flood-status-chip {
+  align-self: flex-start;
+  font-size: 11px;
+}
+
+.flood-stat-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.flood-stat-chips span {
+  flex: 1 1 72px;
+  min-width: 0;
+  padding: 5px 8px;
+  border-radius: 8px;
+  background: var(--rv-surface-2);
+  border: 1px solid var(--rv-line);
+  color: var(--rv-ink);
+  font-family: var(--rv-font-mono);
+  font-size: 12.5px;
+  font-weight: 650;
+  line-height: 1.25;
+  white-space: normal;
+  overflow: hidden;
+}
+
+.flood-stat-chips em,
+.flood-mini-grid em {
+  display: block;
+  font-style: normal;
+  font-family: var(--rv-font-body);
+  font-size: 9px;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: var(--rv-muted);
+  font-weight: 500;
+  margin-bottom: 1px;
+}
+
+.flood-lead-pills {
+  display: flex;
+  gap: 5px;
+}
+
+.flood-lead-pills button {
+  flex: 1;
+  border: 1px solid var(--rv-line);
+  background: var(--rv-surface);
+  color: var(--rv-muted);
+  border-radius: 999px;
+  padding: 3px 0;
+  font-family: var(--rv-font-mono);
+  font-size: 10.5px;
+  cursor: pointer;
+}
+
+.flood-lead-pills button.is-on {
+  color: var(--rv-blue-dark);
+  border-color: var(--rv-blue);
+  background: var(--rv-blue-soft);
+}
+
+.flood-advance {
+  border: 1px solid var(--rv-blue);
+  background: linear-gradient(180deg, var(--rv-blue-soft), rgba(226, 238, 251, 0.5));
+  color: var(--rv-blue-dark);
+  border-radius: 9px;
+  padding: 6px 10px;
+  font-family: var(--rv-font-mono);
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.flood-advance:hover:not(:disabled) {
+  background: var(--rv-blue);
+  border-color: var(--rv-blue-dark);
+  color: #ffffff;
+}
+
+.flood-advance:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.flood-loading {
+  color: var(--rv-muted);
+  font-size: 12px;
+  padding: 10px 0;
+}
+
+.flood-panel-label {
+  font-size: 10px;
+  letter-spacing: 1.1px;
+  text-transform: uppercase;
+  color: var(--rv-muted);
+  margin-top: 2px;
+}
+
+.flood-status-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.flood-status-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 10.5px;
+  color: var(--rv-ink-2);
+  letter-spacing: 0.5px;
+}
+
+.flood-status-meta strong {
+  font-family: var(--rv-font-mono);
+  font-size: 12px;
+  color: var(--rv-ink);
+}
+
+.flood-status-track {
+  height: 5px;
+  border-radius: 99px;
+  background: var(--rv-surface-3);
+  overflow: hidden;
+}
+
+.flood-status-fill {
+  height: 100%;
+  border-radius: 99px;
+}
+
+.flood-mini-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 5px;
+}
+
+.flood-mini-grid span {
+  padding: 4px 7px;
+  border-radius: 8px;
+  background: var(--rv-surface-2);
+  border: 1px solid var(--rv-line);
+  color: var(--rv-ink);
+  font-family: var(--rv-font-mono);
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.flood-map-ribbon {
+  grid-row: 2;
+  grid-column: 1 / -1;
+  z-index: 2;
+  padding: 8px 16px 6px;
+  border-radius: 0;
+  border-left: 0;
+  border-right: 0;
+  border-bottom: 0;
+  display: grid;
+  /* Two columns: reach ribbon + asset detail (rainfall column removed). */
+  grid-template-columns: minmax(0, 1.15fr) minmax(460px, 1fr);
+  gap: 14px;
+  align-items: stretch;
+  height: 168px;
+  max-height: 168px;
+  overflow: hidden;
+}
+
+.dashboard.is-fullscreen .flood-map-ribbon,
+:fullscreen .flood-map-ribbon {
+  height: 188px;
+  max-height: 188px;
+}
+
+.flood-ribbon-main {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding-right: 4px;
+}
+
+.flood-ribbon-head {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.flood-ribbon-head h2 {
+  font-size: 15px;
+}
+
+.flood-ribbon-lead {
+  font-family: var(--rv-font-mono);
+  font-size: 12px;
+  color: var(--rv-sand);
+}
+
+.flood-ribbon-svg {
+  width: 100%;
+  height: 96px;
+  flex: 1 1 auto;
+  min-height: 0;
+  display: block;
+}
+
+.flood-asset-mark {
+  cursor: pointer;
+}
+
+.flood-asset-mark:hover {
+  opacity: 0.85;
+}
+
+.flood-legend {
+  display: flex;
+  gap: 6px;
+  flex-wrap: nowrap;
+  overflow: hidden;
+  padding: 2px 2px 0;
+}
+
+.flood-legend-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+  padding: 2px 7px;
+  border-radius: 999px;
+  border: 1px solid var(--rv-line);
+  background: var(--rv-surface-2);
+  font-size: 10px;
+  color: var(--rv-ink-2);
+}
+
+.flood-legend .sw {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 99px;
+}
+
+.flood-detail-panel {
+  min-width: 0;
+  min-height: 0;
+  border-left: 1px solid var(--rv-line);
+  padding-left: 12px;
+  display: grid;
+  grid-template-columns: minmax(160px, 0.38fr) minmax(0, 1fr);
+  gap: 10px;
+  align-items: stretch;
+}
+
+.flood-detail-meta {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+}
+
+.flood-detail-panel h3 {
+  font-size: 12px;
+}
+
+.flood-detail-name {
+  font-family: var(--rv-font-display);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.15;
+  color: var(--rv-ink);
+}
+
+.flood-detail-num {
+  font-family: var(--rv-font-mono);
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.flood-detail-num small {
+  font-size: 11px;
+  color: var(--rv-muted);
+  font-weight: 500;
+}
+
+.flood-detail-meta .flood-stat-chips span {
+  padding: 3px 6px;
+  font-size: 12px;
+}
+
+.flood-detail-graph {
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.flood-hydro-chart {
+  width: 100%;
+  flex: 1;
+  height: 100%;
+  min-height: 0;
+  display: block;
+}
+
+.flood-detail-caption {
+  font-size: 10px;
+  color: var(--rv-muted);
+  margin-top: 2px;
+  line-height: 1.3;
+}
+
+@media (max-width: 1100px) {
+  .flood-map-overlays {
+    grid-template-columns: 1fr;
+    grid-template-rows: minmax(0, 1fr) auto auto;
+  }
+
+  .flood-map-panel {
+    grid-row: 2;
+    grid-column: 1;
+    max-height: 42vh;
+    border-radius: 0;
+  }
+
+  .flood-map-ribbon {
+    grid-row: 3;
+    grid-template-columns: 1fr;
+    height: auto;
+    max-height: none;
+  }
+
+  .flood-detail-panel {
+    border-left: 0;
+    border-top: 1px solid var(--rv-line);
+    padding-left: 0;
+    padding-top: 10px;
+    grid-template-columns: minmax(140px, 0.4fr) minmax(0, 1fr);
+  }
+}

@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>River Eye · Mula–Mutha Flood Intelligence</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lora:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --water:#e9f1f7; --panel:#ffffff; --panel2:#f4f9fc; --line:#d5e3ee;
+  --line-strong:#b8cfe0; --ink:#0d2436; --ink2:#3a5c73; --muted:#6b8798;
+  --teal:#0e8f9c; --teal-soft:#dcf3f5; --marigold:#b3761a; --marigold-soft:#fbf0dc;
+  --blue:#1668b3; --bed:#7d9db5; --bed-soft:#dde9f2;
+  --safe:#1c8a55; --watch:#b8860b; --warning:#d2701a; --danger:#c2372a;
+  --shadow:0 1px 2px rgba(15,37,64,.06),0 1px 3px rgba(15,37,64,.07);
+  --disp:'Lora',Georgia,"Times New Roman",serif;
+  --body:'Inter',"Segoe UI",system-ui,-apple-system,sans-serif;
+  --mono:'JetBrains Mono',ui-monospace,Consolas,"SF Mono",monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--water);color:var(--ink);font-family:var(--body);font-size:14px;line-height:1.5}
+.wrap{max-width:1240px;margin:0 auto;padding:0 20px 56px}
+
+header{display:flex;align-items:baseline;gap:18px;flex-wrap:wrap;padding:22px 0 12px;border-bottom:1px solid var(--line)}
+.wordmark{font-family:var(--disp);font-weight:700;font-size:28px;letter-spacing:.5px}
+.wordmark span{color:var(--teal)}
+.tagline{color:var(--muted);font-size:13px}
+.hdr-date{margin-left:auto;font-family:var(--mono);font-size:12px;color:var(--muted)}
+
+.kpi-strip{display:grid;grid-template-columns:repeat(4,1fr) auto;gap:12px;align-items:stretch;margin:18px 0 20px}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px;box-shadow:var(--shadow)}
+.kpi em{display:block;font-style:normal;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
+.kpi strong{font-family:var(--mono);font-size:22px;font-weight:700;display:block;line-height:1.1}
+.kpi small{color:var(--muted);font-size:11px}
+.kpi .prov{display:inline-block;margin-top:4px;padding:2px 7px;border-radius:999px;
+  border:1px solid var(--line);background:var(--panel2);font-family:var(--mono);
+  font-size:8.5px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--muted)}
+.kpi .prov.live{color:#0a6f7a;border-color:rgba(14,143,156,.35);background:var(--teal-soft)}
+.kpi .prov.model{color:var(--blue);border-color:rgba(22,104,179,.3);background:#e2eefb}
+.advance{background:linear-gradient(180deg,var(--teal-soft),#eef9fa);
+  border:1px solid rgba(14,143,156,.45);color:var(--teal);border-radius:10px;padding:12px 18px;
+  font-family:var(--mono);font-size:13px;cursor:pointer;white-space:nowrap;box-shadow:var(--shadow)}
+.advance:hover:not(:disabled){background:rgba(14,143,156,.14)}
+.advance:disabled{opacity:.6;cursor:wait}
+
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px 18px;margin-bottom:18px;box-shadow:var(--shadow)}
+.card h2{font-family:var(--disp);font-weight:500;font-size:19px;margin-bottom:2px}
+.card h2 small{font-family:var(--body);color:var(--muted);font-weight:400;font-size:12px}
+.card-head{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:10px}
+.card-tools{margin-left:auto;display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.pill{font-family:var(--mono);font-size:11px;border:1px solid var(--line);background:transparent;
+  color:var(--muted);border-radius:999px;padding:3px 10px;cursor:pointer}
+.pill.on{border-color:var(--teal);color:var(--teal);background:var(--teal-soft)}
+select{font-family:var(--mono);font-size:12px;background:var(--panel2);color:var(--ink);
+  border:1px solid var(--line);border-radius:8px;padding:5px 8px}
+svg.chart{width:100%;height:auto;display:block}
+.legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:8px;font-size:12px;color:var(--muted)}
+.legend i{display:inline-block;width:14px;height:3px;border-radius:2px;margin-right:6px;vertical-align:3px}
+
+.alerts{display:flex;flex-direction:column;gap:8px}
+.alert{display:flex;gap:12px;align-items:flex-start;padding:10px 12px;border-radius:8px;
+  border:1px solid var(--line);background:var(--panel2)}
+.alert b{font-family:var(--mono);font-size:10px;letter-spacing:1px;border-radius:4px;padding:2px 8px;
+  white-space:nowrap;color:#ffffff;font-weight:700}
+.alert p{font-size:13px}
+.alert span{display:block;color:var(--muted);font-size:11px;margin-top:2px}
+.note{color:var(--muted);font-size:12px;margin-top:10px}
+
+.margin-board{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}
+.asset{border:1px solid var(--line);border-radius:10px;padding:12px;background:var(--panel2);
+  border-left-width:4px;cursor:pointer}
+.asset:hover{background:#e6f0f8}
+.asset .aid{font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:1px}
+.asset .aname{font-size:13px;margin:2px 0 6px}
+.asset .amargin{font-family:var(--mono);font-size:22px;font-weight:700;line-height:1}
+.asset .arow{font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:4px}
+
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line)}
+th{color:var(--muted);font-weight:500;font-size:11px;letter-spacing:1px;text-transform:uppercase}
+td:last-child{font-family:var(--mono);text-align:right}
+
+.method{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px}
+.method div{border:1px solid var(--line);border-radius:10px;padding:12px 14px;background:var(--panel2)}
+.method h4{font-family:var(--disp);font-weight:500;font-size:15px;margin-bottom:6px;color:var(--teal)}
+.method p{font-size:12.5px;color:var(--ink2)}
+.method code{font-family:var(--mono);font-size:11.5px;color:var(--marigold)}
+
+@media(max-width:900px){
+  .kpi-strip{grid-template-columns:repeat(2,1fr)}
+  .advance{grid-column:1/-1}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="wordmark">RIVER <span>EYE</span></div>
+    <div class="tagline">Mula–Mutha River Intelligence · Sangam → Manjari Reach</div>
+    <div class="hdr-date" id="hdrDate">Connecting to live twin…</div>
+  </header>
+
+  <div class="kpi-strip">
+    <div class="kpi"><em>Simulation clock</em><strong id="kClock">—</strong><small>since forecast issue</small><span class="prov model">Model</span></div>
+    <div class="kpi"><em>Discharge now</em><strong id="kQ">—</strong><small id="kQsub">Twin · /api/state</small><span class="prov model">Model</span></div>
+    <div class="kpi"><em>Reach</em><strong id="kReach">—</strong><small id="kStations">—</small><span class="prov model">Model geometry</span></div>
+    <div class="kpi"><em>Ensemble</em><strong id="kEns">—</strong><small id="kEnssub">members × horizon</small><span class="prov model">Model</span></div>
+    <button class="advance" id="advance">Advance simulation +6 h ▸</button>
+  </div>
+
+  <section class="card">
+    <div class="card-head">
+      <h2>Longitudinal profile <small>— observed vs forecast (confidence fog = P10–P90)</small></h2>
+      <div class="card-tools" id="leadPills"></div>
+      <span class="prov model">Model</span>
+    </div>
+    <svg class="chart" id="profileChart" viewBox="0 0 1160 330" preserveAspectRatio="xMidYMid meet"></svg>
+    <div class="legend">
+      <span><i style="background:#0e8f9c"></i>Observed WSE (now)</span>
+      <span><i style="background:#b3761a"></i>Forecast median</span>
+      <span><i style="background:rgba(179,118,26,.40)"></i>P10–P90 band</span>
+      <span><i style="background:#7d9db5"></i>Inferred bed (±σ)</span>
+      <span><i style="background:#c2372a"></i>Embankment crest</span>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="card-head">
+      <h2>Hydrograph at asset <small id="hydroSub">—</small></h2>
+      <div class="card-tools"><select id="assetSelect"></select></div>
+      <span class="prov model">Model</span>
+    </div>
+    <svg class="chart" id="hydroChart" viewBox="0 0 1160 270" preserveAspectRatio="xMidYMid meet"></svg>
+    <div class="legend">
+      <span><i style="background:#0e8f9c"></i>Observed (past 72 h)</span>
+      <span><i style="background:#b3761a"></i>Ensemble median</span>
+      <span><i style="background:#c2372a"></i>Asset threshold</span>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2 style="margin-bottom:10px">Active alerts</h2>
+    <div class="alerts" id="alerts"></div>
+    <p class="note">Alert semantics: probability of exceedance + time-to-threshold + current margin. Confidence stated on every alert.</p>
+  </section>
+
+  <section class="card">
+    <h2 style="margin-bottom:10px">Margin board <small>— margin to threshold per protected asset</small></h2>
+    <div class="margin-board" id="board"></div>
+    <p class="note">Status bands: SAFE &lt;10% · WATCH ≥10% · WARNING ≥30% · DANGER ≥60% probability of 72 h exceedance (or margin already ≤ 0).</p>
+  </section>
+
+  <section class="card">
+    <h2 style="margin-bottom:10px">Seasonal scorecard <small>— hindcast-scored, live-computed</small></h2>
+    <table><thead><tr><th>Metric</th><th style="text-align:right">Value</th></tr></thead>
+    <tbody id="score"></tbody></table>
+  </section>
+
+  <section class="card">
+    <h2 style="margin-bottom:10px">Methodology</h2>
+    <div class="method">
+      <div>
+        <h4>1 · Reach geometry</h4>
+        <p>The river polygon is traced from the uploaded KML. A centerline is extracted and resampled into
+        <code id="mStations">—</code> chainage cells over <code id="mReach">—</code>, which becomes the x-axis for every
+        longitudinal product.</p>
+      </div>
+      <div>
+        <h4>2 · Bed inference</h4>
+        <p>Bed elevation is inferred from width–depth hydraulics along the centerline and reported with a ±σ
+        shading. Bed is never observed directly, so it is always drawn as an uncertainty ribbon rather than a line.</p>
+      </div>
+      <div>
+        <h4>3 · Ensemble forecast</h4>
+        <p><code id="mEns">—</code> are propagated over the horizon from the upstream discharge boundary.
+        The median is plotted; P10–P90 is drawn as confidence fog that widens downstream and with lead time.</p>
+      </div>
+      <div>
+        <h4>4 · Thresholds and margin</h4>
+        <p>Each protected asset carries a threshold elevation. Margin is <code>threshold − WSE(now)</code>. The margin board
+        shows margin, not a bare stage value, because margin is what an operator acts on.</p>
+      </div>
+      <div>
+        <h4>5 · Exceedance probability</h4>
+        <p>P(exceed 72 h) is the fraction of ensemble members crossing the threshold within the horizon.
+        Time-to-threshold is the first crossing of the ensemble <em>median</em>, so it can be absent even when P is high.</p>
+      </div>
+      <div>
+        <h4>6 · Scoring</h4>
+        <p>Skill is hindcast-scored on held-out periods: WSE RMSE at 24 h plus hits, misses and false alarms against
+        observed threshold crossings. Bad months are kept in — the scorecard is not filtered.</p>
+      </div>
+    </div>
+    <p class="note" id="methodNote">Discharge, WSE, margins, thresholds and alerts all come from the reach digital twin API (Model / demonstration). Open-Meteo is not used on this page.</p>
+  </section>
+</div>
+
+<script>
+const API='https://riverdigitaltwin-production.up.railway.app/api';
+const COLORS={SAFE:'#1c8a55',WATCH:'#b8860b',WARNING:'#d2701a',DANGER:'#c2372a'};
+const C_OBS='#0e8f9c',C_FCST='#b3761a',C_CREST='#c2372a',C_BED='#7d9db5',C_BEDFILL='#dde9f2',
+      C_GRID='rgba(15,37,64,.18)',C_AXIS='#6b8798',C_NEUTRAL='#6b8798',C_PANEL='#ffffff';
+const LEADS=[6,24,48,72];
+const state={meta:null,twin:null,margins:[],profile:null,hydro:null,lead:24,assetId:null};
+
+const api=(p,o)=>fetch(API+p,Object.assign({cache:'no-store'},o)).then(r=>{
+  if(!r.ok) throw new Error(p+' → '+r.status); return r.json();
+});
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;');
+// The twin tags its own copy as demo material; provenance lives in Methodology,
+// not repeated on every asset label and alert line.
+const clean=s=>String(s??'').replace(/\s*\((?:illustrative|synthetic|demo)\)/gi,'').trim();
+const shortName=n=>clean(String(n).split(' - ')[0]);
+const cellOf=m=>Math.max(0,Math.min(state.meta.n_cells-1,
+  Math.round(m/((state.meta.reach_km*1000)/state.meta.n_cells))));
+const thin=(a,n)=>{ if(!a||a.length<=n) return a||[]; const s=a.length/n,o=[];
+  for(let i=0;i<n;i++)o.push({v:a[Math.floor(i*s)],i:Math.floor(i*s)}); o.push({v:a[a.length-1],i:a.length-1}); return o; };
+
+function drawProfile(){
+  const m=state.meta,p=state.profile,twin=state.twin;
+  if(!m||!p||!twin) return;
+  const W=1160,H=330,L=64,R=18,T=18,B=40,N=m.n_cells;
+  const bed=m.bed,crest=m.crest,sig=m.sigma_bed,wse=twin.wse;
+  const all=[].concat(bed,crest,p.p90,p.p10,wse).filter(Number.isFinite);
+  const lo=Math.min.apply(null,all)-1, hi=Math.max.apply(null,all)+1;
+  const X=i=>L+(i/(N-1))*(W-L-R);
+  const Y=v=>T+(1-(v-lo)/(hi-lo))*(H-T-B);
+  const D=(arr,c,w,dash)=>{
+    const t=thin(arr,320);
+    return `<path d="${t.map((o,k)=>(k?'L':'M')+X(o.i).toFixed(1)+' '+Y(o.v).toFixed(1)).join(' ')}" fill="none" stroke="${c}" stroke-width="${w}"${dash?` stroke-dasharray="${dash}"`:''} stroke-linejoin="round"/>`;
+  };
+  const hi90=thin(p.p90,320),lo10=thin(p.p10,320);
+  const fog=`<path d="${hi90.map((o,k)=>(k?'L':'M')+X(o.i).toFixed(1)+' '+Y(o.v).toFixed(1)).join(' ')} ${lo10.slice().reverse().map(o=>'L'+X(o.i).toFixed(1)+' '+Y(o.v).toFixed(1)).join(' ')} Z" fill="${C_FCST}" fill-opacity="0.20"/>`;
+  const bt=thin(bed,320),st=thin(sig,320);
+  const bedBand=`<path d="${bt.map((o,k)=>(k?'L':'M')+X(o.i).toFixed(1)+' '+Y(o.v+(st[k]?st[k].v:0)).toFixed(1)).join(' ')} ${bt.slice().reverse().map((o,k)=>{const j=bt.length-1-k;return 'L'+X(o.i).toFixed(1)+' '+Y(o.v-(st[j]?st[j].v:0)).toFixed(1);}).join(' ')} Z" fill="${C_BED}" fill-opacity="0.55"/>`;
+  const bedFill=`<path d="M${X(0)} ${Y(lo)} ${bt.map(o=>'L'+X(o.i).toFixed(1)+' '+Y(o.v).toFixed(1)).join(' ')} L${X(N-1)} ${Y(lo)} Z" fill="${C_BEDFILL}" fill-opacity="0.9"/>`;
+
+  let grid='';
+  for(let i=0;i<=4;i++){const v=lo+(hi-lo)*i/4;
+    grid+=`<line x1="${L}" x2="${W-R}" y1="${Y(v).toFixed(1)}" y2="${Y(v).toFixed(1)}" stroke="${C_GRID}" stroke-dasharray="3 3"/>
+    <text x="${L-8}" y="${(Y(v)+4).toFixed(1)}" text-anchor="end" fill="${C_AXIS}" font-size="10" font-family="'JetBrains Mono',ui-monospace,monospace">${v.toFixed(1)}</text>`;}
+  let ticks='';
+  for(let km=0;km<=m.reach_km;km+=2){const i=Math.round((km/m.reach_km)*(N-1));
+    ticks+=`<text x="${X(i).toFixed(1)}" y="${H-18}" text-anchor="middle" fill="${C_AXIS}" font-size="10" font-family="'JetBrains Mono',ui-monospace,monospace">${km} km</text>`;}
+
+  const marks=state.margins.map(a=>{
+    const c=COLORS[a.status]||C_NEUTRAL, i=cellOf(a.chainage_m);
+    return `<g><line x1="${X(i).toFixed(1)}" x2="${X(i).toFixed(1)}" y1="${T}" y2="${(H-B).toFixed(1)}" stroke="${c}" stroke-opacity=".35"/>
+    <circle cx="${X(i).toFixed(1)}" cy="${Y(a.threshold).toFixed(1)}" r="4" fill="${c}" stroke="${C_PANEL}" stroke-width="1.5"/>
+    <text x="${X(i).toFixed(1)}" y="${(Y(a.threshold)-9).toFixed(1)}" text-anchor="middle" fill="${c}" font-size="9.5" font-family="'JetBrains Mono',ui-monospace,monospace">${a.id}</text></g>`;
+  }).join('');
+
+  document.getElementById('profileChart').innerHTML=
+    grid+bedFill+bedBand+fog+D(crest,C_CREST,1.6,'6 4')+D(p.median,C_FCST,2.2)+D(wse,C_OBS,2.2)+marks+ticks+
+    `<text x="${L-8}" y="${T+2}" text-anchor="end" fill="${C_AXIS}" font-size="10" font-family="'JetBrains Mono',ui-monospace,monospace">m</text>`;
+}
+
+function drawHydro(){
+  const m=state.meta,h=state.hydro,a=state.margins.find(x=>x.id===state.assetId);
+  if(!m||!h||!a) return;
+  const obs=h.observed||[],med=h.forecast.median||[],p10=h.forecast.p10||[],p90=h.forecast.p90||[];
+  const W=1160,H=270,L=64,R=18,T=18,B=38,P=m.past_hours,F=m.forecast_hours;
+  const all=obs.concat(med,p10,p90,[a.threshold]).filter(Number.isFinite);
+  const lo=Math.min.apply(null,all)-0.3, hi=Math.max.apply(null,all)+0.3;
+  const X=t=>L+((t+P)/(P+F))*(W-L-R);
+  const Y=v=>T+(1-(v-lo)/(hi-lo))*(H-T-B);
+  const obsP=`<path d="${obs.map((v,i)=>(i?'L':'M')+X(i-P).toFixed(1)+' '+Y(v).toFixed(1)).join(' ')}" fill="none" stroke="${C_OBS}" stroke-width="2.3"/>`;
+  const medP=`<path d="${med.map((v,i)=>(i?'L':'M')+X(i+1).toFixed(1)+' '+Y(v).toFixed(1)).join(' ')}" fill="none" stroke="${C_FCST}" stroke-width="2.2"/>`;
+  const fog=p10.length?`<path d="${p90.map((v,i)=>(i?'L':'M')+X(i+1).toFixed(1)+' '+Y(v).toFixed(1)).join(' ')} ${p10.slice().reverse().map((v,i)=>'L'+X(p10.length-i).toFixed(1)+' '+Y(v).toFixed(1)).join(' ')} Z" fill="${C_FCST}" fill-opacity="0.20"/>`:'';
+
+  let grid='';
+  for(let i=0;i<=4;i++){const v=lo+(hi-lo)*i/4;
+    grid+=`<line x1="${L}" x2="${W-R}" y1="${Y(v).toFixed(1)}" y2="${Y(v).toFixed(1)}" stroke="${C_GRID}" stroke-dasharray="3 3"/>
+    <text x="${L-8}" y="${(Y(v)+4).toFixed(1)}" text-anchor="end" fill="${C_AXIS}" font-size="10" font-family="'JetBrains Mono',ui-monospace,monospace">${v.toFixed(1)}</text>`;}
+  let ticks='';
+  for(let t=-P;t<=F;t+=12){
+    ticks+=`<text x="${X(t).toFixed(1)}" y="${H-16}" text-anchor="middle" fill="${C_AXIS}" font-size="10" font-family="'JetBrains Mono',ui-monospace,monospace">${t>0?'+'+t:t} h</text>`;}
+  const nowL=`<line x1="${X(0).toFixed(1)}" x2="${X(0).toFixed(1)}" y1="${T}" y2="${H-B}" stroke="${C_OBS}" stroke-dasharray="3 3"/>
+    <text x="${(X(0)+5).toFixed(1)}" y="${T+11}" fill="${C_OBS}" font-size="10" font-family="'JetBrains Mono',ui-monospace,monospace">now</text>`;
+  const thr=`<line x1="${L}" x2="${W-R}" y1="${Y(a.threshold).toFixed(1)}" y2="${Y(a.threshold).toFixed(1)}" stroke="${C_CREST}" stroke-width="1.6" stroke-dasharray="6 4"/>
+    <text x="${W-R-4}" y="${(Y(a.threshold)-5).toFixed(1)}" text-anchor="end" fill="${C_CREST}" font-size="10" font-family="'JetBrains Mono',ui-monospace,monospace">threshold ${a.threshold} m</text>`;
+
+  document.getElementById('hydroChart').innerHTML=grid+fog+thr+medP+obsP+nowL+ticks;
+  document.getElementById('hydroSub').textContent=`— ${a.id} · ${shortName(a.name)} — ${a.type} · WSE now ${a.wse_now} m`;
+}
+
+function drawAlerts(list){
+  const m=state.meta;
+  const note=`Ensemble-based estimate · ${m.members} members over ${m.forecast_hours} h.`;
+  document.getElementById('alerts').innerHTML=list.map(x=>{
+    const c=COLORS[x.severity]||C_NEUTRAL;
+    return `<div class="alert" style="border-left:4px solid ${c}">
+      <b style="background:${c}">${esc(x.severity)}</b>
+      <p>${esc(clean(x.message))}<span>${esc(note)}</span></p></div>`;
+  }).join('') || '<p class="note">No active alerts in the current horizon.</p>';
+}
+
+function drawBoard(){
+  document.getElementById('board').innerHTML=state.margins.map(a=>{
+    const c=COLORS[a.status]||C_NEUTRAL;
+    const cross=a.time_to_threshold_h!=null?`~${a.time_to_threshold_h} h to threshold`:'no median crossing';
+    return `<div class="asset" data-id="${a.id}" style="border-left-color:${c}">
+      <div class="aid">${a.id}</div>
+      <div class="aname">${esc(shortName(a.name))} — ${esc(a.type)}</div>
+      <div class="amargin" style="color:${c}">${a.margin_now_m>0?'+':''}${a.margin_now_m} m</div>
+      <div class="arow">P(exceed 72 h): ${Math.round((a.p_exceed_72h||0)*100)}%</div>
+      <div class="arow">${cross}</div></div>`;
+  }).join('');
+  document.querySelectorAll('.asset').forEach(el=>el.addEventListener('click',()=>{
+    document.getElementById('assetSelect').value=el.dataset.id;
+    selectAsset(el.dataset.id);
+    document.getElementById('hydroChart').scrollIntoView({behavior:'smooth',block:'center'});
+  }));
+}
+
+function drawKpis(){
+  const m=state.meta,twin=state.twin;
+  document.getElementById('kClock').textContent='t + '+m.sim_hour+' h';
+  if(twin && Number.isFinite(twin.q_now)){
+    document.getElementById('kQ').innerHTML=twin.q_now+' <small>m³/s</small>';
+    document.getElementById('kQsub').textContent='Twin · /api/state q_now';
+  } else {
+    document.getElementById('kQ').textContent='—';
+    document.getElementById('kQsub').textContent='Twin · /api/state';
+  }
+  document.getElementById('kReach').textContent=m.reach_km+' km';
+  document.getElementById('kStations').textContent=m.n_cells+' cells';
+  document.getElementById('kEns').textContent=m.members+' × '+m.forecast_hours+' h';
+  document.getElementById('kEnssub').textContent='twin ensemble (modelled WSE)';
+}
+
+function drawLeadPills(){
+  document.getElementById('leadPills').innerHTML=
+    '<span style="color:#6b8798;font-size:11px;letter-spacing:1px">FORECAST LEAD</span>'+
+    LEADS.map(h=>`<button class="pill${h===state.lead?' on':''}" data-lead="${h}">+${h} h</button>`).join('');
+  document.querySelectorAll('[data-lead]').forEach(b=>b.addEventListener('click',async()=>{
+    state.lead=Number(b.dataset.lead); drawLeadPills();
+    state.profile=await api('/forecast/profile?lead='+state.lead); drawProfile();
+  }));
+}
+
+async function selectAsset(id){
+  state.assetId=id;
+  const a=state.margins.find(x=>x.id===id);
+  if(!a) return;
+  state.hydro=await api('/hydrograph?cell='+cellOf(a.chainage_m));
+  drawHydro();
+}
+
+async function refreshTwin(){
+  const [twin,margins,alerts,score,profile]=await Promise.all([
+    api('/state'),api('/margins'),api('/alerts'),api('/scorecard'),
+    api('/forecast/profile?lead='+state.lead)
+  ]);
+  state.twin=twin; state.margins=margins; state.profile=profile;
+  drawKpis(); drawProfile(); drawAlerts(alerts); drawBoard();
+  document.getElementById('score').innerHTML=(score.rows||[])
+    .filter(r=>!/^data source$/i.test(r.metric))
+    .map(r=>`<tr><td>${esc(r.metric)}</td><td>${esc(r.value)}</td></tr>`).join('');
+  await selectAsset(state.assetId||margins[0].id);
+}
+
+(async()=>{
+  try{
+    state.meta=await api('/meta');
+    const m=state.meta;
+    document.getElementById('hdrDate').textContent='Live twin · sim hour '+m.sim_hour;
+    document.getElementById('mStations').textContent=m.n_cells+' cells';
+    document.getElementById('mReach').textContent=m.reach_km+' km';
+    document.getElementById('mEns').textContent=m.members+' ensemble members';
+    document.getElementById('assetSelect').innerHTML=(m.assets||[])
+      .map(a=>`<option value="${a.id}">${a.id} — ${esc(shortName(a.name))}</option>`).join('');
+    document.getElementById('assetSelect').addEventListener('change',e=>selectAsset(e.target.value));
+
+    const btn=document.getElementById('advance');
+    btn.addEventListener('click',async()=>{
+      btn.disabled=true; btn.textContent='Advancing…';
+      try{
+        const r=await api('/advance?hours=6',{method:'POST'});
+        state.meta.sim_hour=r.sim_hour!=null?r.sim_hour:state.meta.sim_hour+6;
+        await refreshTwin();
+        document.getElementById('hdrDate').textContent='Live twin · sim hour '+state.meta.sim_hour;
+      }catch(e){ console.error(e); }
+      btn.disabled=false; btn.textContent='Advance simulation +6 h ▸';
+    });
+
+    drawLeadPills();
+    await refreshTwin();
+  }catch(err){
+    document.getElementById('hdrDate').textContent='Live twin unreachable — '+err.message;
+    document.getElementById('methodNote').textContent=
+      'The reach twin API did not respond ('+err.message+'). Charts stay empty until it is back.';
+  }
+})();
+</script>
+</body>
+</html>

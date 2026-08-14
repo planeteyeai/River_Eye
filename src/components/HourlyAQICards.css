@@ -1,0 +1,180 @@
+.hourly-aqi-cards-container {
+  width: 100%;
+  padding: 2rem;
+  background: var(--rv-surface);
+  box-shadow: var(--rv-shadow-sm);
+  font-family: var(--rv-font-body);
+  border-radius: 16px;
+  margin-bottom: 1rem;
+}
+
+.hourly-aqi-header {
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.hourly-aqi-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--rv-ink);
+  font-family: var(--rv-font-display);
+  margin: 0 0 0.5rem 0;
+  letter-spacing: 0.5px;
+}
+
+.hourly-aqi-subtitle {
+  font-size: 1rem;
+  color: var(--rv-muted);
+  margin: 0;
+}
+
+.hourly-aqi-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 1rem;
+  max-width: 100%;
+}
+
+.hourly-aqi-card {
+  background: var(--rv-surface);
+  border: 2px solid;
+  border-radius: 16px;
+  padding: 1rem;
+  transition: all 0.3s ease;
+  box-shadow: var(--rv-shadow-sm);
+  min-height: 120px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.hourly-aqi-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--rv-shadow);
+}
+
+.hourly-aqi-card-header {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.hour-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--rv-ink-2);
+  font-family: var(--rv-font-mono);
+  letter-spacing: 0.5px;
+  padding: 0.25rem 0.5rem;
+  background: var(--rv-surface-3);
+  border-radius: 6px;
+}
+
+.hourly-aqi-card-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  gap: 0.5rem;
+}
+
+.aqi-value {
+  font-size: 2rem;
+  font-family: var(--rv-font-mono);
+  font-weight: 700;
+  line-height: 1;
+}
+
+.aqi-category {
+  font-size: 1.25rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.aqi-no-data {
+  font-size: 0.875rem;
+  color: var(--rv-faint);
+  font-style: italic;
+}
+
+.loading-state,
+.error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  text-align: center;
+}
+
+.loading-spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid var(--rv-surface-3);
+  border-top-color: var(--rv-teal);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 1rem;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.loading-state p,
+.error-state p {
+  color: var(--rv-ink-2);
+  font-size: 1rem;
+  margin: 0;
+}
+
+.error-state p {
+  color: var(--rv-danger);
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .hourly-aqi-cards-grid {
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 0.75rem;
+  }
+
+  .hourly-aqi-card {
+    min-height: 100px;
+    padding: 0.75rem;
+  }
+
+  .aqi-value {
+    font-size: 1.5rem;
+  }
+
+  .hourly-aqi-title {
+    font-size: 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .hourly-aqi-cards-grid {
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+    gap: 0.5rem;
+  }
+
+  .hourly-aqi-card {
+    min-height: 90px;
+    padding: 0.5rem;
+  }
+
+  .aqi-value {
+    font-size: 1.25rem;
+  }
+
+  .hour-label {
+    font-size: 0.75rem;
+  }
+}
+

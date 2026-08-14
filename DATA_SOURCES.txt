@@ -1,0 +1,492 @@
+================================================================================
+CLIMATEEYE - DATA SOURCES AND REFERENCES
+================================================================================
+
+Every number, geometry and tile the app displays, where it comes from, and what
+may and may not be claimed about it.
+
+Last updated : 2026-08-14
+Maintained by: update this file in the SAME change that adds, removes or
+               re-points a data source. See section 9.
+
+Provenance labels used in the UI:
+  Live · GloFAS   real observation/forecast from a global model
+  Live · ECMWF    real weather forecast
+  Model           digital twin output (synthetic hydraulics)
+  Estimated       derived in this app from other inputs, not measured
+  Demo/Synthetic  invented figures, present only to exercise the software
+
+
+================================================================================
+1. LIVE EXTERNAL APIs
+================================================================================
+
+--------------------------------------------------------------------------------
+1.1  GloFAS river discharge - Open-Meteo Flood API  ** REMOVED 2026-08-14 **
+--------------------------------------------------------------------------------
+Was        : https://flood-api.open-meteo.com/v1/flood via floodLiveApi.js /
+             floodZones.js (both files deleted).
+Why removed: GloFAS ~5 km global grid was judged not accurate enough for this
+             reach (regulated dams upstream; not a Pune gauge).
+Replaced by: twin /state.q_now for discharge (section 2.1). Return-period
+             corridor map layers are no longer drawn.
+
+--------------------------------------------------------------------------------
+1.2  ECMWF precipitation - Open-Meteo Forecast API  ** REMOVED 2026-08-14 **
+--------------------------------------------------------------------------------
+Was        : https://api.open-meteo.com/v1/forecast via floodLiveApi.js
+             fetchRainfall() in the flood map overlay.
+Why removed: same decision as 1.1 — Open-Meteo flood feeds withdrawn from the
+             flood panel. AQI/weather detail pages still use the ClimateEye
+             backend (section 2.2), not this endpoint.
+
+--------------------------------------------------------------------------------
+1.3  Place-name lookup - Open-Meteo Geocoding API
+--------------------------------------------------------------------------------
+Endpoint    : https://geocoding-api.open-meteo.com/v1/search
+Used in     : src/components/WeatherMetricsCards.jsx
+Purpose     : resolve a display name for the selected coordinates
+Auth        : none
+Note        : geocoding only — not a discharge or rainfall source.
+
+
+================================================================================
+2. PROJECT BACKEND APIs
+================================================================================
+
+--------------------------------------------------------------------------------
+2.1  River digital twin (Mula-Mutha reach)
+--------------------------------------------------------------------------------
+Base        : https://riverdigitaltwin-production.up.railway.app/api
+Override    : VITE_FLOOD_API_BASE (see src/lib/floodApi.js)
+Used in     : src/lib/floodApi.js, src/components/FloodMapOverlay.jsx
+UI label    : Model
+Endpoints   : /meta  /state  /margins  /alerts  /scorecard
+              /forecast/profile?lead=<h>  /hydrograph?cell=<i>  /advance?hours=<h>
+
+REAL data from this API:
+  - reach centreline lat[] / lon[]  (derived from the KML in 3.1)
+  - reach_km, n_cells
+  - real_width_m[]  per-cell channel width measured off the KML polygon
+
+SYNTHETIC data from this API - demonstration only:
+  - q_now discharge (shown as "Discharge" in FloodMapOverlay)
+  - water surface elevation, bed level, embankment crest
+  - asset thresholds, freeboard margins, exceedance probabilities
+  - alerts, scorecard, hydrographs
+  - the simulation clock advanced by /advance
+
+Discharge in the flood panel is this twin q_now only. Open-Meteo / GloFAS is
+not used (see 1.1 REMOVED).
+
+The API self-labels assets "<Place> - <type> (illustrative)". floodApi.js
+strips that suffix for display via cleanLabel()/shortName(), so the caveat
+lives in the methodology text instead of on every label.
+
+Do not merge the twin's simulation hour with the GloFAS calendar dates. They
+are separate time axes and the UI keeps them separate on purpose.
+
+--------------------------------------------------------------------------------
+2.2  ClimateEye API (AQI + weather)
+--------------------------------------------------------------------------------
+Base (prod) : https://climateye-apis.up.railway.app/api
+Base (dev)  : /api, proxied by vite.config.js to the same host
+Used in     : src/services/api.js
+Endpoints   : POST /aqi                  POST /weather
+              POST /aqi/hourly           POST /weather/hourly
+              POST /aqi/hourly/range     POST /weather/monthly
+              POST /aqi/analyze
+Payload     : { latitude, longitude, date | start_date+end_date | year+month }
+
+TO CONFIRM: the upstream provider behind this backend is not visible from the
+frontend. Record here which measurement network or model the AQI and weather
+figures originate from (e.g. CPCB/MPCB station, satellite product, reanalysis),
+and whether /aqi/analyze output is model-generated text.
+
+Note: /weather/monthly can return raw NaN and Infinity tokens, which is invalid
+JSON. src/services/api.js sanitises the response text before parsing.
+
+
+================================================================================
+3. STATIC AND BUNDLED DATA
+================================================================================
+
+--------------------------------------------------------------------------------
+3.1  public/asset/mula-mutha-river.kml
+--------------------------------------------------------------------------------
+Content  : Mula-Mutha reach geometry through Pune, roughly 17 km
+Used in  : src/components/Dashboard.jsx (loaded and drawn on the map)
+           also the geometry behind the twin's /meta centreline and widths
+Status   : REAL geometry - the one genuinely surveyed-looking input in the
+           flood view. Everything hydraulic layered on it is estimated.
+TO CONFIRM: original provenance of this KML (who digitised it, from what
+           imagery or survey, and at what date).
+
+--------------------------------------------------------------------------------
+3.2  public/asset/dashboard_data.json
+--------------------------------------------------------------------------------
+Content  : BOD/COD water-quality figures for 7 reaches, Sangam-Bund Garden to
+           Hadapsar-Manjari, with history and forecast series
+Used in  : src/components/BodCodMapOverlay.jsx
+Generated: 2026-08-18 (per its own "generated" field)
+Status   : SYNTHETIC DEMO. Its own demo_notice reads: "MULA-MUTHA SYNTHETIC
+           DEMO ... Figures validate software, not real-world accuracy."
+           Class thresholds bod_edges = [2, 3, 6, 10] mg/L.
+No CPCB or MPCB observation is used anywhere in the BOD/COD view.
+
+--------------------------------------------------------------------------------
+3.2b  public/asset/mula-mutha-tss-class.geojson (+ .kml)
+--------------------------------------------------------------------------------
+Content  : Turbidity / TSS class polygons over the Mula-Mutha, May 2026
+           (period in source name: 2026-05-01 to 2026-05-31).
+           Classes supplied with the product:
+             1 = Low    (≤ 0.62)
+             2 = Medium (0.62–1.17)
+             3 = High   (> 1.17)
+           291 cells (191 / 86 / 14). GeoJSON derived from the uploaded KML
+           89d60b30671f4f18b2bed16e2802306e.kml; original also kept as
+           mula-mutha-tss-class.kml.
+Used in  : src/components/MapComponent.jsx (fill+line layer when water-quality
+           overlay is open and TSS toggle is on); legend in
+           BodCodMapOverlay.jsx. Theme card: Water quality.
+UI label : Estimated
+Status   : classed product map bundled as a static asset. Not live.
+TO CONFIRM: upstream sensor/model, physical units for the 0.62 / 1.17 breaks
+           (NTU vs mg/L TSS vs index), and whether the class map is measured
+           or modelled.
+
+--------------------------------------------------------------------------------
+3.2c  public/asset/mula-mutha-ndci-class.geojson (+ .kml)
+--------------------------------------------------------------------------------
+Content  : NDCI — Chlorophyll class polygons over the Mula-Mutha, May 2026
+           (period in source name: 2026-05-01 to 2026-05-31).
+           Classes supplied with the product:
+             1 = Low Chlorophyll  (NDCI < 0)
+             2 = High Chlorophyll (NDCI ≥ 0)
+           24 cells (5 / 19). GeoJSON derived from the uploaded KML
+           8a697955694b4d05b5e0da8c548f18d8 (1).kml; original also kept as
+           mula-mutha-ndci-class.kml.
+Used in  : src/components/MapComponent.jsx (fill+line layer when water-quality
+           overlay is open and NDCI toggle is on); legend in
+           BodCodMapOverlay.jsx. Theme card: Water quality.
+UI label : Estimated
+Status   : classed product map bundled as a static asset. Not live.
+TO CONFIRM: satellite sensor / NDCI recipe, and whether NDCI ≥ 0 is the
+           intended high-chlorophyll cut for this reach.
+
+--------------------------------------------------------------------------------
+3.2d  public/asset/mula-mutha-ndwi-class.geojson (+ .kml)
+--------------------------------------------------------------------------------
+Content  : NDWI — Water Detection class polygons over the Mula-Mutha, May 2026
+           (period in source name: 2026-05-01 to 2026-05-31).
+           Classes supplied with the product:
+             1 = Land / Non-water (NDWI < 0)
+             2 = Water            (NDWI ≥ 0)
+           79 cells (2 / 77). GeoJSON derived from the uploaded KML
+           44cb265d1183415fb987ca9397f25677.kml; original also kept as
+           mula-mutha-ndwi-class.kml.
+Used in  : src/components/MapComponent.jsx (fill+line layer when water-quality
+           overlay is open and NDWI toggle is on); legend in
+           BodCodMapOverlay.jsx. Theme card: Water quality.
+UI label : Estimated
+Status   : classed product map bundled as a static asset. Not live.
+TO CONFIRM: satellite sensor / NDWI recipe, and whether NDWI ≥ 0 is the
+           intended water cut for this reach.
+
+--------------------------------------------------------------------------------
+3.2e  public/asset/mula-mutha-wst-class.geojson (+ .kml)
+--------------------------------------------------------------------------------
+Content  : WST — Water Surface Temperature (°C) class polygons over the
+           Mula-Mutha, 2026-05-01 to 2026-05-30.
+           Classes supplied with the product:
+             1 = Very Low   (<27 °C)
+             2 = Low        (27–<30 °C)
+             3 = Moderate   (30–<33 °C)
+             4 = High       (33–<36 °C)
+             5 = Very High  (≥36 °C)
+           122 cells in this export (0 / 0 / 2 / 32 / 88) — classes 1–2
+           are empty for this period. GeoJSON derived from
+           843aea2a6486443da6e845f82c6f2638 (1).kml; original kept as
+           mula-mutha-wst-class.kml.
+Used in  : src/components/MapComponent.jsx (fill+line layer when water-quality
+           overlay is open and WST toggle is on); legend checkbox in
+           BodCodMapOverlay.jsx. Theme cards: Water quality and Salinity
+           intrusion (WST as thermal proxy inside the water-quality view).
+UI label : Estimated
+Status   : classed product map bundled as a static asset. Not live.
+TO CONFIRM: satellite sensor / WST retrieval method, and whether the °C
+           breaks are fixed product bins or reach-specific.
+
+--------------------------------------------------------------------------------
+3.3  Standalone HTML panels
+--------------------------------------------------------------------------------
+Files    : public/asset/mula-mutha-flood.html
+           public/asset/mula-mutha-bod-cod.html
+Used in  : src/components/Dashboard.jsx, loaded in an iframe
+Status   : self-contained pages with their own inline fetches.
+           mula-mutha-flood.html is twin-only (same Railway /api as 2.1):
+           discharge KPI = /state q_now, Model label. Open-Meteo GloFAS /
+           ECMWF fetches and charts were removed 2026-08-14. Keep in step
+           with this file.
+
+--------------------------------------------------------------------------------
+3.4  public/asset/godavari-waterbody-rajahmundry.kml
+--------------------------------------------------------------------------------
+Status   : present in the repo but NOT referenced anywhere in src/.
+           Either wire it up or delete it.
+
+
+================================================================================
+4. MAP BASEMAPS, LABELS AND TERRAIN
+================================================================================
+
+Defined in src/lib/basemaps.js and src/lib/applyBasemap.js.
+
+Google raster tiles      mt0-mt3.google.com/vt?lyrs=<y|s|m|p|h>
+                         lyrs: y=hybrid s=satellite m=roads p=terrain h=labels
+                         attribution in code: "© Google"
+                         WARNING: these mt*.google.com tile URLs are not an
+                         officially published API. Review licensing before any
+                         production or commercial release; the supported route
+                         is Google Maps Platform with a key, or switch to the
+                         Esri/CARTO styles already configured below.
+
+Esri / ArcGIS Online     server.arcgisonline.com/ArcGIS/rest/services/
+                           World_Imagery/MapServer
+                           Reference/World_Boundaries_and_Places/MapServer
+                         attribution: "Esri, Maxar, Earthstar Geographics"
+
+CARTO + OpenStreetMap    basemaps.cartocdn.com/light_all/{z}/{x}/{y}@2x.png
+                         attribution: "© CARTO © OSM"
+
+Map label fonts          tiles.openstreetmap.us/fonts/{fontstack}/{range}.pbf
+
+Terrain / hillshade DEM  s3.amazonaws.com/elevation-tiles-prod/terrarium/
+                         (AWS Terrain Tiles, Terrarium encoding; originally
+                         Mapzen. Sources include SRTM, NED, ETOPO1 and others.)
+                         Used in src/components/MapComponent.jsx
+                         attribution in code: "DEM AWS Terrarium"
+                         NOTE: used for map relief shading ONLY. It is not
+                         used for any flood or inundation calculation.
+
+Rendering library        MapLibre GL JS (see package.json)
+
+
+================================================================================
+5. PUBLISHED LITERATURE AND GAUGE REFERENCES
+================================================================================
+
+--------------------------------------------------------------------------------
+5.1  Khadakwasla flood frequency analysis  ** USED IN CODE **
+--------------------------------------------------------------------------------
+Figures used:
+  mean annual peak flood        1165 m3/s   (1940-2007)
+  highest flood on record       3211 m3/s   (1958)
+  record length                 68 years
+  severe flood years cited      1944, 1958, 1961, 1976, 1983, 1997, 2005
+  post-1961 trend               declining peak magnitudes, rising variability,
+                                attributed to Temghar and Varasgaon coming online
+  PMC operational target        hold Khadakwasla release below 50,000 cusecs
+                                (~1416 m3/s) during the monsoon
+
+Consumed by : src/lib/floodZones.js -> GAUGE_ANCHOR
+Purpose     : bias-correct GloFAS onto observed Pune discharges (see 6.2)
+
+Primary source: "Disaster Management & Flood Control - An Initiative by Pune
+                Municipal Corporation", PMC presentation.
+Copy consulted: https://www.slideserve.com/bethanyc/disaster-management-amp-flood-control-an-initiative-by-pune-municipal-corporation-powerpoint-ppt-presentation
+CONFIDENCE  : the figures are quoted consistently, but the copy consulted is a
+              third-party mirror of the slides. Obtain the original PMC PDF or
+              the CWC/WRD gauge record before treating 1165 and 3211 as
+              authoritative. Substituting a verified series would change
+              Q10/Q25/Q100 directly.
+
+--------------------------------------------------------------------------------
+5.2  Supporting references (context only, not used in code)
+--------------------------------------------------------------------------------
+Khadakwasla spillway capacity ~2775 m3/s (~98,000 cusecs) and HEC-RAS flood
+routing scenarios for the Mutha through Pune:
+  International Journal of Engineering and Advanced Technology, v8i5
+  https://www.ijeat.org/wp-content/uploads/papers/v8i5/E7735068519.pdf
+
+2005 flood, dam releases on 1 Aug 2005 - Khadakwasla 35,000 cusecs, Mulshi
+30,000 cusecs, Pavana 5,500 cusecs; ~2,000 people evacuated along the Mutha
+and Mula:
+  PTI via Rediff, 2005-08-01
+  https://www.rediff.com/news/report/rain7/20050801.htm
+
+2005 Maharashtra floods situation report:
+  ReliefWeb, 2005-08-05
+  https://reliefweb.int/report/india/india-konkan-region-maharashtra-state-floods-situation-report-5-aug-2005
+
+2019 Maharashtra dam releases and downstream flooding:
+  Frontline, "When dams swelled"
+  https://frontline.thehindu.com/cover-story/article30206048.ece
+
+Historically documented severe Pune floods, for orientation: 1944, 1958,
+1961 (Panshet-Khadakwasla dam failure), 1976, 1983, 1997, 2005, 2015 (intense
+rainfall, largely urban drainage), 2019 (cloudburst plus dam releases).
+Only 1997, 2005 and 2019 fall inside the app's 29-year model record.
+
+
+================================================================================
+6. DERIVED DATA - COMPUTED IN THIS APP
+================================================================================
+
+--------------------------------------------------------------------------------
+6.1–6.3  Flood-frequency fit, gauge correction, map corridors  ** REMOVED 2026-08-14 **
+--------------------------------------------------------------------------------
+Previously computed in src/lib/floodZones.js from GloFAS reanalysis via
+Open-Meteo, bias-corrected to Khadakwasla, then drawn as Estimated corridors.
+That file and the Open-Meteo flood feeds are gone. Discharge shown in the
+flood overlay is now the twin's synthetic q_now only (section 2.1).
+
+Section 5.1 (Khadakwasla literature) remains as a reference archive; it is
+no longer applied in code.
+
+
+================================================================================
+7. KNOWN GAPS - DATA WE DO NOT HAVE
+================================================================================
+
+Not integrated, and each would materially improve accuracy:
+
+  - Maharashtra WRD official red line / blue line flood polygons for the Pune
+    Mula and Mutha segments. This is the correct source for regulatory zones.
+  - CWC / Khadakwasla observed daily gauge archive. Would replace the single
+    published mean in 5.1 with a real series and remove the reliance on a
+    mirrored slide deck.
+  - A DEM or bathymetry for the reach, needed before any inundation extent can
+    be claimed rather than a corridor width.
+  - Real hydraulics for water surface elevation, freeboard and thresholds,
+    which are currently synthetic (2.1).
+  - CPCB / MPCB observed BOD and COD, to replace the synthetic figures in 3.2.
+  - Google Flood Hub API - evaluated, not integrated; needs a server-side proxy.
+  - Sentinel-2 or JRC Global Surface Water for observed water extent.
+  - Gauge-based validation of the AQI and weather backend (2.2).
+
+Also missing by construction: GloFAS returns nothing usable before 1997 at
+these cells, so the 1961 Panshet-Khadakwasla dam failure - the worst flood
+Pune has recorded - is outside the model record entirely.
+
+
+================================================================================
+8. HOW TO CITE THE FLOOD NUMBERS
+================================================================================
+
+Acceptable:
+  "GloFAS-derived return periods, bias-corrected to the published Khadakwasla
+   mean annual peak; estimated corridor, not a surveyed flood line."
+
+Not acceptable:
+  "100-year flood zone" presented as a regulatory or planning boundary
+  "matches Pune flood records"        (it matches some years, not all - see 6.2)
+  any use for emergency response, land-use decisions or property-level risk
+
+
+================================================================================
+9. MAINTENANCE
+================================================================================
+
+Update this file in the same change that touches a data source. For each entry
+record: what the data is, the exact endpoint or file, which source file consumes
+it, auth and attribution, the UI provenance label, and the caveats.
+
+When a figure is hard-coded from a publication, cite it in section 5 and note
+your confidence in the source. When a figure is computed, put the method and the
+current output in section 6 so drift is visible.
+
+Add a line below on every change.
+
+--------------------------------------------------------------------------------
+CHANGE LOG
+--------------------------------------------------------------------------------
+2026-08-14  File created. Inventoried Open-Meteo GloFAS and ECMWF feeds, the
+            Railway digital twin, the ClimateEye AQI/weather backend, bundled
+            KML and JSON assets, basemap and DEM tile providers, and the
+            Khadakwasla gauge reference. Recorded the gauge bias correction
+            (-197 m3/s, model 16.9% high) and its 1958 validation
+            (1-in-64 against 1-in-69 expected). Open items flagged: provenance
+            of mula-mutha-river.kml, upstream provider behind the ClimateEye
+            backend, primary PMC source for the 1165 and 3211 m3/s figures,
+            Google tile licensing, unused godavari KML.
+2026-08-14  Added the public homepage at / (src/components/Home.jsx). It restates
+            this inventory in short form for visitors: source names, tiers
+            (Live / Measured / Reference / Synthetic / Demo), the four-step
+            corridor method, the 1958 validation, and the "what this is not"
+            caveats from section 8. It also prints reach length 17.0 km, the
+            29-year record, 50 ensemble members and 8 assets. No new data source
+            and no new endpoint - display only. If any of those figures or tiers
+            change here, change them there in the same edit.
+2026-08-14  REMOVED Open-Meteo flood feeds (GloFAS discharge + ECMWF rainfall
+            in the flood overlay) and the Estimated return-period corridors.
+            Deleted src/lib/floodLiveApi.js and src/lib/floodZones.js. Flood
+            discharge is again the twin /state.q_now only (Model). Place-name
+            geocoding via Open-Meteo (1.3) is unchanged. Sections 1.1, 1.2 and
+            6.1-6.3 marked removed.
+2026-08-14  Open-Meteo discharge and rainfall sample point changed from the
+            twin centreline inlet (meta.lat[0]/lon[0]) to a fixed pin
+            18.542728 N, 73.880453 E (18°32'33.82"N 73°52'49.63"E), exported
+            as GLOFAS_SAMPLE_POINT. Live panel and upstream return-period fit
+            both use it; the outlet cell for corridors still comes from the
+            twin. GloFAS still serves the same ~5 km cell
+            (18.525002 N, 73.875015 E), so discharge numbers are unchanged
+            until Open-Meteo's snap changes.
+2026-08-14  Signed-in hub (/home) now shows the same nine monitoring themes as
+            the landing page (shared list in src/data/monitoringThemes.js).
+            Hydrology deep-links to ?view=flood, water quality to ?view=bodcod;
+            the rest open the live map. Display only — no new data source.
+2026-08-14  Landing page feature grid replaced by nine monitoring themes
+            (hydrology, geology, biodiversity, soil & land use, salinity
+            intrusion, water quality, pollution, climate impact,
+            socio-economic), supplied as a design reference. IMPORTANT: these
+            describe intended scope, not implemented sources - only hydrology
+            is backed by live feeds (GloFAS discharge, ECMWF rainfall) and
+            water quality by demo data. Nothing in sections 1-6 changed. The
+            cards no longer carry per-card provenance tiers, so the "Data &
+            limits" band now states which themes are actually wired up. Also
+            note the theme copy is Goa/Mandovi-oriented (Ganjem, Khazan,
+            mangroves, sea-level rise) while this app covers the Mula-Mutha at
+            Pune - TO CONFIRM whether the scope is meant to widen.
+2026-08-14  Rebuilt the landing page on the PlanetEye/Adani landing structure
+            (navbar, hero, stats band, ten-card feature grid, footer). The
+            provenance tiers moved onto the feature cards themselves, using
+            Live / Live · GloFAS / Live · ECMWF / Measured / Estimated /
+            Synthetic / Demo, plus Tool for the two cards that are UI features
+            rather than data (draw-or-upload, spreadsheet export). Section 8's
+            caveats and the four-step corridor method are kept in the "Data &
+            limits" band. Still display only.
+2026-08-14  Added the signed-in hub at /home (src/components/AppHome.jsx). Its
+            four tiles carry the same tier vocabulary, and it repeats the
+            demonstration-data warning for the twin and the BOD-COD series.
+            Again display only, no new source.
+2026-08-14  mula-mutha-flood.html (header Digital Twin iframe): stripped
+            Open-Meteo GloFAS discharge + ECMWF rainfall fetch/draw/boot.
+            Discharge now KPI uses twin /api/state q_now only (Model), matching
+            the map FloodMapOverlay. Section 3.3 updated.
+2026-08-14  Added Turbidity/TSS class map to water quality: bundled
+            public/asset/mula-mutha-tss-class.geojson (+ source .kml), drawn on
+            the map when the BOD–COD / water-quality overlay is open. Classes
+            1 Low ≤0.62 · 2 Medium 0.62–1.17 · 3 High >1.17 (May 2026). Hub
+            ?view=bodcod now opens that map overlay. Section 3.2b added.
+2026-08-14  Added NDCI — Chlorophyll class map beside TSS in water quality:
+            public/asset/mula-mutha-ndci-class.geojson (+ .kml). Classes
+            1 Low (NDCI < 0) · 2 High (NDCI ≥ 0), May 2026, 24 cells.
+            Legend toggles show/hide TSS and NDCI independently. Section 3.2c.
+2026-08-14  Added NDWI — Water Detection class map to water quality:
+            public/asset/mula-mutha-ndwi-class.geojson (+ .kml). Classes
+            1 Land/Non-water (NDWI < 0) · 2 Water (NDWI ≥ 0), May 2026,
+            79 cells. Legend toggle alongside TSS and NDCI. Section 3.2d.
+2026-08-14  Added WST — Water Surface Temperature (°C) class map to water
+            quality: public/asset/mula-mutha-wst-class.geojson (+ .kml).
+            Classes 1–5 (<27 / 27–<30 / 30–<33 / 33–<36 / ≥36 °C), May 2026,
+            122 cells (only 3–5 present this period). Section 3.2e.
+2026-08-14  Segregated class maps onto the nine theme cards: Water quality
+            keeps TSS + NDCI + NDWI + BOD–COD (?view=waterquality); WST moves
+            to Salinity intrusion as the thermal proxy (?view=salinity).
+            monitoringThemes.js carries a datasets[] list per card.
+            SalinityMapOverlay.jsx added; map has a Salinity button.
+2026-08-14  WST / salinity folded back into Water quality: same map view and
+            legend checkboxes as TSS / NDCI / NDWI. Salinity theme card deep-
+            links to ?view=waterquality. Removed SalinityMapOverlay and the
+            map Salinity button.
