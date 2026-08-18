@@ -33,3 +33,6 @@ lerna-debug.log*
 
 # OS
 Thumbs.db
+
+# Local conversion scratch (KMZ unpacks, HTML downloads). Shipped copies live in public/asset/.
+tmp-*/
