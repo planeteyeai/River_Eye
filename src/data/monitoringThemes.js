@@ -4,7 +4,8 @@
  *  `datasets` array are scope cards only (map lands with no thematic layer).
  *
  *  Salinity intrusion and Water quality share the same water-quality map view;
- *  WST (thermal) sits with TSS / NDCI / NDWI / BOD–COD there.
+ *  WST (thermal) sits with TSS / NDCI / NDWI / BOD–COD there. Soil & land use
+ *  opens the urban vegetation classification.
  */
 
 export const MONITORING_THEMES = [
@@ -28,9 +29,9 @@ export const MONITORING_THEMES = [
   },
   {
     name: 'Soil & land use',
-    desc: 'LULC change, Khazan salinity, crop monitoring, urban sprawl',
-    to: '/dashboard',
-    datasets: [],
+    desc: 'Urban vegetation type and health in the 1 km river buffer',
+    to: '/dashboard?view=landuse',
+    datasets: ['urbanveg'],
   },
   {
     name: 'Salinity intrusion',

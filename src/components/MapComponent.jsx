@@ -31,6 +31,17 @@ const WST_SOURCE = 'src-wst-class'
 const WST_FILL = 'lyr-wst-fill'
 const WST_LINE = 'lyr-wst-line'
 const WST_GEOJSON_URL = '/asset/mula-mutha-wst-class.geojson'
+const DEPTH_SOURCE = 'src-depth-class'
+const DEPTH_FILL = 'lyr-depth-fill'
+const DEPTH_LINE = 'lyr-depth-line'
+const DEPTH_GEOJSON_URL = '/asset/mula-mutha-depth-class.geojson'
+const URBAN_VEG_SOURCE = 'src-urban-veg'
+const URBAN_VEG_FILL = 'lyr-urban-veg-fill'
+const URBAN_VEG_LINE = 'lyr-urban-veg-line'
+const URBAN_VEG_JSON_URL = '/asset/mula-mutha-urban-vegetation.json'
+const FLOOD_ZONE_SOURCE = 'src-flood-zones'
+const FLOOD_ZONE_FILL = 'lyr-flood-zone-fill'
+const FLOOD_ZONE_LINE = 'lyr-flood-zone-line'
 
 const EMPTY_COLLECTION = { type: 'FeatureCollection', features: [] }
 
@@ -70,7 +81,31 @@ const WST_FILL_COLOR = [
   '#6b8798',
 ]
 
-const ensureClassLayer = (map, { sourceId, fillId, lineId, colorExpr, fillOpacity = 0.55 }) => {
+const DEPTH_FILL_COLOR = [
+  'match',
+  ['get', 'depth_class'],
+  0, '#0000ff',
+  1, '#00ff00',
+  2, '#ffff00',
+  3, '#ff8000',
+  4, '#ff0000',
+  '#6b8798',
+]
+
+const ensureClassLayer = (
+  map,
+  {
+    sourceId,
+    fillId,
+    lineId,
+    colorExpr,
+    fillOpacity = 0.55,
+    lineWidth = 0.8,
+    lineOpacity = 0.85,
+    // Adjacent grid cells leave hairline seams when antialiased; disable for tiled rasters-as-polygons.
+    fillAntialias = true,
+  },
+) => {
   if (map.getSource(sourceId)) return
   map.addSource(sourceId, { type: 'geojson', data: EMPTY_COLLECTION })
   map.addLayer({
@@ -81,6 +116,7 @@ const ensureClassLayer = (map, { sourceId, fillId, lineId, colorExpr, fillOpacit
     paint: {
       'fill-color': colorExpr,
       'fill-opacity': fillOpacity,
+      'fill-antialias': fillAntialias,
     },
   })
   map.addLayer({
@@ -90,8 +126,8 @@ const ensureClassLayer = (map, { sourceId, fillId, lineId, colorExpr, fillOpacit
     layout: { visibility: 'none' },
     paint: {
       'line-color': colorExpr,
-      'line-width': 0.8,
-      'line-opacity': 0.85,
+      'line-width': lineWidth,
+      'line-opacity': lineOpacity,
     },
   })
 }
@@ -154,6 +190,30 @@ const coordsToPolygonFeature = (coordinates) => {
 }
 
 const ensureOverlayLayers = (map) => {
+  // Added first so the corridors sit under the reach outline and draw preview.
+  if (!map.getSource(FLOOD_ZONE_SOURCE)) {
+    map.addSource(FLOOD_ZONE_SOURCE, { type: 'geojson', data: EMPTY_COLLECTION })
+    map.addLayer({
+      id: FLOOD_ZONE_FILL,
+      type: 'fill',
+      source: FLOOD_ZONE_SOURCE,
+      paint: {
+        'fill-color': ['get', 'color'],
+        'fill-opacity': 0.26,
+      },
+    })
+    map.addLayer({
+      id: FLOOD_ZONE_LINE,
+      type: 'line',
+      source: FLOOD_ZONE_SOURCE,
+      paint: {
+        'line-color': ['get', 'color'],
+        'line-width': 1.6,
+        'line-opacity': 0.95,
+      },
+    })
+  }
+
   if (!map.getSource(POLYGON_SOURCE)) {
     map.addSource(POLYGON_SOURCE, { type: 'geojson', data: EMPTY_COLLECTION })
     map.addLayer({
@@ -232,6 +292,46 @@ const ensureOverlayLayers = (map) => {
     colorExpr: WST_FILL_COLOR,
     fillOpacity: 0.55,
   })
+  // Depth is the primary read on the Digital Twin map, so it renders near-opaque
+  // like the source KML in Google Earth, with matching outlines to close cell seams.
+  ensureClassLayer(map, {
+    sourceId: DEPTH_SOURCE,
+    fillId: DEPTH_FILL,
+    lineId: DEPTH_LINE,
+    colorExpr: DEPTH_FILL_COLOR,
+    fillOpacity: 0.92,
+    lineWidth: 1.1,
+    lineOpacity: 1,
+    fillAntialias: false,
+  })
+
+  // The vegetation KML carries an extent and class shares, not per-pixel
+  // geometry, so all the map can honestly show is the classified footprint.
+  if (!map.getSource(URBAN_VEG_SOURCE)) {
+    map.addSource(URBAN_VEG_SOURCE, { type: 'geojson', data: EMPTY_COLLECTION })
+    map.addLayer({
+      id: URBAN_VEG_FILL,
+      type: 'fill',
+      source: URBAN_VEG_SOURCE,
+      layout: { visibility: 'none' },
+      paint: {
+        'fill-color': '#31a354',
+        'fill-opacity': 0.1,
+      },
+    })
+    map.addLayer({
+      id: URBAN_VEG_LINE,
+      type: 'line',
+      source: URBAN_VEG_SOURCE,
+      layout: { visibility: 'none' },
+      paint: {
+        'line-color': '#006837',
+        'line-width': 1.8,
+        'line-dasharray': [3, 2],
+        'line-opacity': 0.9,
+      },
+    })
+  }
 }
 
 const MapComponent = ({
@@ -245,6 +345,9 @@ const MapComponent = ({
   showNdciLayer = false,
   showNdwiLayer = false,
   showWstLayer = false,
+  showDepthLayer = false,
+  showUrbanVegLayer = false,
+  floodZones = null,
 }) => {
   const containerRef = useRef(null)
   const mapRef = useRef(null)
@@ -254,6 +357,8 @@ const MapComponent = ({
   const ndciLoadedRef = useRef(false)
   const ndwiLoadedRef = useRef(false)
   const wstLoadedRef = useRef(false)
+  const depthLoadedRef = useRef(false)
+  const urbanVegLoadedRef = useRef(false)
   const drawPointsRef = useRef([])
   const drawHandlersRef = useRef({ click: null, dblclick: null })
   const [drawPointCount, setDrawPointCount] = React.useState(0)
@@ -596,6 +701,90 @@ const MapComponent = ({
       cancelled = true
     }
   }, [showWstLayer, mapReady])
+
+  useEffect(() => {
+    const map = mapRef.current
+    if (!map || !mapReady) return undefined
+
+    const setVisibility = (visible) => {
+      const value = visible ? 'visible' : 'none'
+      if (map.getLayer(DEPTH_FILL)) map.setLayoutProperty(DEPTH_FILL, 'visibility', value)
+      if (map.getLayer(DEPTH_LINE)) map.setLayoutProperty(DEPTH_LINE, 'visibility', value)
+    }
+
+    if (!showDepthLayer) {
+      setVisibility(false)
+      return undefined
+    }
+
+    let cancelled = false
+    const load = async () => {
+      try {
+        if (!depthLoadedRef.current) {
+          const response = await fetch(DEPTH_GEOJSON_URL, { cache: 'no-store' })
+          if (!response.ok) throw new Error(`Depth layer → ${response.status}`)
+          const geojson = await response.json()
+          if (cancelled) return
+          map.getSource(DEPTH_SOURCE)?.setData(geojson)
+          depthLoadedRef.current = true
+        }
+        if (!cancelled) setVisibility(true)
+      } catch (error) {
+        console.error('Failed to load water depth layer', error)
+        if (!cancelled) setVisibility(false)
+      }
+    }
+    load()
+
+    return () => {
+      cancelled = true
+    }
+  }, [showDepthLayer, mapReady])
+
+  useEffect(() => {
+    const map = mapRef.current
+    if (!map || !mapReady) return undefined
+
+    const setVisibility = (visible) => {
+      const value = visible ? 'visible' : 'none'
+      if (map.getLayer(URBAN_VEG_FILL)) map.setLayoutProperty(URBAN_VEG_FILL, 'visibility', value)
+      if (map.getLayer(URBAN_VEG_LINE)) map.setLayoutProperty(URBAN_VEG_LINE, 'visibility', value)
+    }
+
+    if (!showUrbanVegLayer) {
+      setVisibility(false)
+      return undefined
+    }
+
+    let cancelled = false
+    const load = async () => {
+      try {
+        if (!urbanVegLoadedRef.current) {
+          const response = await fetch(URBAN_VEG_JSON_URL, { cache: 'no-store' })
+          if (!response.ok) throw new Error(`Urban vegetation → ${response.status}`)
+          const doc = await response.json()
+          if (cancelled) return
+          map.getSource(URBAN_VEG_SOURCE)?.setData(doc.extent || EMPTY_COLLECTION)
+          urbanVegLoadedRef.current = true
+        }
+        if (!cancelled) setVisibility(true)
+      } catch (error) {
+        console.error('Failed to load urban vegetation extent', error)
+        if (!cancelled) setVisibility(false)
+      }
+    }
+    load()
+
+    return () => {
+      cancelled = true
+    }
+  }, [showUrbanVegLayer, mapReady])
+
+  useEffect(() => {
+    const map = mapRef.current
+    if (!map || !mapReady) return
+    map.getSource(FLOOD_ZONE_SOURCE)?.setData(floodZones || EMPTY_COLLECTION)
+  }, [floodZones, mapReady])
 
   useEffect(() => {
     const map = mapRef.current

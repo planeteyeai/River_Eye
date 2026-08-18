@@ -9,6 +9,7 @@ import MapLayersControl from './MapLayersControl'
 import BodCodMapOverlay from './BodCodMapOverlay'
 import AqiMapOverlay from './AqiMapOverlay'
 import FloodMapOverlay from './FloodMapOverlay'
+import SoilLandUseMapOverlay from './SoilLandUseMapOverlay'
 import WeatherSection from './WeatherSection'
 import AQISection from './AQISection'
 import LiveDashboardCards from './LiveDashboardCards'
@@ -44,6 +45,9 @@ const Dashboard = () => {
   const [showAqiOverlay, setShowAqiOverlay] = useState(false) 
   const [showFlood, setShowFlood] = useState(false)
   const [showFloodOverlay, setShowFloodOverlay] = useState(false)
+  const [floodZones, setFloodZones] = useState(null)
+  const [showLandUseOverlay, setShowLandUseOverlay] = useState(false)
+  const [showUrbanVegLayer, setShowUrbanVegLayer] = useState(true)
   const [currentViewDate, setCurrentViewDate] = useState(null) // Currently viewing date
   const [weatherData, setWeatherData] = useState(null)
   const [aqiData, setAqiData] = useState(null)
@@ -944,6 +948,7 @@ const Dashboard = () => {
       || requestedView === 'bodcod'
       || requestedView === 'waterquality'
       || requestedView === 'salinity'
+      || requestedView === 'landuse'
       || requestedView === 'corridors'
     ) {
       clearParam()
@@ -960,6 +965,18 @@ const Dashboard = () => {
         setShowNdciLayer(true)
         setShowNdwiLayer(true)
         setShowWstLayer(true)
+        setShowFlood(false)
+        setShowFloodOverlay(false)
+        setShowLandUseOverlay(false)
+        setShowAnalysis(false)
+        setShowAqiOverlay(false)
+      }
+      else if (requestedView === 'landuse') {
+        // Soil & land use: urban vegetation type and health.
+        setShowLandUseOverlay(true)
+        setShowUrbanVegLayer(true)
+        setShowBodCod(false)
+        setShowBodCodOverlay(false)
         setShowFlood(false)
         setShowFloodOverlay(false)
         setShowAnalysis(false)
@@ -1699,6 +1716,32 @@ const Dashboard = () => {
                   uploadedKML?.name?.toLowerCase().includes('mula-mutha')) && (
                   <button
                     type="button"
+                    className={`map-landuse-button ${showLandUseOverlay ? 'active' : ''}`}
+                    onClick={() => {
+                      const next = !showLandUseOverlay
+                      setShowLandUseOverlay(next)
+                      if (next) setShowUrbanVegLayer(true)
+                      setShowBodCod(false)
+                      setShowBodCodOverlay(false)
+                      setShowAnalysis(false)
+                      setShowAqiOverlay(false)
+                      setShowFloodOverlay(false)
+                    }}
+                    title="Soil & land use: urban vegetation type and health"
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M12 21V9" />
+                      <path d="M12 13c-3.5 0-5-2.5-5-5.5C10.5 7.5 12 10 12 13z" />
+                      <path d="M12 11c0-3 1.5-5.5 5-6 0 3.5-1.5 6-5 6z" />
+                      <path d="M4 21h16" />
+                    </svg>
+                    Land use
+                  </button>
+                )}
+                {(uploadedKML?.displayName === 'Mula-Mutha River' ||
+                  uploadedKML?.name?.toLowerCase().includes('mula-mutha')) && (
+                  <button
+                    type="button"
                     className={`map-flood-button ${showFloodOverlay ? 'active' : ''}`}
                     onClick={() => {
                       setShowFloodOverlay((open) => !open)
@@ -1707,6 +1750,7 @@ const Dashboard = () => {
                       setShowAnalysis(false)
                       setShowAqiOverlay(false)
                       setShowBodCodOverlay(false)
+                      setShowLandUseOverlay(false)
                     }}
                     title="Show digital twin flood risk on map"
                   >
@@ -1732,7 +1776,13 @@ const Dashboard = () => {
                   onToggleWst={setShowWstLayer}
                 />
               )}
-              {showFloodOverlay && <FloodMapOverlay />}
+              {showFloodOverlay && <FloodMapOverlay onZonesChange={setFloodZones} />}
+              {showLandUseOverlay && (
+                <SoilLandUseMapOverlay
+                  showExtentLayer={showUrbanVegLayer}
+                  onToggleExtent={setShowUrbanVegLayer}
+                />
+              )}
               {showAqiOverlay && (
                 <AqiMapOverlay
                   aqiData={aqiData}
@@ -1752,6 +1802,9 @@ const Dashboard = () => {
                 showNdciLayer={showBodCodOverlay && showNdciLayer}
                 showNdwiLayer={showBodCodOverlay && showNdwiLayer}
                 showWstLayer={showBodCodOverlay && showWstLayer}
+                showDepthLayer={showFloodOverlay}
+                showUrbanVegLayer={showLandUseOverlay && showUrbanVegLayer}
+                floodZones={showFloodOverlay ? floodZones : null}
               />
             </div>
           ) : (

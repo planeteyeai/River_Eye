@@ -95,38 +95,6 @@
   background: #fbf0dc;
 }
 
-.flood-zone-pills {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-}
-
-.flood-zone-pills button {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 4px 9px;
-  border-radius: 999px;
-  border: 1px solid var(--rv-line);
-  background: var(--rv-surface);
-  color: var(--rv-muted);
-  font-family: var(--rv-font-mono);
-  font-size: 11px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: border-color 0.15s ease, color 0.15s ease;
-}
-
-.flood-zone-pills button:disabled {
-  cursor: default;
-  opacity: 0.55;
-}
-
-.flood-zone-pills button.is-on {
-  background: var(--rv-surface-2);
-}
-
-.flood-zone-pills .sw,
 .flood-zone-row .sw {
   display: inline-block;
   width: 9px;
@@ -138,7 +106,7 @@
 .flood-zone-rows {
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 4px;
 }
 
 .flood-zone-row {
@@ -147,6 +115,50 @@
   gap: 6px;
   font-size: 10.5px;
   color: var(--rv-muted);
+}
+
+.flood-zone-check {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  cursor: pointer;
+}
+
+.flood-zone-check input[type='checkbox'] {
+  appearance: none;
+  -webkit-appearance: none;
+  flex: 0 0 auto;
+  width: 14px;
+  height: 14px;
+  margin: 0;
+  border: 1.5px solid rgba(13, 36, 54, 0.4);
+  border-radius: 3px;
+  background: var(--rv-surface);
+  position: relative;
+  cursor: pointer;
+}
+
+.flood-zone-check input[type='checkbox']:checked {
+  background: #0e8f9c;
+  border-color: #0e8f9c;
+}
+
+.flood-zone-check input[type='checkbox']:checked::after {
+  content: '';
+  position: absolute;
+  left: 3.5px;
+  top: 1px;
+  width: 3px;
+  height: 7px;
+  border: solid #fff;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.flood-zone-check input[type='checkbox']:focus-visible {
+  outline: 2px solid rgba(14, 143, 156, 0.45);
+  outline-offset: 2px;
 }
 
 .flood-zone-row strong {
@@ -415,6 +427,79 @@
   text-transform: uppercase;
   color: var(--rv-muted);
   margin-top: 2px;
+}
+
+.flood-depth-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 8px;
+  margin: 4px 0 2px;
+}
+
+.flood-depth-distribution {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.flood-depth-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.flood-depth-meta {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+  font-size: 11px;
+  color: var(--rv-ink-2);
+}
+
+.flood-depth-meta .sw {
+  width: 11px;
+  height: 11px;
+  border-radius: 3px;
+  border: 1px solid rgba(15, 37, 64, 0.12);
+}
+
+.flood-depth-meta span:nth-child(2) {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.flood-depth-meta strong {
+  font-size: 11.5px;
+  color: var(--rv-ink);
+}
+
+.flood-depth-meta em {
+  font-style: normal;
+  font-family: var(--rv-font-mono);
+  font-size: 10px;
+  color: var(--rv-muted);
+}
+
+.flood-depth-count {
+  font-family: var(--rv-font-mono);
+  font-size: 11px;
+  text-align: right;
+}
+
+.flood-depth-count small {
+  display: block;
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--rv-muted);
+}
+
+.flood-depth-note {
+  margin: 6px 0 0;
+  font-size: 10.5px;
+  color: var(--rv-muted);
 }
 
 .flood-status-bars {

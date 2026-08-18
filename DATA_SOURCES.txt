@@ -127,8 +127,19 @@ TO CONFIRM: original provenance of this KML (who digitised it, from what
 --------------------------------------------------------------------------------
 Content  : BOD/COD water-quality figures for 7 reaches, Sangam-Bund Garden to
            Hadapsar-Manjari, with history and forecast series
-Used in  : src/components/BodCodMapOverlay.jsx
-Generated: 2026-08-18 (per its own "generated" field)
+Used in  : src/components/BodCodMapOverlay.jsx, and fetched by
+           mula-mutha-bod-cod.html (3.3), which prefers this served file over
+           the copy embedded in its own <script id="fallback">.
+Generated: 2026-08-18 (per its own "generated" field). 90-day history
+           2026-05-20 to 2026-08-18, 14-day forecast to 2026-09-01.
+Checked  : 2026-08-18 against a freshly supplied build of the upstream panel.
+           Every series, alert, skill row and blind metric was byte-identical;
+           the only difference was class_colors, where the upstream feed now
+           ships a dark-theme palette. This file keeps the light palette
+           (A #1668b3 B #1c8a55 C #b8860b D #d2701a E #c2372a NA #6b8798)
+           because BodCodMapOverlay.jsx colours the map ribbon straight from
+           it, and the HTML panel overrides the feed palette for the same
+           reason. Re-check both if the feed is refreshed.
 Status   : SYNTHETIC DEMO. Its own demo_notice reads: "MULA-MUTHA SYNTHETIC
            DEMO ... Figures validate software, not real-world accuracy."
            Class thresholds bod_edges = [2, 3, 6, 10] mg/L.
@@ -218,6 +229,55 @@ TO CONFIRM: satellite sensor / WST retrieval method, and whether the °C
            breaks are fixed product bins or reach-specific.
 
 --------------------------------------------------------------------------------
+3.2f  public/asset/mula-mutha-urban-vegetation.json (+ .kml)
+--------------------------------------------------------------------------------
+Content  : Urban vegetation classification in a strict 1 km buffer around the
+           Mula-Mutha, May 2026. Sentinel-2, ~10 m pixels, 59,735 classified
+           pixels = 566.4 ha. Class 0 (outside the buffer) is not rendered.
+           Vegetation type:
+             1 Sparse Vegetation      #d9f0a3   317.1 ha   56.0%
+             2 Moderate Vegetation    #78c679   123.6 ha   21.8%
+             3 Dense Vegetation       #31a354   117.0 ha   20.7%
+             4 Very Dense Vegetation  #006837     8.7 ha    1.5%
+           Vegetation health:
+             1 Very Poor / Severe Stress  #d7191c  252.0 ha  44.5%
+             2 Poor / Stressed            #fdae61  111.9 ha  19.8%
+             3 Moderate / Fair            #ffff00   87.3 ha  15.4%
+             4 Good / Healthy             #a6d96a   71.9 ha  12.7%
+             5 Very Good / Very Healthy   #1a9641   43.2 ha   7.6%
+           Extent (both GroundOverlays): N 18.55631916 S 18.51176272
+           E 74.00294361 W 73.84546894. Verified 2026-08-18: that box is
+           exactly the bbox of mula-mutha-river.kml (3.1) padded 1.00 km on
+           all four sides, i.e. the raster canvas, NOT the buffer outline.
+           It covers 16.62 x 4.93 km = 81.9 km2, while the classified
+           vegetation is 5.66 km2 - 6.9% of the box. Do not read the
+           rectangle as vegetation cover; the panel labels it "the image
+           canvas, not the vegetation" for that reason.
+Derived  : scripts/convert-urban-vegetation-kml.mjs reads the Google Earth Pro
+           export c0bd6d6d12cd420595b6636dd6732585.kml - a pair of
+           GroundOverlays whose <description> holds the class tables above -
+           and writes the JSON plus a rectangle extent as GeoJSON. Original
+           kept as mula-mutha-urban-vegetation.kml.
+IMPORTANT: the KML references type_overlay.png and health_overlay.png for the
+           per-pixel maps. A .kml-only export does not carry them, so THERE IS
+           NO PIXEL GEOMETRY in this app - only the aggregate shares and the
+           bounding extent. The map draws the extent rectangle, nothing more,
+           and the panel says so. If the .kmz arrives, drop the PNGs in
+           public/asset/ and set raster.type / raster.health in the JSON to
+           their paths, then add an image source in MapComponent using the
+           bounds above.
+Used in  : src/components/MapComponent.jsx (lyr-urban-veg-fill / -line, the
+           dashed extent, on when the land-use overlay and its checkbox are
+           on); src/components/SoilLandUseMapOverlay.jsx (class tables and
+           share bars). Dashboard "Land use" button and ?view=landuse.
+           Theme card: Soil & land use.
+UI label : Estimated
+Status   : classed product summary bundled as a static asset. Not live.
+TO CONFIRM: the index behind "health" (NDVI? NDRE?) and its class breaks, the
+           exact Sentinel-2 acquisition dates, and whether "urban vegetation"
+           is meant to exclude cropland inside the buffer.
+
+--------------------------------------------------------------------------------
 3.3  Standalone HTML panels
 --------------------------------------------------------------------------------
 Files    : public/asset/mula-mutha-flood.html
@@ -228,6 +288,14 @@ Status   : self-contained pages with their own inline fetches.
            discharge KPI = /state q_now, Model label. Open-Meteo GloFAS /
            ECMWF fetches and charts were removed 2026-08-14. Keep in step
            with this file.
+           mula-mutha-bod-cod.html reads dashboard_data.json (3.2) and falls
+           back to its own embedded copy. It is an upstream-generated page,
+           re-themed here for the app's light UI: the light class palette,
+           Lora/Inter/JetBrains Mono and the light chart/ribbon colours are
+           local edits on top of the vendor build. Re-apply them whenever a
+           new build is dropped in - the vendor ships a dark theme, which is
+           illegible in this white iframe. Everything else in the file,
+           including all analysis logic, is upstream's.
 
 --------------------------------------------------------------------------------
 3.4  public/asset/godavari-waterbody-rajahmundry.kml
@@ -289,8 +357,12 @@ Figures used:
   PMC operational target        hold Khadakwasla release below 50,000 cusecs
                                 (~1416 m3/s) during the monsoon
 
-Consumed by : src/lib/floodZones.js -> GAUGE_ANCHOR
-Purpose     : bias-correct GloFAS onto observed Pune discharges (see 6.2)
+Consumed by : src/lib/floodZones.js -> GAUGE_RECORD
+Purpose     : the ONLY input to the Q10/Q25/Q100 fit (see 6.1). Since the
+              Open-Meteo GloFAS feed was removed, these published figures are
+              no longer a bias correction on a model series - they are the
+              series. Only the mean annual peak, the record peak and the record
+              length are used; there is no year-by-year data behind them.
 
 Primary source: "Disaster Management & Flood Control - An Initiative by Pune
                 Municipal Corporation", PMC presentation.
@@ -334,15 +406,64 @@ Only 1997, 2005 and 2019 fall inside the app's 29-year model record.
 ================================================================================
 
 --------------------------------------------------------------------------------
-6.1–6.3  Flood-frequency fit, gauge correction, map corridors  ** REMOVED 2026-08-14 **
+6.1  Return-period discharge Q10 / Q25 / Q100  ** RESTORED 2026-08-17, OFFLINE **
 --------------------------------------------------------------------------------
-Previously computed in src/lib/floodZones.js from GloFAS reanalysis via
-Open-Meteo, bias-corrected to Khadakwasla, then drawn as Estimated corridors.
-That file and the Open-Meteo flood feeds are gone. Discharge shown in the
-flood overlay is now the twin's synthetic q_now only (section 2.1).
+Computed in : src/lib/floodZones.js -> getReturnPeriods()
+Input       : section 5.1 only - mean annual peak 1165 m3/s, record peak
+              3211 m3/s (1958), record length 68 years. No API call; the fit is
+              a constant, evaluated in the browser.
+Method      : Gumbel (EV1). The record peak is placed at the (n+1)=69-year
+              return period using the Weibull plotting position, which with the
+              mean gives the two parameters:
+                beta = (3211 - 1165) / (y69 - 0.5772) = 560.6
+                mu   = 1165 - 0.5772 * beta          = 841.4
+              Q(T) = mu + beta * (-ln(-ln(1 - 1/T)))
+Current output (m3/s, rounded):
+                Q2   1047   (bankfull reference)
+                Q5   1682
+                Q10  2103
+                Q25  2635
+                Q50  3029
+                Q100 3420
+Cross-checks: Q100 3420 sits just above the 1958 record 3211, i.e. that flood
+              prices as roughly a 1-in-69 event - consistent by construction.
+              Q10 2103 is below the Khadakwasla spillway capacity ~2775 (5.2)
+              and well above the PMC monsoon release target ~1416 (5.1).
+Caveats     : two published summary statistics, not a gauge series, so there is
+              no way to test the Gumbel assumption, no confidence interval, and
+              no trend handling - 5.1 itself notes peaks have declined since
+              Temghar and Varasgaon came online. The pre-2026-08-14 version of
+              these numbers came from GloFAS reanalysis bias-corrected to the
+              same publication and read Q10 2103 / Q25 2635 / Q100 3420 after
+              correction; the values are close, but this is now literature-only.
+UI label    : Estimated
 
-Section 5.1 (Khadakwasla literature) remains as a reference archive; it is
-no longer applied in code.
+--------------------------------------------------------------------------------
+6.2  Map corridors from Q10 / Q25 / Q100  ** RESTORED 2026-08-17 **
+--------------------------------------------------------------------------------
+Computed in : src/lib/floodZones.js -> buildFloodZones()
+Inputs      : 6.1 discharges, plus the per-cell channel width real_width_m from
+              the twin /meta (3.1 KML geometry), smoothed over 25 cells.
+Method      : downstream hydraulic geometry W = a*Q^0.5, bankfull taken as Q2,
+              so corridor width = channel width * (Q_T / Q2)^0.5, capped at
+              channel width + 900 m. The width is offset either side of the
+              centreline along the local normal to make one polygon per return
+              period, ~683 vertices each. Q is uniform along the reach - with a
+              single gauge there is no upstream/downstream gradient to apply.
+Current output (reach 16.96 km, 1698 cells):
+                10-year   mean width 259 m   range 173-567   area 4.4 km2
+                25-year   mean width 290 m   range 194-635   area 4.9 km2
+                100-year  mean width 330 m   range 221-723   area 5.6 km2
+Caveats     : NO DEM and no bathymetry are involved. This is a width scaled off
+              a channel outline, so it cannot represent terrain, embankments,
+              backwater, culverts or urban drainage, and real inundation is
+              patchy rather than a smooth band. Treat the ranking of the three
+              zones as far more meaningful than any edge on the map.
+Consumed by : src/components/FloodMapOverlay.jsx (checkbox per return period,
+              discharge / mean width / area per row) -> Dashboard.jsx ->
+              MapComponent.jsx layers lyr-flood-zone-fill / -line, drawn under
+              the reach outline.
+UI label    : Estimated
 
 
 ================================================================================
@@ -365,9 +486,11 @@ Not integrated, and each would materially improve accuracy:
   - Sentinel-2 or JRC Global Surface Water for observed water extent.
   - Gauge-based validation of the AQI and weather backend (2.2).
 
-Also missing by construction: GloFAS returns nothing usable before 1997 at
-these cells, so the 1961 Panshet-Khadakwasla dam failure - the worst flood
-Pune has recorded - is outside the model record entirely.
+Also missing by construction: the return-period fit (6.1) has only two numbers
+behind it - a mean and a single record peak - so individual floods such as the
+1961 Panshet-Khadakwasla dam failure, 2005 or 2019 are nowhere in it. A real
+annual maximum series is the single change that would most improve the flood
+zones.
 
 
 ================================================================================
@@ -375,12 +498,13 @@ Pune has recorded - is outside the model record entirely.
 ================================================================================
 
 Acceptable:
-  "GloFAS-derived return periods, bias-corrected to the published Khadakwasla
-   mean annual peak; estimated corridor, not a surveyed flood line."
+  "Return periods fitted (Gumbel) to the published Khadakwasla annual peak
+   statistics, 1940-2007; estimated corridor, not a surveyed flood line."
 
 Not acceptable:
   "100-year flood zone" presented as a regulatory or planning boundary
-  "matches Pune flood records"        (it matches some years, not all - see 6.2)
+  "based on the Pune gauge record"    (two summary figures, not a series - 6.1)
+  "matches Pune flood records"        (only 1958 anchors the fit)
   any use for emergency response, land-use decisions or property-level risk
 
 
@@ -490,3 +614,55 @@ CHANGE LOG
             legend checkboxes as TSS / NDCI / NDWI. Salinity theme card deep-
             links to ?view=waterquality. Removed SalinityMapOverlay and the
             map Salinity button.
+2026-08-17  RESTORED the 10 / 25 / 100-year flood zones, now with NO Open-Meteo
+            dependency. Re-added src/lib/floodZones.js: Gumbel fit on the
+            published Khadakwasla statistics alone (5.1) giving Q10 2103,
+            Q25 2635, Q100 3420 m3/s, then corridors scaled off the KML channel
+            width exactly as before (W ~ Q^0.5, bankfull = Q2). Offline and
+            synchronous - no flood API is called. Sections 6.1 and 6.2 rewritten
+            with the method and current output; 5.1 re-labelled from "bias
+            correction" to sole input; section 8 citation wording and the
+            section 7 note on missing years updated. Drawn on the map as
+            lyr-flood-zone-fill / -line under the reach outline, with one
+            checkbox per return period in the flood panel (all three on by
+            default), each row showing discharge, mean width and area.
+            Still labelled Estimated: no DEM, not a surveyed flood line.
+2026-08-17  Added Urban vegetation to the Soil & land use theme, which until now
+            was a scope card with no data. New asset
+            public/asset/mula-mutha-urban-vegetation.json (+ source .kml) and
+            scripts/convert-urban-vegetation-kml.mjs. Vegetation type (4
+            classes) and vegetation health (5 classes) over 566.4 ha in a
+            strict 1 km river buffer, Sentinel-2 ~10 m, May 2026. New
+            SoilLandUseMapOverlay.jsx panel with the class shares and bars, a
+            "Land use" map button, and ?view=landuse from the theme card;
+            monitoringThemes.js Soil & land use now points there with
+            datasets ['urbanveg']. The map shows only the classified extent
+            rectangle - the KML's overlay PNGs were not in the export, so no
+            per-pixel geometry exists here and both the panel and section 3.2f
+            state that. Also retired the dead .map-salinity-button CSS,
+            reusing it for .map-landuse-button.
+2026-08-18  Refreshed the BOD-COD panel from a newly supplied upstream build
+            (presigned S3 link, since expired). The DATA did not move:
+            dashboard_data.json already carried exactly the same series,
+            alerts, skill and blind metrics, generated 2026-08-18, so it is
+            unchanged apart from the note added in 3.2. What changed is
+            mula-mutha-bod-cod.html, now the newer renderer: CPCB-style class
+            descriptions under the legend, BOD thresholds shown per class, a
+            selected-date marker on the chart, and reach card / alerts /
+            skill panel that all follow the time scrubber instead of being
+            pinned to today (alerts for the scrubbed date plus derived
+            exceedances; per-horizon skill on forecast dates). The vendor
+            build is dark-themed, so its palette, fonts and chart colours
+            were ported back to the app's light theme - see 3.3. The feed's
+            new dark class_colors are left untouched in the embedded fallback
+            but overridden at runtime, so the map ribbon in
+            BodCodMapOverlay.jsx is unaffected.
+2026-08-18  Checked the urban vegetation layer end to end. It renders (assets
+            serve, source and layers build, and it survives basemap switches
+            since applyBasemap swaps tile sources rather than the style), but
+            the only thing on the map is the GroundOverlay box, which measures
+            81.9 km2 against 5.66 km2 of classified vegetation - see 3.2f.
+            Relabelled the panel so the box cannot be mistaken for cover: the
+            checkbox now reads "Show analysed area on map · outline only - the
+            box is the image canvas, not the vegetation", and the class tables
+            no longer dim when the outline is switched off.

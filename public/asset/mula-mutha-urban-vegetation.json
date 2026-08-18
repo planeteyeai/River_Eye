@@ -1,0 +1,145 @@
+{
+  "name": "Mula-Mutha Vegetation Classification - Strict 1km Buffer",
+  "sensor": "Sentinel-2",
+  "pixel_size_m": 10,
+  "captured": "May 2026",
+  "note": "Class 0 (outside the strict 1 km buffer) is not rendered.",
+  "raster": {
+    "type": null,
+    "health": null
+  },
+  "bounds": {
+    "north": 18.55631916100013,
+    "south": 18.5117627229078,
+    "east": 74.00294361118094,
+    "west": 73.84546894187478
+  },
+  "extent": {
+    "type": "FeatureCollection",
+    "features": [
+      {
+        "type": "Feature",
+        "properties": {
+          "label": "Vegetation classification extent · strict 1 km buffer"
+        },
+        "geometry": {
+          "type": "Polygon",
+          "coordinates": [
+            [
+              [
+                73.84546894187478,
+                18.5117627229078
+              ],
+              [
+                74.00294361118094,
+                18.5117627229078
+              ],
+              [
+                74.00294361118094,
+                18.55631916100013
+              ],
+              [
+                73.84546894187478,
+                18.55631916100013
+              ],
+              [
+                73.84546894187478,
+                18.5117627229078
+              ]
+            ]
+          ]
+        }
+      }
+    ]
+  },
+  "layers": [
+    {
+      "id": "type",
+      "title": "Vegetation Type",
+      "classes": [
+        {
+          "class": 1,
+          "label": "Sparse Vegetation",
+          "color": "#d9f0a3",
+          "pixels": 33446,
+          "area_ha": 317.1,
+          "share_pct": 56
+        },
+        {
+          "class": 2,
+          "label": "Moderate Vegetation",
+          "color": "#78c679",
+          "pixels": 13034,
+          "area_ha": 123.6,
+          "share_pct": 21.8
+        },
+        {
+          "class": 3,
+          "label": "Dense Vegetation",
+          "color": "#31a354",
+          "pixels": 12341,
+          "area_ha": 117,
+          "share_pct": 20.7
+        },
+        {
+          "class": 4,
+          "label": "Very Dense Vegetation",
+          "color": "#006837",
+          "pixels": 914,
+          "area_ha": 8.7,
+          "share_pct": 1.5
+        }
+      ],
+      "total_pixels": 59735,
+      "total_area_ha": 566.4
+    },
+    {
+      "id": "health",
+      "title": "Vegetation Health Class",
+      "classes": [
+        {
+          "class": 1,
+          "label": "Very Poor / Severe Stress",
+          "color": "#d7191c",
+          "pixels": 26576,
+          "area_ha": 252,
+          "share_pct": 44.5
+        },
+        {
+          "class": 2,
+          "label": "Poor / Stressed",
+          "color": "#fdae61",
+          "pixels": 11806,
+          "area_ha": 111.9,
+          "share_pct": 19.8
+        },
+        {
+          "class": 3,
+          "label": "Moderate / Fair",
+          "color": "#ffff00",
+          "pixels": 9209,
+          "area_ha": 87.3,
+          "share_pct": 15.4
+        },
+        {
+          "class": 4,
+          "label": "Good / Healthy",
+          "color": "#a6d96a",
+          "pixels": 7586,
+          "area_ha": 71.9,
+          "share_pct": 12.7
+        },
+        {
+          "class": 5,
+          "label": "Very Good / Very Healthy",
+          "color": "#1a9641",
+          "pixels": 4558,
+          "area_ha": 43.2,
+          "share_pct": 7.6
+        }
+      ],
+      "total_pixels": 59735,
+      "total_area_ha": 566.3
+    }
+  ]
+}

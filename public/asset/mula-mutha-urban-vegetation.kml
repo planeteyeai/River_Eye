@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2" xmlns:kml="http://www.opengis.net/kml/2.2" xmlns:atom="http://www.w3.org/2005/Atom">
+<Document>
+	<name>Mula-Mutha Vegetation Classification - Strict 1km Buffer</name>
+	<atom:link rel="app" href="https://www.google.com/earth/about/versions/#earth-pro" title="Google Earth Pro 7.3.7.1155"></atom:link>
+	<Folder>
+		<name>Vegetation Type</name>
+		<GroundOverlay>
+			<name>Vegetation Type - Classified Overlay</name>
+			<description><![CDATA[<h3>Vegetation Type</h3><table style="border-collapse:collapse;font-family:Arial,sans-serif;font-size:12px;"><tr style="font-weight:bold;background:#eee;"><td style="padding:2px 8px;">Color</td><td style="padding:2px 8px;">Class</td><td style="padding:2px 8px;">Pixels</td><td style="padding:2px 8px;">Area</td><td style="padding:2px 8px;">Share</td></tr><tr><td style="padding:2px 8px;background:rgb(217,240,163);border:1px solid #666;">&nbsp;&nbsp;&nbsp;</td><td style="padding:2px 8px;">Sparse Vegetation</td><td style="padding:2px 8px;text-align:right;">33,446</td><td style="padding:2px 8px;text-align:right;">317.1 ha</td><td style="padding:2px 8px;text-align:right;">56.0%</td></tr><tr><td style="padding:2px 8px;background:rgb(120,198,121);border:1px solid #666;">&nbsp;&nbsp;&nbsp;</td><td style="padding:2px 8px;">Moderate Vegetation</td><td style="padding:2px 8px;text-align:right;">13,034</td><td style="padding:2px 8px;text-align:right;">123.6 ha</td><td style="padding:2px 8px;text-align:right;">21.8%</td></tr><tr><td style="padding:2px 8px;background:rgb(49,163,84);border:1px solid #666;">&nbsp;&nbsp;&nbsp;</td><td style="padding:2px 8px;">Dense Vegetation</td><td style="padding:2px 8px;text-align:right;">12,341</td><td style="padding:2px 8px;text-align:right;">117.0 ha</td><td style="padding:2px 8px;text-align:right;">20.7%</td></tr><tr><td style="padding:2px 8px;background:rgb(0,104,55);border:1px solid #666;">&nbsp;&nbsp;&nbsp;</td><td style="padding:2px 8px;">Very Dense Vegetation</td><td style="padding:2px 8px;text-align:right;">914</td><td style="padding:2px 8px;text-align:right;">8.7 ha</td><td style="padding:2px 8px;text-align:right;">1.5%</td></tr></table><p style='font-size:11px;color:#777;'>Pixel size ~10 m (Sentinel-2). Class 0 (outside strict buffer) not rendered.</p>]]></description>
+			<Icon>
+				<href>type_overlay.png</href>
+			</Icon>
+			<LatLonBox>
+				<north>18.55631916100013</north>
+				<south>18.5117627229078</south>
+				<east>74.00294361118094</east>
+				<west>73.84546894187478</west>
+			</LatLonBox>
+		</GroundOverlay>
+		<ScreenOverlay>
+			<name>Vegetation Type Legend</name>
+			<Icon>
+				<href>type_legend.png</href>
+			</Icon>
+			<overlayXY x="0" y="0" xunits="fraction" yunits="fraction"/>
+			<screenXY x="0.02" y="0.02" xunits="fraction" yunits="fraction"/>
+			<rotationXY x="0.5" y="0.5" xunits="fraction" yunits="fraction"/>
+			<size x="-1" y="-1" xunits="pixels" yunits="pixels"/>
+		</ScreenOverlay>
+	</Folder>
+	<Folder>
+		<name>Vegetation Health Class</name>
+		<GroundOverlay>
+			<name>Vegetation Health Class - Classified Overlay</name>
+			<description><![CDATA[<h3>Vegetation Health Class</h3><table style="border-collapse:collapse;font-family:Arial,sans-serif;font-size:12px;"><tr style="font-weight:bold;background:#eee;"><td style="padding:2px 8px;">Color</td><td style="padding:2px 8px;">Class</td><td style="padding:2px 8px;">Pixels</td><td style="padding:2px 8px;">Area</td><td style="padding:2px 8px;">Share</td></tr><tr><td style="padding:2px 8px;background:rgb(215,25,28);border:1px solid #666;">&nbsp;&nbsp;&nbsp;</td><td style="padding:2px 8px;">Very Poor / Severe Stress</td><td style="padding:2px 8px;text-align:right;">26,576</td><td style="padding:2px 8px;text-align:right;">252.0 ha</td><td style="padding:2px 8px;text-align:right;">44.5%</td></tr><tr><td style="padding:2px 8px;background:rgb(253,174,97);border:1px solid #666;">&nbsp;&nbsp;&nbsp;</td><td style="padding:2px 8px;">Poor / Stressed</td><td style="padding:2px 8px;text-align:right;">11,806</td><td style="padding:2px 8px;text-align:right;">111.9 ha</td><td style="padding:2px 8px;text-align:right;">19.8%</td></tr><tr><td style="padding:2px 8px;background:rgb(255,255,0);border:1px solid #666;">&nbsp;&nbsp;&nbsp;</td><td style="padding:2px 8px;">Moderate / Fair</td><td style="padding:2px 8px;text-align:right;">9,209</td><td style="padding:2px 8px;text-align:right;">87.3 ha</td><td style="padding:2px 8px;text-align:right;">15.4%</td></tr><tr><td style="padding:2px 8px;background:rgb(166,217,106);border:1px solid #666;">&nbsp;&nbsp;&nbsp;</td><td style="padding:2px 8px;">Good / Healthy</td><td style="padding:2px 8px;text-align:right;">7,586</td><td style="padding:2px 8px;text-align:right;">71.9 ha</td><td style="padding:2px 8px;text-align:right;">12.7%</td></tr><tr><td style="padding:2px 8px;background:rgb(26,150,65);border:1px solid #666;">&nbsp;&nbsp;&nbsp;</td><td style="padding:2px 8px;">Very Good / Very Healthy</td><td style="padding:2px 8px;text-align:right;">4,558</td><td style="padding:2px 8px;text-align:right;">43.2 ha</td><td style="padding:2px 8px;text-align:right;">7.6%</td></tr></table><p style='font-size:11px;color:#777;'>Pixel size ~10 m (Sentinel-2). Class 0 (outside strict buffer) not rendered.</p>]]></description>
+			<Icon>
+				<href>health_overlay.png</href>
+			</Icon>
+			<LatLonBox>
+				<north>18.55631916100013</north>
+				<south>18.5117627229078</south>
+				<east>74.00294361118094</east>
+				<west>73.84546894187478</west>
+			</LatLonBox>
+		</GroundOverlay>
+		<ScreenOverlay>
+			<name>Vegetation Health Legend</name>
+			<Icon>
+				<href>health_legend.png</href>
+			</Icon>
+			<overlayXY x="0" y="0" xunits="fraction" yunits="fraction"/>
+			<screenXY x="0.02" y="0.02" xunits="fraction" yunits="fraction"/>
+			<rotationXY x="0.5" y="0.5" xunits="fraction" yunits="fraction"/>
+			<size x="-1" y="-1" xunits="pixels" yunits="pixels"/>
+		</ScreenOverlay>
+	</Folder>
+</Document>
+</kml>

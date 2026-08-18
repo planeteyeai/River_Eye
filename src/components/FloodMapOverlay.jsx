@@ -13,6 +13,13 @@ import {
   shortName,
   worstStatus,
 } from '../lib/floodApi'
+import { fetchDepthSummary } from '../lib/depthSummary'
+import {
+  RETURN_PERIODS,
+  ZONE_STYLES,
+  buildFloodZones,
+  getReturnPeriods,
+} from '../lib/floodZones'
 import './FloodMapOverlay.css'
 
 const LEAD_OPTIONS = [6, 24, 48, 72]
@@ -147,7 +154,7 @@ const AssetHydrograph = ({ hydro, meta, threshold }) => {
   )
 }
 
-const FloodMapOverlay = () => {
+const FloodMapOverlay = ({ onZonesChange }) => {
   const [meta, setMeta] = useState(null)
   const [state, setState] = useState(null)
   const [margins, setMargins] = useState([])
@@ -157,6 +164,22 @@ const FloodMapOverlay = () => {
   const [lead, setLead] = useState(24)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState(null)
+  const [depthSummary, setDepthSummary] = useState(null)
+  const [activeZones, setActiveZones] = useState(RETURN_PERIODS)
+
+  useEffect(() => {
+    let cancelled = false
+    fetchDepthSummary()
+      .then((data) => {
+        if (!cancelled) setDepthSummary(data)
+      })
+      .catch(() => {
+        if (!cancelled) setDepthSummary(null)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   const loadLive = useCallback(async (metaData) => {
     const [stateData, marginData] = await Promise.all([fetchState(), fetchMargins()])
@@ -189,6 +212,21 @@ const FloodMapOverlay = () => {
     }
   }, [loadLive])
 
+  // The return periods come from a fixed published gauge record, so the fit is a
+  // constant; only the reach geometry and the visible selection change.
+  const returnPeriods = useMemo(() => getReturnPeriods(), [])
+
+  const zones = useMemo(() => {
+    if (!meta || !activeZones.length) return null
+    return buildFloodZones(meta, returnPeriods, activeZones)
+  }, [meta, returnPeriods, activeZones])
+
+  useEffect(() => {
+    onZonesChange?.(zones?.collection || null)
+  }, [zones, onZonesChange])
+
+  useEffect(() => () => onZonesChange?.(null), [onZonesChange])
+
   useEffect(() => {
     let cancelled = false
     fetchProfile(lead)
@@ -215,6 +253,12 @@ const FloodMapOverlay = () => {
       cancelled = true
     }
   }, [meta, asset, state])
+
+  const toggleZone = (years) => {
+    setActiveZones((current) =>
+      current.includes(years) ? current.filter((v) => v !== years) : [...current, years]
+    )
+  }
 
   const handleAdvance = async () => {
     setBusy(true)
@@ -341,6 +385,97 @@ const FloodMapOverlay = () => {
               </div>
             </div>
           ))}
+        </div>
+
+        <div className="flood-panel-label">Water depth distribution</div>
+        {depthSummary ? (
+          <>
+            <div className="flood-stat-chips">
+              <span>
+                <em>Cells</em>{depthSummary.total_cells}
+              </span>
+              <span>
+                <em>Range</em>
+                {depthSummary.classes[0]?.range_min?.toFixed(1)}–
+                {depthSummary.classes[depthSummary.classes.length - 1]?.range_max?.toFixed(1)} m
+              </span>
+            </div>
+            <div className="flood-depth-distribution">
+              {depthSummary.classes.map((row) => (
+                <div className="flood-depth-row" key={row.class}>
+                  <div className="flood-depth-meta">
+                    <span className="sw" style={{ background: row.color }} />
+                    <span>
+                      <strong>{row.label}</strong>
+                      <em>{row.range_label}</em>
+                    </span>
+                    <strong className="flood-depth-count">
+                      {row.count}
+                      <small>{row.pct}%</small>
+                    </strong>
+                  </div>
+                  <div className="flood-status-track">
+                    <div
+                      className="flood-status-fill"
+                      style={{
+                        width: `${row.pct}%`,
+                        background: row.color,
+                      }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+            <p className="flood-depth-note">Colour on map matches depth class · KML patch overlay</p>
+          </>
+        ) : (
+          <div className="flood-loading">Loading depth distribution…</div>
+        )}
+
+        <div className="flood-panel-divider" />
+
+        <div className="flood-live-section-head">
+          <div>
+            <h4>Return-period flood zones</h4>
+            <small>
+              Khadakwasla annual peaks {returnPeriods.firstYear}–{returnPeriods.lastYear}
+            </small>
+          </div>
+          <span className="flood-provenance is-derived">Estimated</span>
+        </div>
+
+        <div className="flood-zone-rows">
+          {RETURN_PERIODS.map((years) => {
+            const style = ZONE_STYLES[years]
+            const stats = zones?.summary.find((row) => row.years === years)
+            const inputId = `flood-zone-${years}`
+            return (
+              <div className="flood-zone-row" key={years}>
+                <label className="flood-zone-check" htmlFor={inputId}>
+                  <input
+                    id={inputId}
+                    type="checkbox"
+                    checked={activeZones.includes(years)}
+                    onChange={() => toggleZone(years)}
+                  />
+                  <span className="sw" style={{ background: style.color }} />
+                  <strong>{style.label}</strong>
+                </label>
+                <em>{Math.round(returnPeriods.levels[years])} m³/s</em>
+                {stats && (
+                  <>
+                    <span>{Math.round(stats.meanWidthM)} m wide</span>
+                    <span>{stats.areaKm2.toFixed(1)} km²</span>
+                  </>
+                )}
+              </div>
+            )
+          })}
+        </div>
+
+        <div className="flood-zone-caveat">
+          Gumbel fit on {returnPeriods.years} published annual peaks, corridor scaled from the KML
+          channel width · no DEM, not a surveyed flood line
         </div>
 
         <div className="flood-panel-label">Reach</div>

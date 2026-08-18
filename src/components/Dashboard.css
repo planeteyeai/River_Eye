@@ -485,7 +485,7 @@
 
 .map-aqi-button,
 .map-bod-cod-button,
-.map-salinity-button,
+.map-landuse-button,
 .map-flood-button {
   display: flex;
   align-items: center;
@@ -547,20 +547,20 @@
   color: #ffffff;
 }
 
-.map-salinity-button {
-  border: 1px solid #1d4e89;
-  color: #1d4e89;
+.map-landuse-button {
+  border: 1px solid #31a354;
+  color: #1f6b38;
 }
 
-.map-salinity-button:hover {
-  background: rgba(29, 78, 137, 0.1);
-  border-color: #12365f;
-  color: #12365f;
+.map-landuse-button:hover {
+  background: rgba(49, 163, 84, 0.12);
+  border-color: #006837;
+  color: #006837;
 }
 
-.map-salinity-button.active {
-  background: #1d4e89;
-  border-color: #12365f;
+.map-landuse-button.active {
+  background: #31a354;
+  border-color: #006837;
   color: #ffffff;
 }
 

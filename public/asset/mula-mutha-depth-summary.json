@@ -1,0 +1,64 @@
+{
+  "source_kml": "b3ff349b41944af598e7015e55bf1c22.kml",
+  "parameter": "Water depth",
+  "unit": "m",
+  "total_patches": 446,
+  "total_cells": 15593,
+  "classes": [
+    {
+      "class": 0,
+      "label": "Shallow",
+      "color": "#0000ff",
+      "range_min": 1.5,
+      "range_max": 1.6,
+      "range_label": "1.5–1.6 m",
+      "patches": 28,
+      "count": 136,
+      "pct": 0.9
+    },
+    {
+      "class": 1,
+      "label": "Low depth",
+      "color": "#00ff00",
+      "range_min": 1.6,
+      "range_max": 1.7,
+      "range_label": "1.6–1.7 m",
+      "patches": 148,
+      "count": 2502,
+      "pct": 16
+    },
+    {
+      "class": 2,
+      "label": "Moderate depth",
+      "color": "#ffff00",
+      "range_min": 1.7,
+      "range_max": 1.8,
+      "range_label": "1.7–1.8 m",
+      "patches": 87,
+      "count": 9005,
+      "pct": 57.8
+    },
+    {
+      "class": 3,
+      "label": "High depth",
+      "color": "#ff8000",
+      "range_min": 1.8,
+      "range_max": 1.9,
+      "range_label": "1.8–1.9 m",
+      "patches": 103,
+      "count": 3185,
+      "pct": 20.4
+    },
+    {
+      "class": 4,
+      "label": "Very high depth",
+      "color": "#ff0000",
+      "range_min": 1.9,
+      "range_max": 2,
+      "range_label": "1.9–2.0 m",
+      "patches": 80,
+      "count": 765,
+      "pct": 4.9
+    }
+  ]
+}
