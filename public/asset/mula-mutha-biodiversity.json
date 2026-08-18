@@ -1,0 +1,157 @@
+{
+  "name": "Mula Mutha Vegetation Type & Health AOI",
+  "theme": "Biodiversity",
+  "sensor": "Sentinel-2 (estimated ~10 m from overlay extent)",
+  "captured": "May 2026",
+  "note": "Non-vegetation / background removed (fully transparent in both overlays).",
+  "bounds": {
+    "north": 18.561529389648026,
+    "south": 18.509966092339564,
+    "east": 73.99602658349323,
+    "west": 73.85023001288063
+  },
+  "imageCoordinates": [
+    [
+      73.85023001288063,
+      18.561529389648026
+    ],
+    [
+      73.99602658349323,
+      18.561529389648026
+    ],
+    [
+      73.99602658349323,
+      18.509966092339564
+    ],
+    [
+      73.85023001288063,
+      18.509966092339564
+    ]
+  ],
+  "rasters": {
+    "type": "/asset/mula-mutha-biodiversity-overlay.png",
+    "health": "/asset/mula-mutha-biodiversity-health-overlay.png"
+  },
+  "raster": "/asset/mula-mutha-biodiversity-overlay.png",
+  "layers": [
+    {
+      "id": "type",
+      "title": "Vegetation type",
+      "classes": [
+        {
+          "id": 1,
+          "key": "006400",
+          "label": "Trees",
+          "color": "#006400",
+          "class": 1,
+          "pixels": 69981,
+          "share_pct": 60.3,
+          "area_ha": 658.9
+        },
+        {
+          "id": 2,
+          "key": "8B4513",
+          "label": "Shrub / Scrub",
+          "color": "#8B4513",
+          "class": 2,
+          "pixels": 15478,
+          "share_pct": 13.3,
+          "area_ha": 145.7
+        },
+        {
+          "id": 3,
+          "key": "7CFC00",
+          "label": "Grass / Herbaceous",
+          "color": "#7CFC00",
+          "class": 3,
+          "pixels": 29368,
+          "share_pct": 25.3,
+          "area_ha": 276.5
+        },
+        {
+          "id": 4,
+          "key": "800080",
+          "label": "Mixed / Diverse",
+          "color": "#800080",
+          "class": 4,
+          "pixels": 1189,
+          "share_pct": 1.0,
+          "area_ha": 11.2
+        }
+      ],
+      "total_pixels": 116016,
+      "total_area_ha": 1092.3,
+      "image_px": [
+        1623,
+        574
+      ]
+    },
+    {
+      "id": "health",
+      "title": "Vegetation health",
+      "classes": [
+        {
+          "id": 1,
+          "key": "006400",
+          "label": "Very Healthy (80\u2013100)",
+          "color": "#006400",
+          "range": "80\u2013100",
+          "class": 1,
+          "pixels": 59741,
+          "share_pct": 51.5,
+          "area_ha": 562.5
+        },
+        {
+          "id": 2,
+          "key": "32CD32",
+          "label": "Healthy (65\u201380)",
+          "color": "#32CD32",
+          "range": "65\u201380",
+          "class": 2,
+          "pixels": 23058,
+          "share_pct": 19.9,
+          "area_ha": 217.1
+        },
+        {
+          "id": 3,
+          "key": "FFFF00",
+          "label": "Moderate (50\u201365)",
+          "color": "#FFFF00",
+          "range": "50\u201365",
+          "class": 3,
+          "pixels": 15273,
+          "share_pct": 13.2,
+          "area_ha": 143.8
+        },
+        {
+          "id": 4,
+          "key": "FF8C00",
+          "label": "Poor (35\u201350)",
+          "color": "#FF8C00",
+          "range": "35\u201350",
+          "class": 4,
+          "pixels": 11013,
+          "share_pct": 9.5,
+          "area_ha": 103.7
+        },
+        {
+          "id": 5,
+          "key": "FF0000",
+          "label": "Critical (0\u201335)",
+          "color": "#FF0000",
+          "range": "0\u201335",
+          "class": 5,
+          "pixels": 6931,
+          "share_pct": 6.0,
+          "area_ha": 65.3
+        }
+      ],
+      "total_pixels": 116016,
+      "total_area_ha": 1092.4,
+      "image_px": [
+        1623,
+        574
+      ]
+    }
+  ]
+}

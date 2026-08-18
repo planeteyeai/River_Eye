@@ -5,7 +5,9 @@
  *
  *  Salinity intrusion and Water quality share the same water-quality map view;
  *  WST (thermal) sits with TSS / NDCI / NDWI / BOD–COD there. Soil & land use
- *  opens the urban vegetation classification.
+ *  opens the urban vegetation classification. Biodiversity opens the
+ *  vegetation-type raster from the KMZ overlay. Climate impact opens the
+ *  flood / surface-water heatmap from flood_water_timeseries.xlsx.
  */
 
 export const MONITORING_THEMES = [
@@ -23,9 +25,9 @@ export const MONITORING_THEMES = [
   },
   {
     name: 'Biodiversity',
-    desc: 'Forest & mangrove health, habitat corridors, fish habitat proxies',
-    to: '/dashboard',
-    datasets: [],
+    desc: 'Vegetation type and health — trees, shrub, grass and score bands',
+    to: '/dashboard?view=biodiversity',
+    datasets: ['biodiversity'],
   },
   {
     name: 'Soil & land use',
@@ -41,7 +43,7 @@ export const MONITORING_THEMES = [
   },
   {
     name: 'Water quality',
-    desc: 'TSS, NDCI, NDWI and WST class maps, plus BOD–COD demo',
+    desc: 'TSS, NDCI, NDWI and WST July overlays, plus BOD–COD demo',
     to: '/dashboard?view=waterquality',
     datasets: ['tss', 'ndci', 'ndwi', 'wst', 'bodcod'],
   },
@@ -53,9 +55,9 @@ export const MONITORING_THEMES = [
   },
   {
     name: 'Climate impact',
-    desc: 'Sea-level rise, rainfall trends, drought and flood frequency',
-    to: '/dashboard?view=flood',
-    datasets: ['twin'],
+    desc: 'Flood and surface-water heatmap across seven 2026 image pairs',
+    to: '/dashboard?view=climate',
+    datasets: ['floodwater'],
   },
   {
     name: 'Socio-economic',

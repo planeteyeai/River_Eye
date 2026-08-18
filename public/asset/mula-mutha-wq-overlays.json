@@ -1,0 +1,219 @@
+{
+  "name": "Mula-Mutha water-quality overlays",
+  "captured": "July 2026",
+  "note": "Classified GroundOverlay rasters from the July NDCI / NDWI / TSS / WST KMZ pack. The download folder was labelled NDVI; the file is NDWI (water classification). Same AOI as the biodiversity overlays except WST, which is a slightly larger LatLonBox.",
+  "layers": [
+    {
+      "id": "tss",
+      "title": "Turbidity / TSS",
+      "source_kmz": "MulaMutha_Turbidity.kmz",
+      "captured": "July 2026",
+      "raster": "/asset/mula-mutha-tss-overlay.png",
+      "kml": "/asset/mula-mutha-tss-class.kml",
+      "bounds": {
+        "north": 18.561529389648026,
+        "south": 18.509966092339564,
+        "east": 73.99602658349323,
+        "west": 73.85023001288063
+      },
+      "imageCoordinates": [
+        [
+          73.85023001288063,
+          18.561529389648026
+        ],
+        [
+          73.99602658349323,
+          18.561529389648026
+        ],
+        [
+          73.99602658349323,
+          18.509966092339564
+        ],
+        [
+          73.85023001288063,
+          18.509966092339564
+        ]
+      ],
+      "classes": [
+        {
+          "class": 1,
+          "label": "Low",
+          "range": "TSS ≤ 0.62",
+          "color": "#2196F3"
+        },
+        {
+          "class": 2,
+          "label": "Medium",
+          "range": "0.62–1.17",
+          "color": "#FFC107"
+        },
+        {
+          "class": 3,
+          "label": "High",
+          "range": "> 1.17",
+          "color": "#F44336"
+        }
+      ],
+      "bytes": 53253
+    },
+    {
+      "id": "ndci",
+      "title": "NDCI — Chlorophyll",
+      "source_kmz": "MulaMutha_NDCI.kmz",
+      "captured": "July 2026",
+      "raster": "/asset/mula-mutha-ndci-overlay.png",
+      "kml": "/asset/mula-mutha-ndci-class.kml",
+      "bounds": {
+        "north": 18.561529389648026,
+        "south": 18.509966092339564,
+        "east": 73.99602658349323,
+        "west": 73.85023001288063
+      },
+      "imageCoordinates": [
+        [
+          73.85023001288063,
+          18.561529389648026
+        ],
+        [
+          73.99602658349323,
+          18.561529389648026
+        ],
+        [
+          73.99602658349323,
+          18.509966092339564
+        ],
+        [
+          73.85023001288063,
+          18.509966092339564
+        ]
+      ],
+      "classes": [
+        {
+          "class": 1,
+          "label": "Low Chlorophyll",
+          "range": "NDCI < 0",
+          "color": "#C8E6C9"
+        },
+        {
+          "class": 2,
+          "label": "High Chlorophyll",
+          "range": "NDCI ≥ 0",
+          "color": "#1B5E20"
+        }
+      ],
+      "bytes": 48749
+    },
+    {
+      "id": "ndwi",
+      "title": "NDWI — Water Detection",
+      "source_kmz": "MulaMutha_NDWI.kmz",
+      "captured": "July 2026",
+      "raster": "/asset/mula-mutha-ndwi-overlay.png",
+      "kml": "/asset/mula-mutha-ndwi-class.kml",
+      "bounds": {
+        "north": 18.561529389648026,
+        "south": 18.509966092339564,
+        "east": 73.99602658349323,
+        "west": 73.85023001288063
+      },
+      "imageCoordinates": [
+        [
+          73.85023001288063,
+          18.561529389648026
+        ],
+        [
+          73.99602658349323,
+          18.561529389648026
+        ],
+        [
+          73.99602658349323,
+          18.509966092339564
+        ],
+        [
+          73.85023001288063,
+          18.509966092339564
+        ]
+      ],
+      "classes": [
+        {
+          "class": 1,
+          "label": "Non-water",
+          "range": "NDWI ≤ 0",
+          "color": "#8D6E63"
+        },
+        {
+          "class": 2,
+          "label": "Water",
+          "range": "NDWI > 0",
+          "color": "#0D47A1"
+        }
+      ],
+      "bytes": 34960
+    },
+    {
+      "id": "wst",
+      "title": "WST — Temperature",
+      "source_kmz": "MulaMutha_WST_Temperature.kmz",
+      "captured": "July 2026",
+      "raster": "/asset/mula-mutha-wst-overlay.png",
+      "kml": "/asset/mula-mutha-wst-class.kml",
+      "bounds": {
+        "north": 18.56170905270485,
+        "south": 18.509966092339564,
+        "east": 73.99620624655005,
+        "west": 73.85014018135222
+      },
+      "imageCoordinates": [
+        [
+          73.85014018135222,
+          18.56170905270485
+        ],
+        [
+          73.99620624655005,
+          18.56170905270485
+        ],
+        [
+          73.99620624655005,
+          18.509966092339564
+        ],
+        [
+          73.85014018135222,
+          18.509966092339564
+        ]
+      ],
+      "classes": [
+        {
+          "class": 1,
+          "label": "Very Low",
+          "range": "<27 °C",
+          "color": "#1565C0"
+        },
+        {
+          "class": 2,
+          "label": "Low",
+          "range": "27–<30 °C",
+          "color": "#64B5F6"
+        },
+        {
+          "class": 3,
+          "label": "Moderate",
+          "range": "30–<33 °C",
+          "color": "#FFD54F"
+        },
+        {
+          "class": 4,
+          "label": "High",
+          "range": "33–<36 °C",
+          "color": "#E53935"
+        },
+        {
+          "class": 5,
+          "label": "Very High",
+          "range": "≥36 °C",
+          "color": "#8E0000"
+        }
+      ],
+      "bytes": 5215
+    }
+  ]
+}

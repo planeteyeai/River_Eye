@@ -15,22 +15,15 @@ const POLYGON_LINE = 'lyr-area-line'
 const DRAW_SOURCE = 'src-draw-preview'
 const DRAW_LINE = 'lyr-draw-line'
 const DRAW_POINTS = 'lyr-draw-points'
-const TSS_SOURCE = 'src-tss-class'
-const TSS_FILL = 'lyr-tss-fill'
-const TSS_LINE = 'lyr-tss-line'
-const TSS_GEOJSON_URL = '/asset/mula-mutha-tss-class.geojson'
-const NDCI_SOURCE = 'src-ndci-class'
-const NDCI_FILL = 'lyr-ndci-fill'
-const NDCI_LINE = 'lyr-ndci-line'
-const NDCI_GEOJSON_URL = '/asset/mula-mutha-ndci-class.geojson'
-const NDWI_SOURCE = 'src-ndwi-class'
-const NDWI_FILL = 'lyr-ndwi-fill'
-const NDWI_LINE = 'lyr-ndwi-line'
-const NDWI_GEOJSON_URL = '/asset/mula-mutha-ndwi-class.geojson'
-const WST_SOURCE = 'src-wst-class'
-const WST_FILL = 'lyr-wst-fill'
-const WST_LINE = 'lyr-wst-line'
-const WST_GEOJSON_URL = '/asset/mula-mutha-wst-class.geojson'
+const TSS_SOURCE = 'src-tss-overlay'
+const TSS_RASTER = 'lyr-tss-raster'
+const NDCI_SOURCE = 'src-ndci-overlay'
+const NDCI_RASTER = 'lyr-ndci-raster'
+const NDWI_SOURCE = 'src-ndwi-overlay'
+const NDWI_RASTER = 'lyr-ndwi-raster'
+const WST_SOURCE = 'src-wst-overlay'
+const WST_RASTER = 'lyr-wst-raster'
+const WQ_JSON_URL = '/asset/mula-mutha-wq-overlays.json'
 const DEPTH_SOURCE = 'src-depth-class'
 const DEPTH_FILL = 'lyr-depth-fill'
 const DEPTH_LINE = 'lyr-depth-line'
@@ -39,47 +32,36 @@ const URBAN_VEG_SOURCE = 'src-urban-veg'
 const URBAN_VEG_FILL = 'lyr-urban-veg-fill'
 const URBAN_VEG_LINE = 'lyr-urban-veg-line'
 const URBAN_VEG_JSON_URL = '/asset/mula-mutha-urban-vegetation.json'
+const BIODIV_TYPE_SOURCE = 'src-biodiversity-type'
+const BIODIV_TYPE_RASTER = 'lyr-biodiversity-type'
+const BIODIV_HEALTH_SOURCE = 'src-biodiversity-health'
+const BIODIV_HEALTH_RASTER = 'lyr-biodiversity-health'
+const BIODIV_JSON_URL = '/asset/mula-mutha-biodiversity.json'
 const FLOOD_ZONE_SOURCE = 'src-flood-zones'
 const FLOOD_ZONE_FILL = 'lyr-flood-zone-fill'
 const FLOOD_ZONE_LINE = 'lyr-flood-zone-line'
+const CLIMATE_WATER_SOURCE = 'src-climate-water'
+const CLIMATE_WATER_HEAT = 'lyr-climate-water-heat'
+const CLIMATE_FLOOD_SOURCE = 'src-climate-flood'
+const CLIMATE_FLOOD_HEAT = 'lyr-climate-flood-heat'
+const CHAINAGE_SOURCE = 'src-chainage'
+const CHAINAGE_LINE = 'lyr-chainage-line'
+const CHAINAGE_TICKS = 'lyr-chainage-ticks'
+const CHAINAGE_MAJOR = 'lyr-chainage-major'
+const CHAINAGE_LABELS_MAJOR = 'lyr-chainage-labels-km'
+const CHAINAGE_LABELS_MINOR = 'lyr-chainage-labels-100m'
+const CHAINAGE_GEOJSON_URL = '/asset/mula-mutha-chainage.geojson'
 
 const EMPTY_COLLECTION = { type: 'FeatureCollection', features: [] }
 
-const TSS_FILL_COLOR = [
-  'match',
-  ['get', 'class'],
-  1, '#2a9d8f',
-  2, '#c9a227',
-  3, '#c2372a',
-  '#6b8798',
-]
-
-const NDCI_FILL_COLOR = [
-  'match',
-  ['get', 'class'],
-  1, '#95d5b2',
-  2, '#1b4332',
-  '#6b8798',
-]
-
-const NDWI_FILL_COLOR = [
-  'match',
-  ['get', 'class'],
-  1, '#c4b59a',
-  2, '#1d4e89',
-  '#6b8798',
-]
-
-const WST_FILL_COLOR = [
-  'match',
-  ['get', 'class'],
-  1, '#2c7bb6',
-  2, '#abd9e9',
-  3, '#ffffbf',
-  4, '#fdae61',
-  5, '#d7191c',
-  '#6b8798',
-]
+const pointsToCollection = (pairs) => ({
+  type: 'FeatureCollection',
+  features: (pairs || []).map((coordinates) => ({
+    type: 'Feature',
+    properties: {},
+    geometry: { type: 'Point', coordinates },
+  })),
+})
 
 const DEPTH_FILL_COLOR = [
   'match',
@@ -265,36 +247,6 @@ const ensureOverlayLayers = (map) => {
   }
 
   ensureClassLayer(map, {
-    sourceId: TSS_SOURCE,
-    fillId: TSS_FILL,
-    lineId: TSS_LINE,
-    colorExpr: TSS_FILL_COLOR,
-    fillOpacity: 0.5,
-  })
-  ensureClassLayer(map, {
-    sourceId: NDCI_SOURCE,
-    fillId: NDCI_FILL,
-    lineId: NDCI_LINE,
-    colorExpr: NDCI_FILL_COLOR,
-    fillOpacity: 0.58,
-  })
-  ensureClassLayer(map, {
-    sourceId: NDWI_SOURCE,
-    fillId: NDWI_FILL,
-    lineId: NDWI_LINE,
-    colorExpr: NDWI_FILL_COLOR,
-    fillOpacity: 0.52,
-  })
-  ensureClassLayer(map, {
-    sourceId: WST_SOURCE,
-    fillId: WST_FILL,
-    lineId: WST_LINE,
-    colorExpr: WST_FILL_COLOR,
-    fillOpacity: 0.55,
-  })
-  // Depth is the primary read on the Digital Twin map, so it renders near-opaque
-  // like the source KML in Google Earth, with matching outlines to close cell seams.
-  ensureClassLayer(map, {
     sourceId: DEPTH_SOURCE,
     fillId: DEPTH_FILL,
     lineId: DEPTH_LINE,
@@ -332,6 +284,168 @@ const ensureOverlayLayers = (map) => {
       },
     })
   }
+
+  // Classified rasters (biodiversity KMZs and July water-quality KMZs).
+  const ensureImageRaster = (sourceId, layerId, url) => {
+    if (map.getSource(sourceId)) return
+    map.addSource(sourceId, {
+      type: 'image',
+      url,
+      coordinates: [
+        [0, 0],
+        [0, 0],
+        [0, 0],
+        [0, 0],
+      ],
+    })
+    map.addLayer({
+      id: layerId,
+      type: 'raster',
+      source: sourceId,
+      layout: { visibility: 'none' },
+      paint: {
+        'raster-opacity': 0.82,
+        'raster-fade-duration': 0,
+      },
+    })
+  }
+  ensureImageRaster(TSS_SOURCE, TSS_RASTER, '/asset/mula-mutha-tss-overlay.png')
+  ensureImageRaster(NDCI_SOURCE, NDCI_RASTER, '/asset/mula-mutha-ndci-overlay.png')
+  ensureImageRaster(NDWI_SOURCE, NDWI_RASTER, '/asset/mula-mutha-ndwi-overlay.png')
+  ensureImageRaster(WST_SOURCE, WST_RASTER, '/asset/mula-mutha-wst-overlay.png')
+  ensureImageRaster(
+    BIODIV_TYPE_SOURCE,
+    BIODIV_TYPE_RASTER,
+    '/asset/mula-mutha-biodiversity-overlay.png',
+  )
+  ensureImageRaster(
+    BIODIV_HEALTH_SOURCE,
+    BIODIV_HEALTH_RASTER,
+    '/asset/mula-mutha-biodiversity-health-overlay.png',
+  )
+
+  const ensureHeatmap = (sourceId, layerId, colors) => {
+    if (map.getSource(sourceId)) return
+    map.addSource(sourceId, { type: 'geojson', data: EMPTY_COLLECTION })
+    map.addLayer({
+      id: layerId,
+      type: 'heatmap',
+      source: sourceId,
+      layout: { visibility: 'none' },
+      paint: {
+        'heatmap-weight': 1,
+        'heatmap-intensity': ['interpolate', ['linear'], ['zoom'], 11, 0.45, 15, 1.15],
+        'heatmap-radius': ['interpolate', ['linear'], ['zoom'], 11, 10, 16, 28],
+        'heatmap-opacity': 0.78,
+        'heatmap-color': [
+          'interpolate',
+          ['linear'],
+          ['heatmap-density'],
+          0, 'rgba(0,0,0,0)',
+          ...colors,
+        ],
+      },
+    })
+  }
+  ensureHeatmap(CLIMATE_WATER_SOURCE, CLIMATE_WATER_HEAT, [
+    0.15, 'rgba(47,155,214,0.15)',
+    0.4, '#7ec8e3',
+    0.7, '#2f9bd6',
+    1, '#0d4a73',
+  ])
+  ensureHeatmap(CLIMATE_FLOOD_SOURCE, CLIMATE_FLOOD_HEAT, [
+    0.12, 'rgba(255,209,102,0.2)',
+    0.35, '#fc8d59',
+    0.65, '#d73027',
+    1, '#7f0000',
+  ])
+
+  // Chainage sits last so the centreline and km marks stay readable over depth.
+  if (!map.getSource(CHAINAGE_SOURCE)) {
+    map.addSource(CHAINAGE_SOURCE, { type: 'geojson', data: EMPTY_COLLECTION })
+    map.addLayer({
+      id: CHAINAGE_LINE,
+      type: 'line',
+      source: CHAINAGE_SOURCE,
+      filter: ['==', ['get', 'kind'], 'centerline'],
+      layout: { visibility: 'none', 'line-cap': 'round', 'line-join': 'round' },
+      paint: {
+        'line-color': '#ffd166',
+        'line-width': 2.2,
+        'line-opacity': 0.95,
+      },
+    })
+    map.addLayer({
+      id: CHAINAGE_TICKS,
+      type: 'circle',
+      source: CHAINAGE_SOURCE,
+      filter: ['all', ['==', ['get', 'kind'], 'station'], ['==', ['get', 'major'], false]],
+      layout: { visibility: 'none' },
+      paint: {
+        'circle-radius': ['interpolate', ['linear'], ['zoom'], 12, 2, 16, 3.4],
+        'circle-color': '#ffffff',
+        'circle-stroke-width': 1.2,
+        'circle-stroke-color': '#1a1a1a',
+        'circle-opacity': 0.9,
+      },
+    })
+    map.addLayer({
+      id: CHAINAGE_MAJOR,
+      type: 'circle',
+      source: CHAINAGE_SOURCE,
+      filter: ['all', ['==', ['get', 'kind'], 'station'], ['==', ['get', 'major'], true]],
+      layout: { visibility: 'none' },
+      paint: {
+        'circle-radius': ['interpolate', ['linear'], ['zoom'], 11, 4, 16, 6],
+        'circle-color': '#ffd166',
+        'circle-stroke-width': 1.6,
+        'circle-stroke-color': '#1a1a1a',
+      },
+    })
+    map.addLayer({
+      id: CHAINAGE_LABELS_MAJOR,
+      type: 'symbol',
+      source: CHAINAGE_SOURCE,
+      filter: ['all', ['==', ['get', 'kind'], 'station'], ['==', ['get', 'major'], true]],
+      minzoom: 11,
+      layout: {
+        visibility: 'none',
+        'text-field': ['get', 'name'],
+        'text-font': ['Open Sans Regular'],
+        'text-size': 11,
+        'text-offset': [0, 1.15],
+        'text-anchor': 'top',
+        'text-allow-overlap': false,
+        'text-ignore-placement': false,
+      },
+      paint: {
+        'text-color': '#fff8e7',
+        'text-halo-color': 'rgba(12, 18, 22, 0.88)',
+        'text-halo-width': 1.6,
+      },
+    })
+    map.addLayer({
+      id: CHAINAGE_LABELS_MINOR,
+      type: 'symbol',
+      source: CHAINAGE_SOURCE,
+      filter: ['all', ['==', ['get', 'kind'], 'station'], ['==', ['get', 'major'], false]],
+      minzoom: 14.2,
+      layout: {
+        visibility: 'none',
+        'text-field': ['get', 'name'],
+        'text-font': ['Open Sans Regular'],
+        'text-size': 9.5,
+        'text-offset': [0, 1.05],
+        'text-anchor': 'top',
+        'text-allow-overlap': false,
+      },
+      paint: {
+        'text-color': '#ffffff',
+        'text-halo-color': 'rgba(12, 18, 22, 0.8)',
+        'text-halo-width': 1.2,
+      },
+    })
+  }
 }
 
 const MapComponent = ({
@@ -347,18 +461,24 @@ const MapComponent = ({
   showWstLayer = false,
   showDepthLayer = false,
   showUrbanVegLayer = false,
+  showBiodiversityTypeLayer = false,
+  showBiodiversityHealthLayer = false,
+  showClimateFloodHeat = false,
+  showClimateWaterHeat = false,
+  climatePeriodId = 4,
+  showChainageLayer = false,
   floodZones = null,
 }) => {
   const containerRef = useRef(null)
   const mapRef = useRef(null)
   const mapReadyRef = useRef(false)
   const mapLayerRef = useRef(mapLayer)
-  const tssLoadedRef = useRef(false)
-  const ndciLoadedRef = useRef(false)
-  const ndwiLoadedRef = useRef(false)
-  const wstLoadedRef = useRef(false)
+  const wqMetaRef = useRef(null)
   const depthLoadedRef = useRef(false)
   const urbanVegLoadedRef = useRef(false)
+  const biodiversityMetaRef = useRef(null)
+  const climatePointsRef = useRef({})
+  const chainageLoadedRef = useRef(false)
   const drawPointsRef = useRef([])
   const drawHandlersRef = useRef({ click: null, dblclick: null })
   const [drawPointCount, setDrawPointCount] = React.useState(0)
@@ -550,32 +670,47 @@ const MapComponent = ({
     const map = mapRef.current
     if (!map || !mapReady) return undefined
 
-    const setVisibility = (visible) => {
-      const value = visible ? 'visible' : 'none'
-      if (map.getLayer(TSS_FILL)) map.setLayoutProperty(TSS_FILL, 'visibility', value)
-      if (map.getLayer(TSS_LINE)) map.setLayoutProperty(TSS_LINE, 'visibility', value)
+    const wqLayers = [
+      { id: 'tss', sourceId: TSS_SOURCE, layerId: TSS_RASTER, on: showTssLayer },
+      { id: 'ndci', sourceId: NDCI_SOURCE, layerId: NDCI_RASTER, on: showNdciLayer },
+      { id: 'ndwi', sourceId: NDWI_SOURCE, layerId: NDWI_RASTER, on: showNdwiLayer },
+      { id: 'wst', sourceId: WST_SOURCE, layerId: WST_RASTER, on: showWstLayer },
+    ]
+
+    const setVisibility = (layerId, visible) => {
+      if (map.getLayer(layerId)) {
+        map.setLayoutProperty(layerId, 'visibility', visible ? 'visible' : 'none')
+      }
     }
 
-    if (!showTssLayer) {
-      setVisibility(false)
+    const anyOn = wqLayers.some((layer) => layer.on)
+    if (!anyOn) {
+      wqLayers.forEach((layer) => setVisibility(layer.layerId, false))
       return undefined
     }
 
     let cancelled = false
     const load = async () => {
       try {
-        if (!tssLoadedRef.current) {
-          const response = await fetch(TSS_GEOJSON_URL, { cache: 'no-store' })
-          if (!response.ok) throw new Error(`TSS layer → ${response.status}`)
-          const geojson = await response.json()
-          if (cancelled) return
-          map.getSource(TSS_SOURCE)?.setData(geojson)
-          tssLoadedRef.current = true
+        if (!wqMetaRef.current) {
+          const response = await fetch(WQ_JSON_URL, { cache: 'no-store' })
+          if (!response.ok) throw new Error(`Water-quality overlays → ${response.status}`)
+          wqMetaRef.current = await response.json()
         }
-        if (!cancelled) setVisibility(true)
+        if (cancelled) return
+
+        const byId = Object.fromEntries((wqMetaRef.current.layers || []).map((layer) => [layer.id, layer]))
+        wqLayers.forEach((layer) => {
+          const meta = byId[layer.id]
+          const source = map.getSource(layer.sourceId)
+          if (source?.updateImage && meta?.raster && meta?.imageCoordinates) {
+            source.updateImage({ url: meta.raster, coordinates: meta.imageCoordinates })
+          }
+          setVisibility(layer.layerId, layer.on)
+        })
       } catch (error) {
-        console.error('Failed to load TSS / turbidity layer', error)
-        if (!cancelled) setVisibility(false)
+        console.error('Failed to load water-quality overlays', error)
+        if (!cancelled) wqLayers.forEach((layer) => setVisibility(layer.layerId, false))
       }
     }
     load()
@@ -583,124 +718,7 @@ const MapComponent = ({
     return () => {
       cancelled = true
     }
-  }, [showTssLayer, mapReady])
-
-  useEffect(() => {
-    const map = mapRef.current
-    if (!map || !mapReady) return undefined
-
-    const setVisibility = (visible) => {
-      const value = visible ? 'visible' : 'none'
-      if (map.getLayer(NDCI_FILL)) map.setLayoutProperty(NDCI_FILL, 'visibility', value)
-      if (map.getLayer(NDCI_LINE)) map.setLayoutProperty(NDCI_LINE, 'visibility', value)
-    }
-
-    if (!showNdciLayer) {
-      setVisibility(false)
-      return undefined
-    }
-
-    let cancelled = false
-    const load = async () => {
-      try {
-        if (!ndciLoadedRef.current) {
-          const response = await fetch(NDCI_GEOJSON_URL, { cache: 'no-store' })
-          if (!response.ok) throw new Error(`NDCI layer → ${response.status}`)
-          const geojson = await response.json()
-          if (cancelled) return
-          map.getSource(NDCI_SOURCE)?.setData(geojson)
-          ndciLoadedRef.current = true
-        }
-        if (!cancelled) setVisibility(true)
-      } catch (error) {
-        console.error('Failed to load NDCI / chlorophyll layer', error)
-        if (!cancelled) setVisibility(false)
-      }
-    }
-    load()
-
-    return () => {
-      cancelled = true
-    }
-  }, [showNdciLayer, mapReady])
-
-  useEffect(() => {
-    const map = mapRef.current
-    if (!map || !mapReady) return undefined
-
-    const setVisibility = (visible) => {
-      const value = visible ? 'visible' : 'none'
-      if (map.getLayer(NDWI_FILL)) map.setLayoutProperty(NDWI_FILL, 'visibility', value)
-      if (map.getLayer(NDWI_LINE)) map.setLayoutProperty(NDWI_LINE, 'visibility', value)
-    }
-
-    if (!showNdwiLayer) {
-      setVisibility(false)
-      return undefined
-    }
-
-    let cancelled = false
-    const load = async () => {
-      try {
-        if (!ndwiLoadedRef.current) {
-          const response = await fetch(NDWI_GEOJSON_URL, { cache: 'no-store' })
-          if (!response.ok) throw new Error(`NDWI layer → ${response.status}`)
-          const geojson = await response.json()
-          if (cancelled) return
-          map.getSource(NDWI_SOURCE)?.setData(geojson)
-          ndwiLoadedRef.current = true
-        }
-        if (!cancelled) setVisibility(true)
-      } catch (error) {
-        console.error('Failed to load NDWI / water-detection layer', error)
-        if (!cancelled) setVisibility(false)
-      }
-    }
-    load()
-
-    return () => {
-      cancelled = true
-    }
-  }, [showNdwiLayer, mapReady])
-
-  useEffect(() => {
-    const map = mapRef.current
-    if (!map || !mapReady) return undefined
-
-    const setVisibility = (visible) => {
-      const value = visible ? 'visible' : 'none'
-      if (map.getLayer(WST_FILL)) map.setLayoutProperty(WST_FILL, 'visibility', value)
-      if (map.getLayer(WST_LINE)) map.setLayoutProperty(WST_LINE, 'visibility', value)
-    }
-
-    if (!showWstLayer) {
-      setVisibility(false)
-      return undefined
-    }
-
-    let cancelled = false
-    const load = async () => {
-      try {
-        if (!wstLoadedRef.current) {
-          const response = await fetch(WST_GEOJSON_URL, { cache: 'no-store' })
-          if (!response.ok) throw new Error(`WST layer → ${response.status}`)
-          const geojson = await response.json()
-          if (cancelled) return
-          map.getSource(WST_SOURCE)?.setData(geojson)
-          wstLoadedRef.current = true
-        }
-        if (!cancelled) setVisibility(true)
-      } catch (error) {
-        console.error('Failed to load WST / temperature layer', error)
-        if (!cancelled) setVisibility(false)
-      }
-    }
-    load()
-
-    return () => {
-      cancelled = true
-    }
-  }, [showWstLayer, mapReady])
+  }, [showTssLayer, showNdciLayer, showNdwiLayer, showWstLayer, mapReady])
 
   useEffect(() => {
     const map = mapRef.current
@@ -779,6 +797,155 @@ const MapComponent = ({
       cancelled = true
     }
   }, [showUrbanVegLayer, mapReady])
+
+  useEffect(() => {
+    const map = mapRef.current
+    if (!map || !mapReady) return undefined
+
+    const setVisibility = (layerId, visible) => {
+      if (map.getLayer(layerId)) {
+        map.setLayoutProperty(layerId, 'visibility', visible ? 'visible' : 'none')
+      }
+    }
+
+    const anyOn = showBiodiversityTypeLayer || showBiodiversityHealthLayer
+    if (!anyOn) {
+      setVisibility(BIODIV_TYPE_RASTER, false)
+      setVisibility(BIODIV_HEALTH_RASTER, false)
+      return undefined
+    }
+
+    let cancelled = false
+    const load = async () => {
+      try {
+        if (!biodiversityMetaRef.current) {
+          const response = await fetch(BIODIV_JSON_URL, { cache: 'no-store' })
+          if (!response.ok) throw new Error(`Biodiversity → ${response.status}`)
+          biodiversityMetaRef.current = await response.json()
+        }
+        if (cancelled) return
+
+        const doc = biodiversityMetaRef.current
+        const typeUrl = doc.rasters?.type || doc.raster
+        const healthUrl = doc.rasters?.health
+        const coords = doc.imageCoordinates
+
+        const typeSource = map.getSource(BIODIV_TYPE_SOURCE)
+        if (typeSource?.updateImage && typeUrl) {
+          typeSource.updateImage({ url: typeUrl, coordinates: coords })
+        }
+        const healthSource = map.getSource(BIODIV_HEALTH_SOURCE)
+        if (healthSource?.updateImage && healthUrl) {
+          healthSource.updateImage({ url: healthUrl, coordinates: coords })
+        }
+
+        if (!cancelled) {
+          setVisibility(BIODIV_TYPE_RASTER, showBiodiversityTypeLayer)
+          setVisibility(BIODIV_HEALTH_RASTER, showBiodiversityHealthLayer)
+        }
+      } catch (error) {
+        console.error('Failed to load biodiversity rasters', error)
+        if (!cancelled) {
+          setVisibility(BIODIV_TYPE_RASTER, false)
+          setVisibility(BIODIV_HEALTH_RASTER, false)
+        }
+      }
+    }
+    load()
+
+    return () => {
+      cancelled = true
+    }
+  }, [showBiodiversityTypeLayer, showBiodiversityHealthLayer, mapReady])
+
+  useEffect(() => {
+    const map = mapRef.current
+    if (!map || !mapReady) return undefined
+
+    const setVisibility = (layerId, visible) => {
+      if (map.getLayer(layerId)) {
+        map.setLayoutProperty(layerId, 'visibility', visible ? 'visible' : 'none')
+      }
+    }
+
+    const anyOn = showClimateFloodHeat || showClimateWaterHeat
+    if (!anyOn) {
+      setVisibility(CLIMATE_WATER_HEAT, false)
+      setVisibility(CLIMATE_FLOOD_HEAT, false)
+      return undefined
+    }
+
+    let cancelled = false
+    const load = async () => {
+      try {
+        const period = Number.isFinite(climatePeriodId) ? climatePeriodId : 4
+        if (!climatePointsRef.current[period]) {
+          const response = await fetch(`/asset/mula-mutha-flood-water-${period}.json`, { cache: 'no-store' })
+          if (!response.ok) throw new Error(`Climate heatmap → ${response.status}`)
+          climatePointsRef.current[period] = await response.json()
+        }
+        if (cancelled) return
+        const pack = climatePointsRef.current[period]
+        map.getSource(CLIMATE_WATER_SOURCE)?.setData(pointsToCollection(pack.water))
+        map.getSource(CLIMATE_FLOOD_SOURCE)?.setData(pointsToCollection(pack.flood))
+        setVisibility(CLIMATE_WATER_HEAT, showClimateWaterHeat)
+        setVisibility(CLIMATE_FLOOD_HEAT, showClimateFloodHeat)
+      } catch (error) {
+        console.error('Failed to load climate impact heatmap', error)
+        if (!cancelled) {
+          setVisibility(CLIMATE_WATER_HEAT, false)
+          setVisibility(CLIMATE_FLOOD_HEAT, false)
+        }
+      }
+    }
+    load()
+
+    return () => {
+      cancelled = true
+    }
+  }, [showClimateFloodHeat, showClimateWaterHeat, climatePeriodId, mapReady])
+
+  useEffect(() => {
+    const map = mapRef.current
+    if (!map || !mapReady) return undefined
+
+    const setVisibility = (visible) => {
+      const value = visible ? 'visible' : 'none'
+      ;[CHAINAGE_LINE, CHAINAGE_TICKS, CHAINAGE_MAJOR, CHAINAGE_LABELS_MAJOR, CHAINAGE_LABELS_MINOR].forEach(
+        (layerId) => {
+          if (map.getLayer(layerId)) map.setLayoutProperty(layerId, 'visibility', value)
+        },
+      )
+    }
+
+    if (!showChainageLayer) {
+      setVisibility(false)
+      return undefined
+    }
+
+    let cancelled = false
+    const load = async () => {
+      try {
+        if (!chainageLoadedRef.current) {
+          const response = await fetch(CHAINAGE_GEOJSON_URL, { cache: 'no-store' })
+          if (!response.ok) throw new Error(`Chainage layer → ${response.status}`)
+          const geojson = await response.json()
+          if (cancelled) return
+          map.getSource(CHAINAGE_SOURCE)?.setData(geojson)
+          chainageLoadedRef.current = true
+        }
+        if (!cancelled) setVisibility(true)
+      } catch (error) {
+        console.error('Failed to load chainage layer', error)
+        if (!cancelled) setVisibility(false)
+      }
+    }
+    load()
+
+    return () => {
+      cancelled = true
+    }
+  }, [showChainageLayer, mapReady])
 
   useEffect(() => {
     const map = mapRef.current

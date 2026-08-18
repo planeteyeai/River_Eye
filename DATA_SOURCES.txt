@@ -5,7 +5,7 @@ CLIMATEEYE - DATA SOURCES AND REFERENCES
 Every number, geometry and tile the app displays, where it comes from, and what
 may and may not be claimed about it.
 
-Last updated : 2026-08-14
+Last updated : 2026-08-18
 Maintained by: update this file in the SAME change that adds, removes or
                re-points a data source. See section 9.
 
@@ -123,110 +123,150 @@ TO CONFIRM: original provenance of this KML (who digitised it, from what
            imagery or survey, and at what date).
 
 --------------------------------------------------------------------------------
+3.1b  public/asset/mula-mutha-chainage.geojson (+ .kml)
+--------------------------------------------------------------------------------
+Content  : Mula Mutha River – Chainage Analysis. Centreline LineString plus
+           165 stations every 100 m from 0+000 to 16+400 (16.4 km). Labels
+           use the supplied names (km+metres). First point
+           73.85617563, 18.53227447; last 73.99163603, 18.52245607.
+Source   : user-supplied KML e16af4da5acc48c597e4e8b1c64a5d74.kml, copied to
+           public/asset/mula-mutha-chainage.kml and converted by
+           scripts/convert-chainage-kml.mjs.
+Used in  : src/components/MapComponent.jsx (src-chainage: centreline, 100 m
+           ticks, km marks and labels). Toggle in FloodMapOverlay.jsx;
+           shown on Digital Twin when the flood overlay is open (default on).
+Kind     : REAL geometry (digitised chainage). Not a surveyed flood line.
+           The KML description also mentions corridor polygons ±1100 m;
+           those polygons are not in the file, so they are not drawn.
+UI label : none (reference geometry, not a modelled product).
+River boundary polygon in the same KML is not drawn — the reach outline
+           already comes from mula-mutha-river.kml (3.1).
+TO CONFIRM: who computed the chainage, from which centreline, and the date.
+
+--------------------------------------------------------------------------------
 3.2  public/asset/dashboard_data.json
 --------------------------------------------------------------------------------
 Content  : BOD/COD water-quality figures for 7 reaches, Sangam-Bund Garden to
-           Hadapsar-Manjari, with history and forecast series
+           Hadapsar-Manjari. Hourly fused history (2184 hours, 2026-05-20T00:00
+           to 2026-08-18T23:00) and 336-hour / 14-day forecast to 2026-09-01
+           23:00. Each step carries BOD p10/p50/p90 and COD p10/p50/p90.
 Used in  : src/components/BodCodMapOverlay.jsx, and fetched by
            mula-mutha-bod-cod.html (3.3), which prefers this served file over
            the copy embedded in its own <script id="fallback">.
-Generated: 2026-08-18 (per its own "generated" field). 90-day history
-           2026-05-20 to 2026-08-18, 14-day forecast to 2026-09-01.
-Checked  : 2026-08-18 against a freshly supplied build of the upstream panel.
-           Every series, alert, skill row and blind metric was byte-identical;
-           the only difference was class_colors, where the upstream feed now
-           ships a dark-theme palette. This file keeps the light palette
+Generated: 2026-08-18 (generated field). data_refreshed_at 2026-08-18T09:26:09Z.
+           timeline_resolution = hourly. history_hours 2184, forecast_hours 336.
+           history_days 90 and forecast_days 14 are still present as aliases.
+Checked  : 2026-08-18 against upstream HTML 09e4df1b0bfb4305a48323ef3d2e3b48.
+           Series, alerts, skill and blind metrics match the vendor fallback.
+           class_colors in this served file keep the light palette
            (A #1668b3 B #1c8a55 C #b8860b D #d2701a E #c2372a NA #6b8798)
-           because BodCodMapOverlay.jsx colours the map ribbon straight from
-           it, and the HTML panel overrides the feed palette for the same
-           reason. Re-check both if the feed is refreshed.
+           because BodCodMapOverlay.jsx and the HTML panel both draw on white.
+           The vendor fallback still ships the dark palette; both consumers
+           override it at runtime. class_labels (CPCB-style) are new.
 Status   : SYNTHETIC DEMO. Its own demo_notice reads: "MULA-MUTHA SYNTHETIC
            DEMO ... Figures validate software, not real-world accuracy."
            Class thresholds bod_edges = [2, 3, 6, 10] mg/L.
 No CPCB or MPCB observation is used anywhere in the BOD/COD view.
 
 --------------------------------------------------------------------------------
-3.2b  public/asset/mula-mutha-tss-class.geojson (+ .kml)
+3.2b  public/asset/mula-mutha-tss-overlay.png (+ .kml) and
+      public/asset/mula-mutha-wq-overlays.json
 --------------------------------------------------------------------------------
-Content  : Turbidity / TSS class polygons over the Mula-Mutha, May 2026
-           (period in source name: 2026-05-01 to 2026-05-31).
-           Classes supplied with the product:
-             1 = Low    (≤ 0.62)
-             2 = Medium (0.62–1.17)
-             3 = High   (> 1.17)
-           291 cells (191 / 86 / 14). GeoJSON derived from the uploaded KML
-           89d60b30671f4f18b2bed16e2802306e.kml; original also kept as
-           mula-mutha-tss-class.kml.
-Used in  : src/components/MapComponent.jsx (fill+line layer when water-quality
-           overlay is open and TSS toggle is on); legend in
-           BodCodMapOverlay.jsx. Theme card: Water quality.
+Content  : Turbidity / TSS classified GroundOverlay over the Mula-Mutha,
+           July 2026 (period taken from the source folder name; the KML has
+           no date). Replaces the May 2026 classed-polygon GeoJSON.
+           Classes and colours from the KMZ legend:
+             1 = Low    TSS ≤ 0.62     #2196F3
+             2 = Medium 0.62–1.17      #FFC107
+             3 = High   > 1.17         #F44336
+           Extent (shared with NDCI / NDWI and with biodiversity 3.2g):
+             N 18.56152939 S 18.50996609 E 73.99602658 W 73.85023001.
+           Raster 53,253 bytes. Index JSON: mula-mutha-wq-overlays.json.
+Source   : JULY NDCI NDVI TSS &WST / MulaMutha_Turbidity.kmz
+           (folder e26f9dcc9f5542aabde877f7c2dfca31). The folder is labelled
+           NDVI; there is no NDVI product — the water index is NDWI (3.2d).
+Derived  : scripts/convert-july-wq-kmz.mjs unpacks each KMZ and copies PNG +
+           doc.kml. Source KML kept as mula-mutha-tss-class.kml.
+Used in  : src/components/MapComponent.jsx (image source src-tss-overlay /
+           lyr-tss-raster when water-quality overlay is open and TSS toggle
+           is on); legend in BodCodMapOverlay.jsx. Theme card: Water quality.
 UI label : Estimated
-Status   : classed product map bundled as a static asset. Not live.
-TO CONFIRM: upstream sensor/model, physical units for the 0.62 / 1.17 breaks
-           (NTU vs mg/L TSS vs index), and whether the class map is measured
-           or modelled.
+Status   : classed product raster bundled as a static asset. Not live.
+TO CONFIRM: exact July date range, upstream sensor/model, physical units for
+           the 0.62 / 1.17 breaks (NTU vs mg/L TSS vs index), and whether
+           the overlay is measured or modelled.
 
 --------------------------------------------------------------------------------
-3.2c  public/asset/mula-mutha-ndci-class.geojson (+ .kml)
+3.2c  public/asset/mula-mutha-ndci-overlay.png (+ .kml)
 --------------------------------------------------------------------------------
-Content  : NDCI — Chlorophyll class polygons over the Mula-Mutha, May 2026
-           (period in source name: 2026-05-01 to 2026-05-31).
-           Classes supplied with the product:
-             1 = Low Chlorophyll  (NDCI < 0)
-             2 = High Chlorophyll (NDCI ≥ 0)
-           24 cells (5 / 19). GeoJSON derived from the uploaded KML
-           8a697955694b4d05b5e0da8c548f18d8 (1).kml; original also kept as
-           mula-mutha-ndci-class.kml.
-Used in  : src/components/MapComponent.jsx (fill+line layer when water-quality
-           overlay is open and NDCI toggle is on); legend in
-           BodCodMapOverlay.jsx. Theme card: Water quality.
+Content  : NDCI — Chlorophyll classified GroundOverlay, July 2026 (folder
+           name; KML has no date). Replaces the May 2026 classed-polygon
+           GeoJSON. Classes and colours from the KMZ legend:
+             1 = Low Chlorophyll  NDCI < 0   #C8E6C9
+             2 = High Chlorophyll NDCI ≥ 0   #1B5E20
+           Same LatLonBox as TSS (3.2b). Raster 48,749 bytes.
+Source   : JULY NDCI NDVI TSS &WST / MulaMutha_NDCI.kmz
+Derived  : scripts/convert-july-wq-kmz.mjs. Source KML kept as
+           mula-mutha-ndci-class.kml. Bounds listed in
+           mula-mutha-wq-overlays.json.
+Used in  : src/components/MapComponent.jsx (src-ndci-overlay /
+           lyr-ndci-raster); legend in BodCodMapOverlay.jsx.
+           Theme card: Water quality.
 UI label : Estimated
-Status   : classed product map bundled as a static asset. Not live.
-TO CONFIRM: satellite sensor / NDCI recipe, and whether NDCI ≥ 0 is the
-           intended high-chlorophyll cut for this reach.
+Status   : classed product raster bundled as a static asset. Not live.
+TO CONFIRM: satellite sensor / NDCI recipe, exact July date range, and
+           whether NDCI ≥ 0 is the intended high-chlorophyll cut.
 
 --------------------------------------------------------------------------------
-3.2d  public/asset/mula-mutha-ndwi-class.geojson (+ .kml)
+3.2d  public/asset/mula-mutha-ndwi-overlay.png (+ .kml)
 --------------------------------------------------------------------------------
-Content  : NDWI — Water Detection class polygons over the Mula-Mutha, May 2026
-           (period in source name: 2026-05-01 to 2026-05-31).
-           Classes supplied with the product:
-             1 = Land / Non-water (NDWI < 0)
-             2 = Water            (NDWI ≥ 0)
-           79 cells (2 / 77). GeoJSON derived from the uploaded KML
-           44cb265d1183415fb987ca9397f25677.kml; original also kept as
-           mula-mutha-ndwi-class.kml.
-Used in  : src/components/MapComponent.jsx (fill+line layer when water-quality
-           overlay is open and NDWI toggle is on); legend in
-           BodCodMapOverlay.jsx. Theme card: Water quality.
+Content  : NDWI — Water Detection classified GroundOverlay, July 2026
+           (folder name; KML has no date). Replaces the May 2026 classed-
+           polygon GeoJSON. The download folder was labelled "NDVI"; the
+           KMZ and KML are NDWI. No NDVI layer is shipped. Classes and
+           colours from the KMZ legend:
+             1 = Non-water  NDWI ≤ 0   #8D6E63
+             2 = Water      NDWI > 0   #0D47A1
+           Same LatLonBox as TSS (3.2b). Raster 34,960 bytes.
+Source   : JULY NDCI NDVI TSS &WST / MulaMutha_NDWI.kmz
+Derived  : scripts/convert-july-wq-kmz.mjs. Source KML kept as
+           mula-mutha-ndwi-class.kml. Bounds listed in
+           mula-mutha-wq-overlays.json.
+Used in  : src/components/MapComponent.jsx (src-ndwi-overlay /
+           lyr-ndwi-raster); legend in BodCodMapOverlay.jsx.
+           Theme card: Water quality.
 UI label : Estimated
-Status   : classed product map bundled as a static asset. Not live.
-TO CONFIRM: satellite sensor / NDWI recipe, and whether NDWI ≥ 0 is the
-           intended water cut for this reach.
+Status   : classed product raster bundled as a static asset. Not live.
+TO CONFIRM: satellite sensor / NDWI recipe, exact July date range, and
+           whether NDWI > 0 is the intended water cut for this reach.
 
 --------------------------------------------------------------------------------
-3.2e  public/asset/mula-mutha-wst-class.geojson (+ .kml)
+3.2e  public/asset/mula-mutha-wst-overlay.png (+ .kml)
 --------------------------------------------------------------------------------
-Content  : WST — Water Surface Temperature (°C) class polygons over the
-           Mula-Mutha, 2026-05-01 to 2026-05-30.
-           Classes supplied with the product:
-             1 = Very Low   (<27 °C)
-             2 = Low        (27–<30 °C)
-             3 = Moderate   (30–<33 °C)
-             4 = High       (33–<36 °C)
-             5 = Very High  (≥36 °C)
-           122 cells in this export (0 / 0 / 2 / 32 / 88) — classes 1–2
-           are empty for this period. GeoJSON derived from
-           843aea2a6486443da6e845f82c6f2638 (1).kml; original kept as
-           mula-mutha-wst-class.kml.
-Used in  : src/components/MapComponent.jsx (fill+line layer when water-quality
-           overlay is open and WST toggle is on); legend checkbox in
-           BodCodMapOverlay.jsx. Theme cards: Water quality and Salinity
-           intrusion (WST as thermal proxy inside the water-quality view).
+Content  : WST — Water Surface Temperature (°C) classified GroundOverlay,
+           July 2026 (folder name; KML has no date). Replaces the May 2026
+           classed-polygon GeoJSON. Classes and colours from the KMZ legend:
+             1 = Very Low   <27 °C      #1565C0
+             2 = Low        27–<30 °C   #64B5F6
+             3 = Moderate   30–<33 °C   #FFD54F
+             4 = High       33–<36 °C   #E53935
+             5 = Very High  ≥36 °C      #8E0000
+           LatLonBox is slightly larger than TSS/NDCI/NDWI:
+             N 18.56170905 S 18.50996609 E 73.99620625 W 73.85014018.
+           Raster is sparse: 5,215 bytes as supplied. Used as-is.
+Source   : JULY NDCI NDVI TSS &WST / MulaMutha_WST_Temperature.kmz
+Derived  : scripts/convert-july-wq-kmz.mjs. Source KML kept as
+           mula-mutha-wst-class.kml. Bounds listed in
+           mula-mutha-wq-overlays.json.
+Used in  : src/components/MapComponent.jsx (src-wst-overlay / lyr-wst-raster
+           when water-quality overlay is open and WST toggle is on); legend
+           checkbox in BodCodMapOverlay.jsx. Theme cards: Water quality and
+           Salinity intrusion (WST as thermal proxy inside the water-quality
+           view).
 UI label : Estimated
-Status   : classed product map bundled as a static asset. Not live.
-TO CONFIRM: satellite sensor / WST retrieval method, and whether the °C
-           breaks are fixed product bins or reach-specific.
+Status   : classed product raster bundled as a static asset. Not live.
+TO CONFIRM: satellite sensor / WST retrieval method, exact July date range,
+           and whether the °C breaks are fixed product bins or reach-specific.
 
 --------------------------------------------------------------------------------
 3.2f  public/asset/mula-mutha-urban-vegetation.json (+ .kml)
@@ -278,6 +318,81 @@ TO CONFIRM: the index behind "health" (NDVI? NDRE?) and its class breaks, the
            is meant to exclude cropland inside the buffer.
 
 --------------------------------------------------------------------------------
+3.2g  public/asset/mula-mutha-biodiversity.json (+ type/health .kml + .png)
+--------------------------------------------------------------------------------
+Content  : Vegetation type AND vegetation health classification for the
+           Mula-Mutha AOI — habitat / biodiversity proxy. Both overlays share
+           the same LatLonBox. Non-vegetation / background is transparent.
+           Vegetation type (overlay.png, 1623 x 574):
+             Trees              #006400   658.9 ha   60.3%
+             Grass / Herbaceous #7CFC00   276.5 ha   25.3%
+             Shrub / Scrub      #8B4513   145.7 ha   13.3%
+             Mixed / Diverse    #800080    11.2 ha    1.0%
+           Vegetation health (health_overlay.png, same extent):
+             Very Healthy 80–100  #006400   562.5 ha   51.5%
+             Healthy 65–80        #32CD32   217.1 ha   19.9%
+             Moderate 50–65       #FFFF00   143.8 ha   13.2%
+             Poor 35–50           #FF8C00   103.7 ha    9.5%
+             Critical 0–35        #FF0000    65.3 ha    6.0%
+           Total classified vegetation: ~1092 ha (116,016 opaque pixels each).
+           Extent: N 18.56152939 S 18.50996609 E 73.99602658 W 73.85023001.
+Derived  : Type from eb3c93c20f2944a1a4655fc21bac443a.kmz (also "(1)" copy,
+           identical SHA-256 overlay). Health from
+           5370d01d69f042b0b75cee2d66285739.kmz (downloaded alongside).
+           scripts/convert-biodiversity-kmz.mjs + sample-biodiversity-
+           overlay.py for class shares. Assets:
+             mula-mutha-biodiversity-overlay.png
+             mula-mutha-biodiversity-health-overlay.png
+             mula-mutha-biodiversity.kml
+             mula-mutha-biodiversity-health.kml
+             mula-mutha-biodiversity.json
+Used in  : src/components/MapComponent.jsx (two image sources:
+           lyr-biodiversity-type / lyr-biodiversity-health); panel in
+           BiodiversityMapOverlay.jsx with independent checkboxes.
+           Dashboard "Biodiversity" button and ?view=biodiversity.
+           Theme card: Biodiversity.
+UI label : Estimated
+Status   : classed product rasters bundled as static assets. Not live.
+TO CONFIRM: classification recipe and date behind "May 2026", score method
+           for the health bands, and whether this AOI matches the strict
+           1 km buffer used in 3.2f.
+
+--------------------------------------------------------------------------------
+3.2h  public/asset/mula-mutha-flood-water.json (+ period point files)
+--------------------------------------------------------------------------------
+Content  : Classed flood / surface-water sample points for seven pre/post
+           image pairs on the Mula-Mutha (21 May 2026 – 8 Aug 2026).
+           The heatmap is point density, not a surveyed flood outline.
+           Areas come from the workbook's areas sheet:
+             21 May–2 Jun    water 106.42 ha   flood 18.23 ha
+             2–14 Jun        water 105.81 ha   flood 17.76 ha
+             14–26 Jun       water 104.18 ha   flood 18.09 ha
+             26 Jun–3 Jul    water  87.26 ha   flood  7.16 ha
+             3–15 Jul        water  92.02 ha   flood 69.67 ha  (peak; default)
+             15–27 Jul       water 156.07 ha   flood 30.36 ha
+             27 Jul–8 Aug    water 169.93 ha   flood  6.27 ha
+           Points (lat_lon sheet): 105,636 rows — flood 18,095, water 87,541.
+           Extent ~ lat 18.521–18.547, lon 73.855–73.993.
+           Classes in the UI: flood #c2372a, water #2f9bd6.
+Source   : flood_water_timeseries.xlsx
+           (upload id d71568218a3e490db80433414967a4e5.xlsx).
+           The .xlsx is NOT bundled. Converted by
+           scripts/convert-flood-water-xlsx.py into:
+             mula-mutha-flood-water.json          (index + areas)
+             mula-mutha-flood-water-0.json … -6.json
+           Period files are compact { flood: [[lon,lat],…], water: […] }.
+Used in  : ClimateImpactMapOverlay.jsx (checkboxes, period bars, ha stats)
+           MapComponent.jsx heatmap layers lyr-climate-flood-heat /
+           lyr-climate-water-heat. Dashboard Climate impact view and
+           ?view=climate. Theme card: Climate impact.
+UI label : Estimated
+Status   : classed sample points bundled as static JSON. Not live.
+           Not a regulatory flood line and not a complete inundation map.
+TO CONFIRM: sensor, algorithm and pixel size behind the classed points
+           (flood vs water). Do not treat this as filling the Sentinel-2 /
+           JRC Global Surface Water gap in section 7.
+
+--------------------------------------------------------------------------------
 3.3  Standalone HTML panels
 --------------------------------------------------------------------------------
 Files    : public/asset/mula-mutha-flood.html
@@ -289,12 +404,13 @@ Status   : self-contained pages with their own inline fetches.
            ECMWF fetches and charts were removed 2026-08-14. Keep in step
            with this file.
            mula-mutha-bod-cod.html reads dashboard_data.json (3.2) and falls
-           back to its own embedded copy. It is an upstream-generated page,
-           re-themed here for the app's light UI: the light class palette,
-           Lora/Inter/JetBrains Mono and the light chart/ribbon colours are
-           local edits on top of the vendor build. Re-apply them whenever a
-           new build is dropped in - the vendor ships a dark theme, which is
-           illegible in this white iframe. Everything else in the file,
+           back to its own embedded copy. Upstream build of 2026-08-18 is
+           hourly (step ±1 hour, 30-minute refresh, COD series on the reach
+           card and chart). It is re-themed here for the app's light UI: the
+           light class palette, Lora/Inter/JetBrains Mono and the light
+           chart/ribbon colours are local edits on top of the vendor dark
+           theme. Re-apply them whenever a new build is dropped in
+           (scripts/port-bod-cod-html.mjs). Everything else in the file,
            including all analysis logic, is upstream's.
 
 --------------------------------------------------------------------------------
@@ -505,6 +621,8 @@ Not acceptable:
   "100-year flood zone" presented as a regulatory or planning boundary
   "based on the Pune gauge record"    (two summary figures, not a series - 6.1)
   "matches Pune flood records"        (only 1958 anchors the fit)
+  the climate-impact heatmap as a surveyed or official flood extent
+    (it is classed sample-point density from 3.2h, not a flood line)
   any use for emergency response, land-use decisions or property-level risk
 
 
@@ -666,3 +784,54 @@ CHANGE LOG
             checkbox now reads "Show analysed area on map · outline only - the
             box is the image canvas, not the vegetation", and the class tables
             no longer dim when the outline is switched off.
+2026-08-18  Added Biodiversity vegetation-type layer from
+            eb3c93c20f2944a1a4655fc21bac443a.kmz. Unlike the urban-vegetation
+            KML (3.2f), this .kmz included overlay.png, so the classified
+            raster is draped on the map (lyr-biodiversity-raster) at the KML
+            LatLonBox. Four classes: Trees 658.9 ha (60.3%), Grass 276.5 ha
+            (25.3%), Shrub 145.7 ha (13.3%), Mixed 11.2 ha (1.0%). New assets
+            mula-mutha-biodiversity.json, .kml and -overlay.png; conversion
+            scripts convert-biodiversity-kmz.mjs and sample-biodiversity-
+            overlay.py. BiodiversityMapOverlay.jsx panel with checkbox;
+            Dashboard "Biodiversity" button and ?view=biodiversity; theme
+            card updated. Section 3.2g added.
+2026-08-18  Biodiversity card now carries BOTH vegetation type and vegetation
+            health. The re-supplied type KMZ
+            (eb3c93c20f2944a1a4655fc21bac443a (1).kmz / MulaMutha_VegetationType)
+            is byte-identical to the existing type overlay. The companion
+            health KMZ (5370d01d69f042b0b75cee2d66285739.kmz) was added as
+            mula-mutha-biodiversity-health-overlay.png with five score bands
+            (Very Healthy 51.5% → Critical 6.0%). MapComponent has separate
+            type/health image layers; BiodiversityMapOverlay has independent
+            checkboxes (type on by default). Section 3.2g rewritten.
+2026-08-18  Added Mula-Mutha chainage from e16af4da5acc48c597e4e8b1c64a5d74.kml
+            (centreline + 165 stations every 100 m, 0+000 to 16+400). Bundled
+            as mula-mutha-chainage.geojson and .kml; convert-chainage-kml.mjs.
+            Drawn on Digital Twin (default on) with km labels and 100 m ticks.
+            Section 3.1b added. The KML's advertised ±1100 m corridors are
+            absent from the file and were not invented.
+2026-08-18  Refreshed BOD-COD from upstream HTML
+            09e4df1b0bfb4305a48323ef3d2e3b48. The feed is now hourly (2184 h
+            history + 336 h forecast) with COD p10/p50/p90 on every step,
+            CPCB class_labels, hour-step buttons and a 30-minute refresh.
+            dashboard_data.json replaced; mula-mutha-bod-cod.html ported to
+            the light theme via scripts/port-bod-cod-html.mjs. Map overlay
+            follows the scrubber, shows COD, and downsamples the hourly
+            chart. Still synthetic demo data — see 3.2.
+2026-08-18  Replaced May 2026 TSS / NDCI / NDWI / WST classed-polygon
+            GeoJSON with July 2026 classified GroundOverlay rasters from
+            JULY NDCI NDVI TSS &WST (MulaMutha_Turbidity / _NDCI / _NDWI /
+            _WST_Temperature.kmz). MapComponent now drapes PNG image sources
+            using bounds in mula-mutha-wq-overlays.json; legends in
+            BodCodMapOverlay.jsx use the KMZ hex colours. The folder is
+            labelled NDVI but the product is NDWI — no NDVI layer was added.
+            May *.geojson class maps removed. Period is the folder name;
+            KMLs have no date. WST overlay is sparse (5 KB) as supplied.
+            Sections 3.2b–3.2e rewritten. convert-july-wq-kmz.mjs.
+2026-08-18  Climate impact now opens a flood / surface-water heatmap from
+            flood_water_timeseries.xlsx (d71568218a3e490db80433414967a4e5;
+            seven 2026 image pairs, 105,636 classed points). Bundled as
+            mula-mutha-flood-water.json plus period files 0–6; the xlsx is
+            not in the repo. MapLibre heatmap layers, Climate impact Views
+            item, hub card ?view=climate. Default period is the 3–15 Jul
+            peak (69.67 ha flood). Label Estimated. Section 3.2h added.

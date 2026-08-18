@@ -154,7 +154,7 @@ const AssetHydrograph = ({ hydro, meta, threshold }) => {
   )
 }
 
-const FloodMapOverlay = ({ onZonesChange }) => {
+const FloodMapOverlay = ({ onZonesChange, showChainageLayer = true, onToggleChainage }) => {
   const [meta, setMeta] = useState(null)
   const [state, setState] = useState(null)
   const [margins, setMargins] = useState([])
@@ -431,6 +431,30 @@ const FloodMapOverlay = ({ onZonesChange }) => {
         ) : (
           <div className="flood-loading">Loading depth distribution…</div>
         )}
+
+        <div className="flood-panel-divider" />
+
+        <div className="flood-live-section-head">
+          <div>
+            <h4>Chainage</h4>
+            <small>Centreline stations every 100 m · 0+000 to 16+400</small>
+          </div>
+        </div>
+        <div className="flood-zone-rows">
+          <div className="flood-zone-row">
+            <label className="flood-zone-check" htmlFor="flood-chainage">
+              <input
+                id="flood-chainage"
+                type="checkbox"
+                checked={showChainageLayer}
+                onChange={() => onToggleChainage?.(!showChainageLayer)}
+              />
+              <span className="sw" style={{ background: '#ffd166' }} />
+              <strong>Show chainage on map</strong>
+            </label>
+            <em>km marks + 100 m ticks</em>
+          </div>
+        </div>
 
         <div className="flood-panel-divider" />
 

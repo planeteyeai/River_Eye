@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react'
 import './SoilLandUseMapOverlay.css'
 
-const URBAN_VEG_URL = '/asset/mula-mutha-urban-vegetation.json'
+const BIODIV_URL = '/asset/mula-mutha-biodiversity.json'
 
-const ClassRows = ({ heading, layer }) => (
+const ClassRows = ({ layer }) => (
   <div className="lulc-group">
     <div className="lulc-group-head">
-      <span>{heading}</span>
+      <span>{layer.title}</span>
       <em>{layer.total_area_ha} ha</em>
     </div>
     {layer.classes.map((row) => (
@@ -28,21 +28,26 @@ const ClassRows = ({ heading, layer }) => (
   </div>
 )
 
-/** Soil & land use overlay — urban vegetation type and health around the river. */
-const SoilLandUseMapOverlay = ({ showExtentLayer = true, onToggleExtent }) => {
+/** Biodiversity overlay — vegetation type and health rasters from KMZ. */
+const BiodiversityMapOverlay = ({
+  showTypeLayer = true,
+  showHealthLayer = false,
+  onToggleType,
+  onToggleHealth,
+}) => {
   const [doc, setDoc] = useState(null)
   const [openInfoId, setOpenInfoId] = useState('type')
 
   useEffect(() => {
     let cancelled = false
-    fetch(URBAN_VEG_URL, { cache: 'no-store' })
+    fetch(BIODIV_URL, { cache: 'no-store' })
       .then((response) => {
-        if (!response.ok) throw new Error(`Urban vegetation → ${response.status}`)
+        if (!response.ok) throw new Error(`Biodiversity → ${response.status}`)
         return response.json()
       })
       .then((json) => !cancelled && setDoc(json))
       .catch((error) => {
-        console.error('Failed to load urban vegetation classes', error)
+        console.error('Failed to load biodiversity vegetation classes', error)
       })
     return () => {
       cancelled = true
@@ -51,12 +56,26 @@ const SoilLandUseMapOverlay = ({ showExtentLayer = true, onToggleExtent }) => {
 
   if (!doc) return null
 
-  const typeLayer = doc.layers.find((layer) => layer.id === 'type')
-  const healthLayer = doc.layers.find((layer) => layer.id === 'health')
+  const typeLayer = doc.layers?.find((layer) => layer.id === 'type')
+  const healthLayer = doc.layers?.find((layer) => layer.id === 'health')
 
-  const infoRows = [
-    { id: 'type', title: 'Vegetation type', layer: typeLayer, heading: 'Vegetation type' },
-    { id: 'health', title: 'Vegetation health', layer: healthLayer, heading: 'Vegetation health' },
+  const rows = [
+    {
+      id: 'type',
+      title: 'Vegetation type',
+      checked: showTypeLayer,
+      onChange: onToggleType,
+      layer: typeLayer,
+      inputId: 'layer-biodiv-type',
+    },
+    {
+      id: 'health',
+      title: 'Vegetation health',
+      checked: showHealthLayer,
+      onChange: onToggleHealth,
+      layer: healthLayer,
+      inputId: 'layer-biodiv-health',
+    },
   ]
 
   const toggleInfo = (id) => {
@@ -65,48 +84,42 @@ const SoilLandUseMapOverlay = ({ showExtentLayer = true, onToggleExtent }) => {
 
   return (
     <div className="lulc-map-overlays">
-      <div className="lulc-legend" aria-label="Urban vegetation classes">
+      <div className="lulc-legend" aria-label="Biodiversity vegetation classes">
         <div className="lulc-legend-title">
-          <span className="lulc-check-text">Urban vegetation</span>
+          <span className="lulc-check-text">Biodiversity</span>
         </div>
 
-        <label className="lulc-check lulc-extent-check" htmlFor="layer-urban-veg">
-          <input
-            id="layer-urban-veg"
-            type="checkbox"
-            checked={Boolean(showExtentLayer)}
-            onChange={(event) => onToggleExtent?.(event.target.checked)}
-          />
-          <span>
-            Show analysed area on map
-            <em>outline only — the box is the image canvas, not the vegetation</em>
-          </span>
-        </label>
-
-        {infoRows.map((row) => {
-          if (!row.layer) return null
+        {rows.map((row) => {
           const isOpen = openInfoId === row.id
           return (
             <div
               key={row.id}
-              className={`lulc-info-drop${isOpen ? ' is-open' : ''}`}
+              className={`lulc-info-drop${row.checked ? '' : ' is-off'}${isOpen ? ' is-open' : ''}`}
             >
               <div className="lulc-info-head">
-                <span className="lulc-check-text">{row.title}</span>
+                <label className="lulc-check" htmlFor={row.inputId}>
+                  <input
+                    id={row.inputId}
+                    type="checkbox"
+                    checked={Boolean(row.checked)}
+                    onChange={(event) => row.onChange?.(event.target.checked)}
+                  />
+                  <span className="lulc-check-text">{row.title}</span>
+                </label>
                 <button
                   type="button"
                   className="lulc-info-toggle"
                   aria-expanded={isOpen}
-                  aria-controls={`lulc-urban-info-${row.id}`}
+                  aria-controls={`lulc-info-${row.id}`}
                   onClick={() => toggleInfo(row.id)}
                 >
                   Info
                   <span className="lulc-info-caret" aria-hidden="true" />
                 </button>
               </div>
-              {isOpen ? (
-                <div className="lulc-info-body" id={`lulc-urban-info-${row.id}`}>
-                  <ClassRows heading={row.heading} layer={row.layer} />
+              {isOpen && row.layer ? (
+                <div className="lulc-info-body" id={`lulc-info-${row.id}`}>
+                  <ClassRows layer={row.layer} />
                 </div>
               ) : null}
             </div>
@@ -117,4 +130,4 @@ const SoilLandUseMapOverlay = ({ showExtentLayer = true, onToggleExtent }) => {
   )
 }
 
-export default SoilLandUseMapOverlay
+export default BiodiversityMapOverlay

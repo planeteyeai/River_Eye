@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+  <Document>
+    <name>Mula Mutha Vegetation Health Class AOI</name>
+    <description>Vegetation health classification (background / non-vegetation made transparent)</description>
+
+    <GroundOverlay>
+      <name>Vegetation Health Score</name>
+      <description><![CDATA[
+        Colors:<br/>
+        80-100 Very Healthy: #006400 (dark green)<br/>
+        65-80 Healthy: #32CD32 (lime green)<br/>
+        50-65 Moderate: #FFFF00 (yellow)<br/>
+        35-50 Poor: #FF8C00 (orange)<br/>
+        0-35 Critical: #FF0000 (red)<br/>
+        Background / Non-Vegetation: transparent
+      ]]></description>
+      <color>ffffffff</color>
+      <Icon>
+        <href>health_overlay.png</href>
+        <viewBoundScale>0.75</viewBoundScale>
+      </Icon>
+      <LatLonBox>
+        <north>18.561529389648026</north>
+        <south>18.509966092339564</south>
+        <east>73.99602658349323</east>
+        <west>73.85023001288063</west>
+        <rotation>0</rotation>
+      </LatLonBox>
+    </GroundOverlay>
+  </Document>
+</kml>

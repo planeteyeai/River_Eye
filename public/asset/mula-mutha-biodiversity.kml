@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+  <Document>
+    <name>Mula Mutha Vegetation Type AOI</name>
+    <description>Vegetation type classification (Non-Vegetation class removed / made transparent)</description>
+
+    <Style id="legendTrees">
+      <IconStyle><color>ff006400</color></IconStyle>
+    </Style>
+
+    <GroundOverlay>
+      <name>Vegetation Type</name>
+      <description><![CDATA[
+        Colors:<br/>
+        Trees: #006400 (dark green)<br/>
+        Shrub / Scrub: #8B4513 (brown)<br/>
+        Grass / Herbaceous: #7CFC00 (bright green)<br/>
+        Mixed / Diverse: #800080 (purple)<br/>
+        Non-Vegetation: removed (fully transparent)
+      ]]></description>
+      <color>ffffffff</color>
+      <Icon>
+        <href>overlay.png</href>
+        <viewBoundScale>0.75</viewBoundScale>
+      </Icon>
+      <LatLonBox>
+        <north>18.561529389648026</north>
+        <south>18.509966092339564</south>
+        <east>73.99602658349323</east>
+        <west>73.85023001288063</west>
+        <rotation>0</rotation>
+      </LatLonBox>
+    </GroundOverlay>
+  </Document>
+</kml>

@@ -486,6 +486,7 @@
 .map-aqi-button,
 .map-bod-cod-button,
 .map-landuse-button,
+.map-biodiversity-button,
 .map-flood-button {
   display: flex;
   align-items: center;
@@ -561,6 +562,23 @@
 .map-landuse-button.active {
   background: #31a354;
   border-color: #006837;
+  color: #ffffff;
+}
+
+.map-biodiversity-button {
+  border: 1px solid #006400;
+  color: #004d00;
+}
+
+.map-biodiversity-button:hover {
+  background: rgba(0, 100, 0, 0.1);
+  border-color: #004d00;
+  color: #004d00;
+}
+
+.map-biodiversity-button.active {
+  background: #006400;
+  border-color: #004d00;
   color: #ffffff;
 }
 
