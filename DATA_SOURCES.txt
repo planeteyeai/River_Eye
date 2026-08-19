@@ -912,3 +912,13 @@ CHANGE LOG
             rendered nothing. The loader rejects HTML bodies with the offending
             path, and the climate panel now says the timeseries is unavailable
             instead of disappearing. No source, endpoint or value changed.
+2026-08-19  Build fix: the production bundle never shipped maplibre-gl's web
+            worker, because maplibre 6 resolves it at runtime through
+            new URL(name, import.meta.url) which Rollup cannot follow. On the
+            deployed site /assets/maplibre-gl-worker.mjs fell through to
+            index.html, the module worker refused the HTML MIME type, and every
+            geojson-backed layer (climate heatmaps, flood corridors, chainage,
+            urban vegetation) drew nothing while the raster overlays looked
+            fine. vite.config.js now emits maplibre-gl-worker.mjs and
+            maplibre-gl-shared.mjs beside the entry chunk. Localhost was never
+            affected, so this only ever reproduced on the hosted build.
