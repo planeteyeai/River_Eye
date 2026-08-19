@@ -899,3 +899,9 @@ CHANGE LOG
             mula-mutha-depth-overlay.png at ~4 m and Gaussian-blurred, then
             draped as a linearly resampled image. Class colours and cell
             counts unchanged. Section 3.1c added. rasterize-depth-overlay.py.
+2026-08-19  Rendering fix only, no source or value changed. Image overlays
+            (depth, TSS, NDCI, NDWI, WST, biodiversity) are now created on the
+            Mula-Mutha LatLonBox from mula-mutha-wq-overlays.json instead of
+            four [0,0] corners, which projected to Infinity under 3D terrain.
+            The AWS Terrarium DEM source is added before setTerrain, and
+            per-layer bounds from the asset JSON still override the initial box.

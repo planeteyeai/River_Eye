@@ -13,6 +13,8 @@ export default defineConfig({
   plugins: [react()],
   optimizeDeps: {
     include: ['react', 'react-dom', 'react-dom/client', 'react/jsx-runtime', 'react/jsx-dev-runtime'],
+    // maplibre-gl ships its own bundled worker; prebundling it drops
+    // maplibre-gl-worker.mjs and every geojson-backed layer stops rendering.
     exclude: ['maplibre-gl'],
   },
   server: {

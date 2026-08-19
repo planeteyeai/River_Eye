@@ -53,6 +53,26 @@ const CHAINAGE_GEOJSON_URL = '/asset/mula-mutha-chainage.geojson'
 
 const EMPTY_COLLECTION = { type: 'FeatureCollection', features: [] }
 
+// Image sources must have a real LatLonBox. Four identical [0,0] corners
+// project to Infinity once terrain is on (MapLibre image source + DEM).
+const MULA_MUTHA_IMAGE_COORDS = [
+  [73.85023001288063, 18.561529389648026],
+  [73.99602658349323, 18.561529389648026],
+  [73.99602658349323, 18.509966092339564],
+  [73.85023001288063, 18.509966092339564],
+]
+
+const isValidImageCoordinates = (coords) =>
+  Array.isArray(coords) &&
+  coords.length === 4 &&
+  coords.every(
+    (corner) =>
+      Array.isArray(corner) &&
+      corner.length >= 2 &&
+      Number.isFinite(corner[0]) &&
+      Number.isFinite(corner[1]),
+  )
+
 const pointsToCollection = (pairs) => ({
   type: 'FeatureCollection',
   features: (pairs || []).map((coordinates) => ({
@@ -228,12 +248,7 @@ const ensureOverlayLayers = (map) => {
     map.addSource(sourceId, {
       type: 'image',
       url,
-      coordinates: [
-        [0, 0],
-        [0, 0],
-        [0, 0],
-        [0, 0],
-      ],
+      coordinates: MULA_MUTHA_IMAGE_COORDS,
     })
     map.addLayer({
       id: layerId,
@@ -508,8 +523,6 @@ const MapComponent = ({
       const initialId = mapLayerRef.current || DEFAULT_BASEMAP
       const initial = BASEMAP_MAP[initialId] || BASEMAP_MAP[DEFAULT_BASEMAP]
       ensureBasemapLayers(map, initial)
-      applyBasemap(map, initialId)
-      applyTerrain3d(map, Boolean(initial?.mode3d), initialId)
 
       if (!map.getSource('src-terrarium')) {
         map.addSource('src-terrarium', {
@@ -521,6 +534,8 @@ const MapComponent = ({
         })
       }
 
+      applyBasemap(map, initialId)
+      applyTerrain3d(map, Boolean(initial?.mode3d), initialId)
       ensureOverlayLayers(map)
       setMapReady(true)
     })
@@ -645,7 +660,7 @@ const MapComponent = ({
         wqLayers.forEach((layer) => {
           const meta = byId[layer.id]
           const source = map.getSource(layer.sourceId)
-          if (source?.updateImage && meta?.raster && meta?.imageCoordinates) {
+          if (source?.updateImage && meta?.raster && isValidImageCoordinates(meta.imageCoordinates)) {
             source.updateImage({ url: meta.raster, coordinates: meta.imageCoordinates })
           }
           setVisibility(layer.layerId, layer.on)
@@ -686,7 +701,7 @@ const MapComponent = ({
           const meta = await response.json()
           if (cancelled) return
           const source = map.getSource(DEPTH_SOURCE)
-          if (source?.updateImage && meta?.raster && meta?.imageCoordinates) {
+          if (source?.updateImage && meta?.raster && isValidImageCoordinates(meta.imageCoordinates)) {
             source.updateImage({ url: meta.raster, coordinates: meta.imageCoordinates })
             depthLoadedRef.current = true
           }
@@ -776,11 +791,11 @@ const MapComponent = ({
         const coords = doc.imageCoordinates
 
         const typeSource = map.getSource(BIODIV_TYPE_SOURCE)
-        if (typeSource?.updateImage && typeUrl) {
+        if (typeSource?.updateImage && typeUrl && isValidImageCoordinates(coords)) {
           typeSource.updateImage({ url: typeUrl, coordinates: coords })
         }
         const healthSource = map.getSource(BIODIV_HEALTH_SOURCE)
-        if (healthSource?.updateImage && healthUrl) {
+        if (healthSource?.updateImage && healthUrl && isValidImageCoordinates(coords)) {
           healthSource.updateImage({ url: healthUrl, coordinates: coords })
         }
 

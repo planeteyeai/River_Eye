@@ -101,12 +101,22 @@ export function applyTerrain3d(map, enabled, basemapId) {
   if (!map) return
 
   if (enabled) {
-    map.setTerrain({ source: 'src-terrarium', exaggeration: 1.85 })
+    if (!map.getSource('src-terrarium')) return
+    try {
+      map.setTerrain({ source: 'src-terrarium', exaggeration: 1.85 })
+    } catch (error) {
+      console.error('Failed to enable 3D terrain', error)
+      return
+    }
     map.easeTo({ pitch: 58, duration: 900 })
     map.dragRotate.enable()
     map.touchZoomRotate.enableRotation()
   } else {
-    map.setTerrain(null)
+    try {
+      map.setTerrain(null)
+    } catch {
+      /* already flat */
+    }
     const flat = BASEMAP_MAP[basemapId]?.topDown
     map.easeTo({ pitch: 0, bearing: flat ? 0 : map.getBearing(), duration: 700 })
     if (flat) {
