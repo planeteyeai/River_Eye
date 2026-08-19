@@ -905,3 +905,10 @@ CHANGE LOG
             four [0,0] corners, which projected to Infinity under 3D terrain.
             The AWS Terrarium DEM source is added before setTerrain, and
             per-layer bounds from the asset JSON still override the initial box.
+2026-08-19  Every bundled asset JSON now loads through src/lib/fetchAssetJson.js.
+            public/_redirects rewrites unmatched paths to index.html with a 200,
+            so an asset missing from a deploy passed the response.ok check and
+            only failed later at JSON.parse — the climate impact panel silently
+            rendered nothing. The loader rejects HTML bodies with the offending
+            path, and the climate panel now says the timeseries is unavailable
+            instead of disappearing. No source, endpoint or value changed.

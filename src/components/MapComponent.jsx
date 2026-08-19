@@ -3,6 +3,7 @@ import { Map, NavigationControl } from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import { EMPTY_MAP_STYLE, BASEMAP_MAP, DEFAULT_BASEMAP } from '../lib/basemaps'
 import { applyBasemap, applyTerrain3d, ensureBasemapLayers } from '../lib/applyBasemap'
+import { fetchAssetJson } from '../lib/fetchAssetJson'
 import './MapComponent.css'
 import './DrawAreaComponent.css'
 
@@ -650,9 +651,7 @@ const MapComponent = ({
     const load = async () => {
       try {
         if (!wqMetaRef.current) {
-          const response = await fetch(WQ_JSON_URL, { cache: 'no-store' })
-          if (!response.ok) throw new Error(`Water-quality overlays → ${response.status}`)
-          wqMetaRef.current = await response.json()
+          wqMetaRef.current = await fetchAssetJson(WQ_JSON_URL, 'Water-quality overlays')
         }
         if (cancelled) return
 
@@ -696,9 +695,7 @@ const MapComponent = ({
     const load = async () => {
       try {
         if (!depthLoadedRef.current) {
-          const response = await fetch(DEPTH_META_URL, { cache: 'no-store' })
-          if (!response.ok) throw new Error(`Depth layer → ${response.status}`)
-          const meta = await response.json()
+          const meta = await fetchAssetJson(DEPTH_META_URL, 'Depth layer')
           if (cancelled) return
           const source = map.getSource(DEPTH_SOURCE)
           if (source?.updateImage && meta?.raster && isValidImageCoordinates(meta.imageCoordinates)) {
@@ -738,9 +735,7 @@ const MapComponent = ({
     const load = async () => {
       try {
         if (!urbanVegLoadedRef.current) {
-          const response = await fetch(URBAN_VEG_JSON_URL, { cache: 'no-store' })
-          if (!response.ok) throw new Error(`Urban vegetation → ${response.status}`)
-          const doc = await response.json()
+          const doc = await fetchAssetJson(URBAN_VEG_JSON_URL, 'Urban vegetation')
           if (cancelled) return
           map.getSource(URBAN_VEG_SOURCE)?.setData(doc.extent || EMPTY_COLLECTION)
           urbanVegLoadedRef.current = true
@@ -779,9 +774,7 @@ const MapComponent = ({
     const load = async () => {
       try {
         if (!biodiversityMetaRef.current) {
-          const response = await fetch(BIODIV_JSON_URL, { cache: 'no-store' })
-          if (!response.ok) throw new Error(`Biodiversity → ${response.status}`)
-          biodiversityMetaRef.current = await response.json()
+          biodiversityMetaRef.current = await fetchAssetJson(BIODIV_JSON_URL, 'Biodiversity')
         }
         if (cancelled) return
 
@@ -840,9 +833,10 @@ const MapComponent = ({
       try {
         const period = Number.isFinite(climatePeriodId) ? climatePeriodId : 4
         if (!climatePointsRef.current[period]) {
-          const response = await fetch(`/asset/mula-mutha-flood-water-${period}.json`, { cache: 'no-store' })
-          if (!response.ok) throw new Error(`Climate heatmap → ${response.status}`)
-          climatePointsRef.current[period] = await response.json()
+          climatePointsRef.current[period] = await fetchAssetJson(
+            `/asset/mula-mutha-flood-water-${period}.json`,
+            'Climate heatmap',
+          )
         }
         if (cancelled) return
         const pack = climatePointsRef.current[period]
@@ -887,9 +881,7 @@ const MapComponent = ({
     const load = async () => {
       try {
         if (!chainageLoadedRef.current) {
-          const response = await fetch(CHAINAGE_GEOJSON_URL, { cache: 'no-store' })
-          if (!response.ok) throw new Error(`Chainage layer → ${response.status}`)
-          const geojson = await response.json()
+          const geojson = await fetchAssetJson(CHAINAGE_GEOJSON_URL, 'Chainage layer')
           if (cancelled) return
           map.getSource(CHAINAGE_SOURCE)?.setData(geojson)
           chainageLoadedRef.current = true

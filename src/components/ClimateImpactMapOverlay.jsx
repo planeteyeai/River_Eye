@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import './ClimateImpactMapOverlay.css'
+import { fetchAssetJson } from '../lib/fetchAssetJson'
 
 const INDEX_URL = '/asset/mula-mutha-flood-water.json'
 
@@ -21,24 +22,38 @@ const ClimateImpactMapOverlay = ({
   onToggleChainage,
 }) => {
   const [doc, setDoc] = useState(null)
+  const [loadError, setLoadError] = useState(null)
 
   useEffect(() => {
     let cancelled = false
-    fetch(INDEX_URL, { cache: 'no-store' })
-      .then((response) => {
-        if (!response.ok) throw new Error(`Flood water timeseries → ${response.status}`)
-        return response.json()
-      })
+    fetchAssetJson(INDEX_URL, 'Flood water timeseries')
       .then((json) => {
         if (!cancelled) setDoc(json)
       })
       .catch((error) => {
         console.error('Failed to load flood water timeseries', error)
+        if (!cancelled) setLoadError(error.message)
       })
     return () => {
       cancelled = true
     }
   }, [])
+
+  if (loadError) {
+    return (
+      <div className="climate-map-overlays">
+        <div className="climate-legend" aria-label="Climate impact heatmap unavailable">
+          <div className="climate-legend-title">
+            <span>Climate impact</span>
+            <em>Unavailable</em>
+          </div>
+          <p className="climate-note">
+            The flood and surface-water timeseries did not load, so no heatmap is drawn. {loadError}
+          </p>
+        </div>
+      </div>
+    )
+  }
 
   if (!doc?.periods?.length) return null
 

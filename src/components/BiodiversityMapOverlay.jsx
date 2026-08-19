@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import './SoilLandUseMapOverlay.css'
+import { fetchAssetJson } from '../lib/fetchAssetJson'
 
 const BIODIV_URL = '/asset/mula-mutha-biodiversity.json'
 
@@ -42,11 +43,7 @@ const BiodiversityMapOverlay = ({
 
   useEffect(() => {
     let cancelled = false
-    fetch(BIODIV_URL, { cache: 'no-store' })
-      .then((response) => {
-        if (!response.ok) throw new Error(`Biodiversity → ${response.status}`)
-        return response.json()
-      })
+    fetchAssetJson(BIODIV_URL, 'Biodiversity')
       .then((json) => !cancelled && setDoc(json))
       .catch((error) => {
         console.error('Failed to load biodiversity vegetation classes', error)

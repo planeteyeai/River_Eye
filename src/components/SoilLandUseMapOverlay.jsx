@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import './SoilLandUseMapOverlay.css'
+import { fetchAssetJson } from '../lib/fetchAssetJson'
 
 const URBAN_VEG_URL = '/asset/mula-mutha-urban-vegetation.json'
 
@@ -40,11 +41,7 @@ const SoilLandUseMapOverlay = ({
 
   useEffect(() => {
     let cancelled = false
-    fetch(URBAN_VEG_URL, { cache: 'no-store' })
-      .then((response) => {
-        if (!response.ok) throw new Error(`Urban vegetation → ${response.status}`)
-        return response.json()
-      })
+    fetchAssetJson(URBAN_VEG_URL, 'Urban vegetation')
       .then((json) => !cancelled && setDoc(json))
       .catch((error) => {
         console.error('Failed to load urban vegetation classes', error)

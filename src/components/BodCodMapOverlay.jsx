@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import './BodCodMapOverlay.css'
 import ChainageLayerCard from './ChainageLayerCard'
+import { fetchAssetJson } from '../lib/fetchAssetJson'
 
 const CLS = ['A', 'B', 'C', 'D', 'E']
 
@@ -317,9 +318,7 @@ const BodCodMapOverlay = ({
     let cancelled = false
     const load = async () => {
       try {
-        const response = await fetch('/asset/dashboard_data.json', { cache: 'no-store' })
-        if (!response.ok) throw new Error('Failed to load BOD-COD data')
-        const json = await response.json()
+        const json = await fetchAssetJson('/asset/dashboard_data.json', 'BOD-COD data')
         if (cancelled) return
         setData(json)
         setSelected(json.kml_reach_id || json.reaches?.[0]?.id || null)
