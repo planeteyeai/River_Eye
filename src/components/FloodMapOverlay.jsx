@@ -20,6 +20,7 @@ import {
   buildFloodZones,
   getReturnPeriods,
 } from '../lib/floodZones'
+import { binBoundsForChainage, formatChainage } from '../lib/chainageBins'
 import './FloodMapOverlay.css'
 
 const LEAD_OPTIONS = [6, 24, 48, 72]
@@ -166,6 +167,7 @@ const TwinLayerPicker = ({
   depthSummary,
   openLayerId,
   onToggleInfo,
+  chainageSelection = null,
 }) => {
   const layers = [
     ...RETURN_PERIODS.map((years) => {
@@ -209,7 +211,9 @@ const TwinLayerPicker = ({
       title: 'Chainage',
       checked: showChainageLayer,
       onChange: (checked) => onToggleChainage?.(checked),
-      subtitle: 'Centreline stations every 100 m · 0+000 to 16+400',
+      subtitle: chainageSelection
+        ? `Selected ${chainageSelection.bin.name} · station ${chainageSelection.station}`
+        : 'Centreline stations every 100 m · 0+000 to 16+400',
       rows: [{ label: 'km marks and 100 m ticks', color: '#ffd166' }],
     },
   ]
@@ -271,6 +275,7 @@ const FloodMapOverlay = ({
   onToggleChainage,
   showDepthLayer = true,
   onToggleDepth,
+  focusChainage = null,
 }) => {
   const [meta, setMeta] = useState(null)
   const [state, setState] = useState(null)
@@ -360,6 +365,40 @@ const FloodMapOverlay = ({
     [margins, selected]
   )
 
+  const chainageSelection = useMemo(() => {
+    if (!focusChainage) return null
+    const bin = binBoundsForChainage(focusChainage.chainage_m)
+    if (!bin) return null
+    const isLast = bin.end_m >= 16400
+    const inBin = margins.filter((row) => {
+      const metres = Number(row.chainage_m)
+      if (!Number.isFinite(metres)) return false
+      return isLast
+        ? metres >= bin.start_m && metres <= bin.end_m
+        : metres >= bin.start_m && metres < bin.end_m
+    })
+    const nearest = [...inBin].sort(
+      (a, b) =>
+        Math.abs(a.chainage_m - focusChainage.chainage_m) -
+        Math.abs(b.chainage_m - focusChainage.chainage_m),
+    )[0]
+    return {
+      bin,
+      station: focusChainage.name || formatChainage(focusChainage.chainage_m),
+      chainage_m: focusChainage.chainage_m,
+      lng: focusChainage.lng,
+      lat: focusChainage.lat,
+      assets: inBin,
+      nearest,
+      cell: meta ? cellForChainage(meta, focusChainage.chainage_m) : null,
+    }
+  }, [focusChainage, margins, meta])
+
+  useEffect(() => {
+    if (!chainageSelection?.nearest) return
+    setSelected(chainageSelection.nearest.id)
+  }, [chainageSelection])
+
   useEffect(() => {
     if (!meta || !asset) return undefined
     let cancelled = false
@@ -407,6 +446,7 @@ const FloodMapOverlay = ({
       depthSummary={depthSummary}
       openLayerId={openLayerId}
       onToggleInfo={toggleLayerInfo}
+      chainageSelection={chainageSelection}
     />
   )
 
@@ -575,8 +615,13 @@ const FloodMapOverlay = ({
         <div className="flood-live-section-head">
           <div>
             <h4>Chainage</h4>
-            <small>Centreline stations every 100 m · 0+000 to 16+400</small>
+            <small>
+              {chainageSelection
+                ? `Selected section ${chainageSelection.bin.name}`
+                : 'Centreline stations every 100 m · 0+000 to 16+400'}
+            </small>
           </div>
+          {chainageSelection ? <span className="flood-provenance is-derived">Estimated</span> : null}
         </div>
         <div className="flood-zone-rows">
           <div className="flood-zone-row">
@@ -590,9 +635,71 @@ const FloodMapOverlay = ({
               <span className="sw" style={{ background: '#ffd166' }} />
               <strong>Show chainage on map</strong>
             </label>
-            <em>km marks + 100 m ticks</em>
+            <em>km boxes + 100 m ticks</em>
           </div>
         </div>
+        {chainageSelection ? (
+          <>
+            <div className="flood-mini-grid">
+              <span>
+                <em>Section</em>
+                {chainageSelection.bin.name}
+              </span>
+              <span>
+                <em>Station</em>
+                {chainageSelection.station}
+              </span>
+              <span>
+                <em>Length</em>
+                {(chainageSelection.bin.length_m / 1000).toFixed(1)} km
+              </span>
+              <span>
+                <em>Twin cell</em>
+                {chainageSelection.cell ?? '—'}
+              </span>
+            </div>
+            <div className="flood-stat-chips" style={{ marginTop: 8 }}>
+              <span>
+                <em>Assets in section</em>
+                {chainageSelection.assets.length}
+              </span>
+              <span>
+                <em>Worst</em>
+                {chainageSelection.assets.length
+                  ? worstStatus(chainageSelection.assets)
+                  : '—'}
+              </span>
+              {Number.isFinite(chainageSelection.lng) ? (
+                <span>
+                  <em>Location</em>
+                  {chainageSelection.lat.toFixed(4)}, {chainageSelection.lng.toFixed(4)}
+                </span>
+              ) : null}
+            </div>
+            {chainageSelection.assets.length ? (
+              <div className="flood-chainage-assets">
+                {chainageSelection.assets.map((row) => (
+                  <button
+                    key={row.id}
+                    type="button"
+                    className={`flood-chainage-asset${row.id === asset?.id ? ' is-on' : ''}`}
+                    onClick={() => setSelected(row.id)}
+                  >
+                    <span className="sw" style={{ background: STATUS_COLORS[row.status] }} />
+                    <strong>{shortName(row.name || row.id)}</strong>
+                    <em>{row.margin_now_m > 0 ? '+' : ''}{Number(row.margin_now_m).toFixed(2)} m</em>
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <p className="flood-depth-note">No twin assets sit in this kilometre.</p>
+            )}
+          </>
+        ) : (
+          <p className="flood-depth-note">
+            Click a yellow kilometre box, a station, or the scale to see that section here.
+          </p>
+        )}
 
         <div className="flood-panel-divider" />
 

@@ -78,9 +78,9 @@ const AppHome = () => {
             <p>
               Hydrology opens the digital twin (modelled discharge, WSE, freeboard and alerts).
               Water quality and salinity intrusion open TSS, NDCI, NDWI, WST and the BOD–COD panel.
-              Biodiversity and soil & land use open classified vegetation overlays. Climate impact
-              opens the flood and surface-water heatmap. Geology opens the satellite-derived
-              bathymetry dashboard. Pollution and socio-economic land on the live map — their
+              Biodiversity opens classified vegetation overlays. Soil & land use opens monthly silt rasters plus urban vegetation. Climate impact
+              opens the flood and surface-water heatmap. Geology opens joining streams on the map,
+              with the satellite-derived bathymetry dashboard from that panel. Pollution and socio-economic land on the live map — their
               satellite layers are intended scope, not shipped screens yet.
             </p>
           </section>

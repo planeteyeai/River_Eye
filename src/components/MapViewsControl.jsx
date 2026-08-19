@@ -74,7 +74,7 @@ const VIEWS = [
     id: 'geology',
     label: 'Geology',
     accent: 'geology',
-    title: 'Satellite-derived bathymetry: 2D map, 3D bed and depth profile',
+    title: 'Geology: joining streams and satellite-derived bathymetry',
     Icon: IconGeology,
   },
   {
@@ -88,7 +88,7 @@ const VIEWS = [
     id: 'landuse',
     label: 'Land use',
     accent: 'land',
-    title: 'Soil & land use: urban vegetation type and health',
+    title: 'Soil & land use: silt classification and urban vegetation',
     Icon: IconLand,
   },
   {

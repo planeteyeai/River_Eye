@@ -134,6 +134,7 @@ const AqiMapOverlay = ({
   selectedHeight,
   showChainageLayer = false,
   onToggleChainage,
+  focusChainage = null,
 }) => {
   const [visible, setVisible] = useState({ aqi: true, pm25: true, pm10: false })
   const processed = aqiData ? extractDataByHeight(aqiData, selectedHeight) : null
@@ -183,6 +184,7 @@ const AqiMapOverlay = ({
           inputId="layer-aqi-chainage"
           checked={showChainageLayer}
           onToggle={onToggleChainage}
+          focusChainage={focusChainage}
         />
       </div>
       <aside className="aqi-map-metrics" aria-label="Air quality metrics">

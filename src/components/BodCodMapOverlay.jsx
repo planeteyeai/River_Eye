@@ -2,6 +2,13 @@ import React, { useEffect, useMemo, useState } from 'react'
 import './BodCodMapOverlay.css'
 import ChainageLayerCard from './ChainageLayerCard'
 import { fetchAssetJson } from '../lib/fetchAssetJson'
+import {
+  chainageFromRibbonKm,
+  formatChainage,
+  reachForRibbonKm,
+  ribbonKmFromChainage,
+  stationsFromChainageGeojson,
+} from '../lib/chainageBins'
 
 const CLS = ['A', 'B', 'C', 'D', 'E']
 
@@ -290,8 +297,11 @@ const BodCodMapOverlay = ({
   onToggleWst,
   showChainageLayer = false,
   onToggleChainage,
+  focusChainage = null,
+  onSelectChainage,
 }) => {
   const [data, setData] = useState(null)
+  const [stations, setStations] = useState([])
   const [scrubIndex, setScrubIndex] = useState(0)
   const [selected, setSelected] = useState(null)
   const [openInfoId, setOpenInfoId] = useState('tss')
@@ -329,6 +339,13 @@ const BodCodMapOverlay = ({
       }
     }
     load()
+    fetchAssetJson('/asset/mula-mutha-chainage.geojson', 'Chainage layer')
+      .then((geojson) => {
+        if (!cancelled) setStations(stationsFromChainageGeojson(geojson))
+      })
+      .catch(() => {
+        if (!cancelled) setStations([])
+      })
     return () => {
       cancelled = true
     }
@@ -348,12 +365,23 @@ const BodCodMapOverlay = ({
     ? data.reaches[0].history.dates.length - 1
     : 0
 
+  const km0 = data?.reaches?.[0]?.km?.[0]
+  const km1 = data?.reaches?.[(data.reaches?.length || 1) - 1]?.km?.[1]
+  const playheadKm = useMemo(() => {
+    if (!focusChainage || !Number.isFinite(km0) || !Number.isFinite(km1)) return null
+    return ribbonKmFromChainage(focusChainage.chainage_m, km0, km1)
+  }, [focusChainage, km0, km1])
+
+  useEffect(() => {
+    if (!data?.reaches || playheadKm == null) return
+    const reach = reachForRibbonKm(data.reaches, playheadKm)
+    if (reach && reach.id !== selected) setSelected(reach.id)
+  }, [playheadKm, data])
+
   if (!data) return null
 
   const colors = { ...data.class_colors, ...LIGHT_CLASS_COLORS }
   const edges = data.bod_edges
-  const km0 = data.reaches[0].km[0]
-  const km1 = data.reaches[data.reaches.length - 1].km[1]
   const margin = { l: 58, r: 24 }
   const width = 1200
   const cy = 62
@@ -442,6 +470,17 @@ const BodCodMapOverlay = ({
     : (data.history_days || selectedReach.history.dates.length)
   const histUnit = isHourly ? 'h' : 'd'
 
+  const pickReach = (reach) => {
+    setSelected(reach.id)
+    if (!onSelectChainage || !stations.length || !Number.isFinite(km0) || !Number.isFinite(km1)) return
+    const mid = (reach.km[0] + reach.km[1]) / 2
+    const metres = chainageFromRibbonKm(mid, km0, km1)
+    const station = stations.reduce((best, row) =>
+      Math.abs(row.chainage_m - metres) < Math.abs(best.chainage_m - metres) ? row : best,
+    )
+    if (station) onSelectChainage(station)
+  }
+
   const scoreBars = [
     { label: 'BOD R²', value: bm.bod.r2, max: 1, color: OBSERVED },
     { label: 'Class accuracy', value: bm.bod.class_accuracy, max: 1, color: '#1c8a55' },
@@ -502,6 +541,7 @@ const BodCodMapOverlay = ({
           inputId="layer-wq-chainage"
           checked={showChainageLayer}
           onToggle={onToggleChainage}
+          focusChainage={focusChainage}
         />
       </div>
       <aside className="bod-cod-map-accuracy" aria-label="Accuracy measure">
@@ -649,7 +689,7 @@ const BodCodMapOverlay = ({
                     strokeWidth={isSelected ? 2.6 : isKml || value.mode === 'forecast' ? 2 : 0}
                     strokeDasharray={value.mode === 'forecast' ? '5 4' : undefined}
                     fillOpacity={value.mode === 'forecast' ? 0.78 : 1}
-                    onClick={() => setSelected(reach.id)}
+                    onClick={() => pickReach(reach)}
                   />
                   {value.support === 'prior' && (
                     <rect
@@ -697,6 +737,33 @@ const BodCodMapOverlay = ({
                 </text>
               </g>
             ))}
+            {playheadKm != null && (
+              <g className="bod-chainage-playhead" pointerEvents="none">
+                <line
+                  x1={xOf(playheadKm)}
+                  x2={xOf(playheadKm)}
+                  y1={18}
+                  y2={cy + 20}
+                  stroke="#f4c430"
+                  strokeWidth="2.4"
+                />
+                <polygon
+                  points={`${xOf(playheadKm)},14 ${xOf(playheadKm) - 7},24 ${xOf(playheadKm) + 7},24`}
+                  fill="#f4c430"
+                />
+                <text
+                  x={xOf(playheadKm)}
+                  y={14}
+                  textAnchor="middle"
+                  fill="#0d2436"
+                  fontSize="11"
+                  fontWeight="700"
+                  style={MONO}
+                >
+                  {focusChainage?.name || formatChainage(focusChainage.chainage_m)}
+                </text>
+              </g>
+            )}
           </svg>
 
           <div className="bod-cod-scrub-row">

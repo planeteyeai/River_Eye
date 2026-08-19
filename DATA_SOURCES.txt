@@ -60,6 +60,7 @@ Note        : geocoding only — not a discharge or rainfall source.
 Base        : https://riverdigitaltwin-production.up.railway.app/api
 Override    : VITE_FLOOD_API_BASE (see src/lib/floodApi.js)
 Used in     : src/lib/floodApi.js, src/components/FloodMapOverlay.jsx
+              public/asset/mula-mutha-twin.html (Digital Twin iframe)
 UI label    : Model
 Endpoints   : /meta  /state  /margins  /alerts  /scorecard
               /forecast/profile?lead=<h>  /hydrograph?cell=<i>  /advance?hours=<h>
@@ -136,8 +137,19 @@ Source   : user-supplied KML e16af4da5acc48c597e4e8b1c64a5d74.kml, copied to
            public/asset/mula-mutha-chainage.kml and converted by
            scripts/convert-chainage-kml.mjs.
 Used in  : src/components/MapComponent.jsx (src-chainage: centreline, 100 m
-           ticks, km marks and labels). Toggle in FloodMapOverlay.jsx;
-           shown on Digital Twin when the flood overlay is open (default on).
+           ticks, km marks and labels). Toggle in FloodMapOverlay.jsx,
+           BodCodMapOverlay.jsx and ChainageLayerCard.jsx. Shown on Digital
+           Twin and water quality (default on). ChainageScrubber.jsx reads
+           the same GeoJSON for the clickable km scale (km labels plus
+           100 m ticks; step buttons move 100 m). On Digital Twin and water
+           quality the scale sits above the bottom ribbon. Click a map
+           station, a chainage bin, or a scale tick to fly there; the
+           selected 1 km section is shown in the twin panel and the water-
+           quality Chainage card. MapComponent also draws 1 km riverbank
+           boxes whose left/right edges are clipped to mula-mutha-river.kml
+           (3.1) via src/lib/chainageBins.js. Estimated bins, river outline
+           is the KML. The BOD ribbon km axis (0–42 km demo reaches in 3.2)
+           is a separate chainage and is not joined to this 16.4 km line.
 Kind     : REAL geometry (digitised chainage). Not a surveyed flood line.
            The KML description also mentions corridor polygons ±1100 m;
            those polygons are not in the file, so they are not drawn.
@@ -179,6 +191,9 @@ Content  : BOD/COD water-quality figures for 7 reaches, Sangam-Bund Garden to
 Used in  : src/components/BodCodMapOverlay.jsx, and fetched by
            mula-mutha-bod-cod.html (3.3), which prefers this served file over
            the copy embedded in its own <script id="fallback">.
+           Map chainage 0–16.4 km (3.1b) is drawn as a playhead on this
+           ribbon by stretching it linearly onto the 0–42 km demo axis.
+           Estimated join only; the two chainages are not surveyed as one.
 Generated: 2026-08-18 (generated field). data_refreshed_at 2026-08-18T09:26:09Z.
            timeline_resolution = hourly. history_hours 2184, forecast_hours 336.
            history_days 90 and forecast_days 14 are still present as aliases.
@@ -344,6 +359,44 @@ TO CONFIRM: the index behind "health" (NDVI? NDRE?) and its class breaks, the
            is meant to exclude cropland inside the buffer.
 
 --------------------------------------------------------------------------------
+3.2fa  public/asset/mula-mutha-silt.json (+ class/volume monthly PNG)
+--------------------------------------------------------------------------------
+Content  : Monthly relative silt classification and volume-surface rasters
+           along the Mula-Mutha, Jan-Jul 2026. Classification is discrete
+           classes 1-4 (Low / Moderate / High / Very High; class 0 is no
+           data and is transparent). Volume is a continuous Earth-tone
+           surface with a colour scale fixed at 0-94.31 across months so
+           they can be compared; the KMZ says the unit is unconfirmed.
+           Overlay colours sampled from the classification PNG:
+             1 Low        #44ce1b
+             2 Moderate   #cedd54
+             3 High       #f3b549
+             4 Very High  #e51f1f
+           Jun 2026 (default): Low 22.6%, Moderate 37.1%, High 23.5%,
+           Very High 16.8%; classed area 44.8 ha.
+           CSV composite 2026-06-01 to 2026-08-01 (River_Silt_Statistics
+           (2).csv, 3 Sentinel-2 scenes): water 154.6 ha, mean score 0.391,
+           Low 56.6 ha (36.6%), Moderate 46.1 ha (29.8%), High 29.1 ha
+           (18.8%), Very High 22.8 ha (14.8%). Those areas are one window,
+           not a monthly series — the map uses the KMZ overlays.
+           Extent (monthly files): N 18.547336 S 18.520746 E 73.993511
+           W 73.854901.
+Derived  : Folder 8bd9b727189f478698b5f10a2a7fde45 /
+           Jan_2026_to_Jun_2026_Silt_Classification (also contains Jul).
+           scripts/convert-silt-kmz.mjs unpacks each *Silt_Classification.kmz
+           and *Silt_Volume_Surface*.kmz GroundOverlay, copies overlay.png,
+           and samples class shares (scripts/sample-silt-overlay.py).
+           River_Silt_Classification.kmz / River_Silt_Score.kmz are river-
+           wide composites with a wider LatLonBox and are not mapped.
+           KMZs are not bundled.
+Used in  : MapComponent.jsx lyr-silt-class / lyr-silt-volume; Soil & land
+           use panel (month picker, class bars, volume scale).
+UI label : Estimated
+Status   : classed / modelled product from the KMZ pack. Not a bed survey.
+TO CONFIRM: volume unit; whether monthly overlays are a single Sentinel-2
+           scene or a composite; exact acquisition dates.
+
+--------------------------------------------------------------------------------
 3.2g  public/asset/mula-mutha-biodiversity.json (+ type/health .kml + .png)
 --------------------------------------------------------------------------------
 Content  : Vegetation type AND vegetation health classification for the
@@ -422,14 +475,20 @@ TO CONFIRM: sensor, algorithm and pixel size behind the classed points
 3.3  Standalone HTML panels
 --------------------------------------------------------------------------------
 Files    : public/asset/mula-mutha-flood.html
+           public/asset/mula-mutha-twin.html
            public/asset/mula-mutha-bod-cod.html
            public/asset/mula-mutha-bathymetry.html
 Used in  : src/components/Dashboard.jsx, loaded in an iframe
 Status   : self-contained pages with their own inline fetches.
-           mula-mutha-flood.html is twin-only (same Railway /api as 2.1):
+           mula-mutha-twin.html is the Digital Twin header view: the live
+           Railway dashboard with the Sangam-Manjari Leaflet/Google reach
+           map removed. Fetches the same /api as 2.1 on
+           riverdigitaltwin-production.up.railway.app. Charts still use
+           Chart.js from jsDelivr.
+           mula-mutha-flood.html is the SVG-chart twin-only copy (no Chart.js):
            discharge KPI = /state q_now, Model label. Open-Meteo GloFAS /
-           ECMWF fetches and charts were removed 2026-08-14. Keep in step
-           with this file.
+           ECMWF fetches and charts were removed 2026-08-14. Not currently
+           the iframe src.
            mula-mutha-bod-cod.html reads dashboard_data.json (3.2) and falls
            back to its own embedded copy. Upstream build of 2026-08-18 is
            hourly (step ±1 hour, 30-minute refresh, COD series on the reach
@@ -457,14 +516,85 @@ Source   : vendor HTML a808cca9ca05492284b458df1a486fd1.html (S3 messaging
            from Sentinel-2 L2A bands B02/B03/B04/B08 captured 14 Jul 2026,
            trained on filled depth points and clipped to the river AOI;
            gaps interpolated from adjacent pixels. Vertical datum: MSL.
-Used in  : Dashboard.jsx iframe when Geology is open (?view=geology, Views
-           dropdown, hub Geology card).
+Used in  : Dashboard.jsx iframe when Geology → Open bathymetry dashboard
+           (?view=geology still lands on the joining-streams map; the
+           iframe is a second step from that panel).
 UI label : Estimated
 Status   : satellite-derived bathymetry for visualization. Not an in-situ
            sounding survey and not used for flood-corridor or inundation
            calculations (those still have no DEM - see section 7).
 TO CONFIRM: training soundings, SDB algorithm, and whether 15,593 histogram
            pixels vs 11,580 grid cells is interpolation vs a different clip.
+
+--------------------------------------------------------------------------------
+3.3c  public/asset/mula-mutha-tributaries.geojson (+ .kml)
+--------------------------------------------------------------------------------
+Content  : OSM waterways clipped to the Mula-Mutha reach (folder name "clipped").
+           60 LineString features:
+             4 main stem (Mula, Mutha, Mula-Mutha, plus one other river way)
+             7 named streams (Muredha, Nagzari, Manik, …)
+             4 drains / nullahs (Bhairoba, Muredha Nullah, …)
+             7 canals (incl. Mutha Right Bank Canal)
+             7 ditches
+             31 unnamed feeders (no name / waterway tag in the KML)
+Source   : user-supplied KML e026fb3446f44831a85a726f4f98a06c.kml, copied to
+           public/asset/mula-mutha-tributaries.kml and converted by
+           scripts/convert-tributaries-kml.mjs. Attributes include OSM
+           osm_id / waterway where present.
+Used in  : Geology map view (GeologyMapOverlay.jsx + MapComponent.jsx
+           src-tributaries). Main stem off by default because the river
+           outline already comes from mula-mutha-river.kml (3.1).
+Kind     : REAL geometry from OpenStreetMap, clipped. Not a surveyed
+           drainage or flood network.
+UI label : Estimated
+TO CONFIRM: clip polygon, OSM extract date, and whether unnamed ways are
+           drains, nallas or mapping artefacts.
+
+--------------------------------------------------------------------------------
+3.3d  public/asset/mula-mutha-erosion-hotspots.png (+ .json, .kml, legend.png)
+--------------------------------------------------------------------------------
+Content  : Bank erosion hotspot classification for 2016–2026, GroundOverlay
+           clipped to the Mula-Mutha AOI. Hotspot = count of year-to-year
+           periods with detected erosion. Classes from the KMZ legend:
+             0 #90EE90 No erosion (83.1% / 257.9 ha in this clip)
+             1 #FFFF00 Low erosion (15.5% / 48.1 ha)
+             2 #FFA500 Moderate erosion (1.4% / 4.5 ha)
+             3 #FF0000 High erosion (0% in this clip)
+             4 #800000 Very high erosion (0% in this clip)
+           Overlay 2060 x 396 px. LatLonBox N 18.547426 S 18.520746
+           E 73.993511 W 73.854722.
+Source   : user-supplied KMZ 83d9c994ab974aaea0052c4103f77abb.kmz
+           (inner document Erosion_Hotspots_2016_2026.kml / Bank Erosion
+           Hotspot (2016-2026)). Bundled by scripts/convert-erosion-kmz.mjs.
+Used in  : Geology map (GeologyMapOverlay.jsx + MapComponent.jsx lyr-erosion).
+           On by default when Geology is open. Year-to-year ha series is 3.3e.
+Kind     : MODELLED / classed product from the KMZ. Not a bank survey.
+UI label : Estimated
+TO CONFIRM: sensor, method, year-to-year periods counted, and the clip
+           polygon. High and very high classes exist only in the legend.
+
+--------------------------------------------------------------------------------
+3.3e  public/asset/mula-mutha-bank-erosion-2016-2026.csv
+      (+ mula-mutha-bank-erosion-series.json)
+--------------------------------------------------------------------------------
+Content  : Ten year-to-year bank-change rows, 2016-2017 through 2025-2026.
+           Landsat 8/9, 30 m, MNDWI threshold 0.05. Fields used: Period,
+           From_Year, To_Year, Analysis_Period, Erosion_ha, Accretion_ha,
+           Net_Change_ha, Erosion_percent, Accretion_percent, Image_Count.
+           Sums in this file: erosion 74.8 ha, accretion 89.3 ha, net
+           +14.5 ha (net accretion over the decade). Largest erosion year
+           2024-2025 (25.7 ha). 2025-2026 window is Jan-2026 to Aug-2026,
+           not a full year. .geo is an empty MultiPoint — nothing to plot.
+Source   : user-supplied 18a4fe57b29043a4b371ba19a17dd597.csv
+           (Bank_Erosion_2016_2026.csv). Copied by
+           scripts/convert-erosion-csv.py.
+Used in  : GeologyMapOverlay.jsx “Bank change” totals and period bars.
+           Companion to the hotspot raster in 3.3d; the CSV is not the
+           class map.
+Kind     : MODELLED water-edge change from Landsat MNDWI. Not a survey.
+UI label : Estimated
+TO CONFIRM: AOI, whether percents are of old-water area, and whether
+           2016-2026 hotspot counts match these ten periods.
 
 --------------------------------------------------------------------------------
 3.4  public/asset/godavari-waterbody-rajahmundry.kml
@@ -933,3 +1063,45 @@ CHANGE LOG
             reverse-proxies /api to the same upstream and keeps the SPA fallback.
             Same endpoints, same payloads, same upstream — only the route the
             browser takes changed. Section 2.2 updated.
+2026-08-19  Soil & land use now drapes monthly silt classification and volume
+            rasters from Jan_2026_to_Jun_2026_Silt_Classification (source
+            8bd9b727189f478698b5f10a2a7fde45; Jul files in the same folder
+            are included). Bundled as mula-mutha-silt.json plus class/volume
+            PNGs per month; KMZs stay out of the repo. Default month Jun 2026.
+            CSV areas are one Jun-Aug window and are labelled as such. Label
+            Estimated. Section 3.2fa. convert-silt-kmz.mjs.
+2026-08-19  Digital Twin header iframes public/asset/mula-mutha-twin.html, a
+            copy of the live reach dashboard with the Sangam-Manjari Leaflet
+            map stripped. APIs still come from
+            riverdigitaltwin-production.up.railway.app. The upstream page
+            cannot be edited from this repo.
+2026-08-19  Clickable chainage bar at the base of the Mula-Mutha map. Same
+            stations as 3.1b (km marks plus 16+400). No new geometry.
+2026-08-19  Geology map view now draws joining streams from
+            e026fb3446f44831a85a726f4f98a06c.kml (OSM clipped waterways).
+            Bundled as mula-mutha-tributaries.geojson/.kml. Bathymetry
+            dashboard remains behind a button on that panel. Label Estimated.
+            Section 3.3c. convert-tributaries-kml.mjs.
+2026-08-19  Chainage on the river is station points and labels only (km marks
+            and 100 m ticks). The 1 km scale stays on the bar at the base of
+            the map. Same stations as 3.1b.
+2026-08-19  Chainage now marks 1 km riverbank ribbons (±150 m from the
+            centreline) as well as the station points. Derived from 3.1b in
+            chainageBins.js. Estimated, not a surveyed bank plot.
+2026-08-19  Chainage riverbank boxes now clip to mula-mutha-river.kml so the
+            yellow edges lie on the river outline, not a ±150 m offset.
+2026-08-19  Digital Twin chainage panel shows the selected 1 km section
+            (station, length, twin cell, assets in that kilometre).
+2026-08-19  Water quality: chainage scale sits above the BOD ribbon (same
+            as the twin). ChainageLayerCard shows the selected 1 km
+            section. A yellow playhead on The river, end to end follows
+            map chainage (linear 16.4 km → 0–42 km demo axis in 3.2).
+            Estimated; the axes are not the same survey.
+2026-08-19  Geology: bank erosion hotspot overlay 2016–2026 from
+            83d9c994ab974aaea0052c4103f77abb.kmz (Erosion_Hotspots_2016_2026).
+            Classed GroundOverlay, clipped to the AOI. Estimated.
+            Section 3.3d. convert-erosion-kmz.mjs.
+2026-08-19  Geology: year-to-year bank erosion/accretion series from
+            Bank_Erosion_2016_2026.csv (18a4fe57b29043a4b371ba19a17dd597.csv).
+            Landsat 8/9 MNDWI, 30 m. Estimated. Section 3.3e.
+            convert-erosion-csv.py.

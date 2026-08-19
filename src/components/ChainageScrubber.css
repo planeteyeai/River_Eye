@@ -1,0 +1,160 @@
+.chainage-scrubber {
+  position: absolute;
+  z-index: 1200;
+  left: 16px;
+  right: 218px;
+  bottom: 14px;
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  min-height: 48px;
+  padding: 0;
+  pointer-events: none;
+  background: none;
+  border: 0;
+  box-shadow: none;
+  font-family: var(--rv-font-body);
+}
+
+.chainage-scrubber.is-above-ribbon {
+  right: min(336px, calc(100% - 220px));
+  bottom: 176px;
+}
+
+.dashboard.is-fullscreen .chainage-scrubber.is-above-ribbon,
+:fullscreen .chainage-scrubber.is-above-ribbon {
+  bottom: 196px;
+}
+
+.chainage-scrubber-kicker,
+.chainage-scrubber-unit {
+  flex: 0 0 auto;
+  padding-bottom: 2px;
+  font-size: 10px;
+  font-weight: 750;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #f4f9fc;
+  text-shadow: 0 0 4px rgba(8, 18, 24, 0.95), 0 1px 2px rgba(8, 18, 24, 0.9);
+}
+
+.chainage-scrubber-track {
+  position: relative;
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 34px;
+}
+
+.chainage-scale-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 9px;
+  height: 2px;
+  background: #f4f9fc;
+  box-shadow: 0 0 0 1px rgba(8, 18, 24, 0.55);
+}
+
+.chainage-tick {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 22px;
+  height: 34px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.chainage-tick-mark {
+  width: 1.5px;
+  height: 14px;
+  margin: 3px 0 0;
+  background: #f4f9fc;
+  box-shadow: 0 0 0 1px rgba(8, 18, 24, 0.55);
+}
+
+.chainage-tick.is-minor {
+  width: 10px;
+  height: 20px;
+}
+
+.chainage-tick.is-minor .chainage-tick-mark {
+  height: 6px;
+  margin-top: 7px;
+  width: 1px;
+}
+
+.chainage-tick.is-minor.is-active .chainage-tick-mark,
+.chainage-tick.is-minor:hover .chainage-tick-mark {
+  width: 2px;
+  height: 10px;
+  margin-top: 5px;
+}
+
+.chainage-step {
+  flex: 0 0 auto;
+  width: 44px;
+  height: 44px;
+  margin-bottom: 0;
+  padding: 0;
+  border: 2px solid #f4f9fc;
+  border-radius: 8px;
+  background: rgba(13, 36, 54, 0.7);
+  color: #f4f9fc;
+  font-size: 28px;
+  font-weight: 600;
+  line-height: 1;
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.chainage-step:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.chainage-step:not(:disabled):hover {
+  background: #f4c430;
+  border-color: #f4c430;
+  color: #0d2436;
+}
+
+.chainage-tick.is-active .chainage-tick-mark,
+.chainage-tick:hover .chainage-tick-mark {
+  width: 2.5px;
+  background: #f4c430;
+  box-shadow: 0 0 0 1px rgba(8, 18, 24, 0.7);
+}
+
+.chainage-tick-label {
+  margin-top: 3px;
+  font-family: var(--rv-font-mono);
+  font-size: 9px;
+  font-weight: 650;
+  line-height: 1;
+  white-space: nowrap;
+  color: #f4f9fc;
+  text-shadow: 0 0 4px rgba(8, 18, 24, 0.95), 0 1px 2px rgba(8, 18, 24, 0.9);
+}
+
+.chainage-tick.is-active .chainage-tick-label,
+.chainage-tick:hover .chainage-tick-label {
+  color: #ffd166;
+}
+
+@media (max-width: 1100px) {
+  .chainage-scrubber {
+    left: 10px;
+    right: 196px;
+  }
+
+  .chainage-scrubber.is-above-ribbon {
+    right: 10px;
+  }
+}

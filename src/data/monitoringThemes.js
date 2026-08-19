@@ -5,10 +5,11 @@
  *
  *  Salinity intrusion and Water quality share the same water-quality map view;
  *  WST (thermal) sits with TSS / NDCI / NDWI / BOD–COD there. Soil & land use
- *  opens the urban vegetation classification. Biodiversity opens the
+ *  opens the urban vegetation classification and the monthly silt rasters. Biodiversity opens the
  *  vegetation-type raster from the KMZ overlay. Climate impact opens the
  *  flood / surface-water heatmap from flood_water_timeseries.xlsx. Geology
- *  opens the satellite-derived bathymetry dashboard.
+ *  opens joining streams and the 2016–2026 bank-erosion hotspot overlay
+ *  on the map, plus the satellite-derived bathymetry dashboard.
  */
 
 export const MONITORING_THEMES = [
@@ -20,9 +21,9 @@ export const MONITORING_THEMES = [
   },
   {
     name: 'Geology',
-    desc: 'Satellite-derived bathymetry — 2D depth map, 3D bed and chainage profile',
+    desc: 'Bank erosion hotspots, joining streams, and satellite-derived bathymetry',
     to: '/dashboard?view=geology',
-    datasets: ['bathymetry'],
+    datasets: ['erosion', 'tributaries', 'bathymetry'],
   },
   {
     name: 'Biodiversity',
@@ -32,9 +33,9 @@ export const MONITORING_THEMES = [
   },
   {
     name: 'Soil & land use',
-    desc: 'Urban vegetation type and health in the 1 km river buffer',
+    desc: 'River silt class and volume, plus urban vegetation in the 1 km buffer',
     to: '/dashboard?view=landuse',
-    datasets: ['urbanveg'],
+    datasets: ['silt', 'urbanveg'],
   },
   {
     name: 'Salinity intrusion',

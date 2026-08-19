@@ -1,0 +1,139 @@
+{
+  "name": "Bank erosion vs accretion, 2016\u20132026",
+  "theme": "Geology",
+  "file": "mula-mutha-bank-erosion-2016-2026.csv",
+  "source_csv": "18a4fe57b29043a4b371ba19a17dd597.csv / Bank_Erosion_2016_2026.csv",
+  "satellite": "Landsat 8/9",
+  "resolution_m": 30,
+  "mndwi_threshold": 0.05,
+  "note": "Year-to-year MNDWI water-edge change. Negative net is net erosion. 2025\u20132026 is Jan\u2013Aug 2026, not a full year. .geo column is an empty MultiPoint \u2014 no map geometry.",
+  "totals": {
+    "periods": 10,
+    "erosion_ha": 74.8,
+    "accretion_ha": 89.3,
+    "net_ha": 14.5,
+    "max_bar_ha": 25.7
+  },
+  "periods": [
+    {
+      "period": "2016-2017",
+      "from_year": 2016,
+      "to_year": 2017,
+      "window": "Full Year",
+      "erosion_ha": 15.1,
+      "accretion_ha": 2.2,
+      "net_ha": -12.9,
+      "erosion_pct": 11.0,
+      "accretion_pct": 1.6,
+      "image_count": 19
+    },
+    {
+      "period": "2017-2018",
+      "from_year": 2017,
+      "to_year": 2018,
+      "window": "Full Year",
+      "erosion_ha": 1.8,
+      "accretion_ha": 7.0,
+      "net_ha": 5.2,
+      "erosion_pct": 1.2,
+      "accretion_pct": 4.7,
+      "image_count": 18
+    },
+    {
+      "period": "2018-2019",
+      "from_year": 2018,
+      "to_year": 2019,
+      "window": "Full Year",
+      "erosion_ha": 4.3,
+      "accretion_ha": 6.2,
+      "net_ha": 1.9,
+      "erosion_pct": 3.0,
+      "accretion_pct": 4.3,
+      "image_count": 19
+    },
+    {
+      "period": "2019-2020",
+      "from_year": 2019,
+      "to_year": 2020,
+      "window": "Full Year",
+      "erosion_ha": 6.9,
+      "accretion_ha": 5.7,
+      "net_ha": -1.2,
+      "erosion_pct": 4.8,
+      "accretion_pct": 4.0,
+      "image_count": 19
+    },
+    {
+      "period": "2020-2021",
+      "from_year": 2020,
+      "to_year": 2021,
+      "window": "Full Year",
+      "erosion_ha": 3.4,
+      "accretion_ha": 11.1,
+      "net_ha": 7.7,
+      "erosion_pct": 2.3,
+      "accretion_pct": 7.7,
+      "image_count": 19
+    },
+    {
+      "period": "2021-2022",
+      "from_year": 2021,
+      "to_year": 2022,
+      "window": "Full Year",
+      "erosion_ha": 9.7,
+      "accretion_ha": 4.2,
+      "net_ha": -5.5,
+      "erosion_pct": 7.1,
+      "accretion_pct": 3.1,
+      "image_count": 36
+    },
+    {
+      "period": "2022-2023",
+      "from_year": 2022,
+      "to_year": 2023,
+      "window": "Full Year",
+      "erosion_ha": 4.6,
+      "accretion_ha": 16.5,
+      "net_ha": 11.9,
+      "erosion_pct": 3.2,
+      "accretion_pct": 11.6,
+      "image_count": 39
+    },
+    {
+      "period": "2023-2024",
+      "from_year": 2023,
+      "to_year": 2024,
+      "window": "Full Year",
+      "erosion_ha": 1.9,
+      "accretion_ha": 21.7,
+      "net_ha": 19.9,
+      "erosion_pct": 1.4,
+      "accretion_pct": 16.8,
+      "image_count": 35
+    },
+    {
+      "period": "2024-2025",
+      "from_year": 2024,
+      "to_year": 2025,
+      "window": "Full Year",
+      "erosion_ha": 25.7,
+      "accretion_ha": 1.6,
+      "net_ha": -24.1,
+      "erosion_pct": 23.4,
+      "accretion_pct": 1.5,
+      "image_count": 34
+    },
+    {
+      "period": "2025-2026",
+      "from_year": 2025,
+      "to_year": 2026,
+      "window": "Jan-2026 to Aug-2026",
+      "erosion_ha": 1.6,
+      "accretion_ha": 13.1,
+      "net_ha": 11.5,
+      "erosion_pct": 1.2,
+      "accretion_pct": 9.8,
+      "image_count": 23
+    }
+  ]
+}

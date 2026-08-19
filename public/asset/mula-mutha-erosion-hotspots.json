@@ -1,0 +1,89 @@
+{
+  "name": "Bank Erosion Hotspot (2016–2026)",
+  "theme": "Geology",
+  "period": "2016-2026",
+  "sensor": "Unconfirmed in KMZ (year-to-year erosion count, clipped to Mula-Mutha AOI)",
+  "note": "Hotspot = number of year-to-year periods with detected erosion. Overlay clipped so 'No erosion' does not spill onto surrounding land. High / very high classes are in the KMZ legend but have no pixels in this clip.",
+  "bounds": {
+    "north": 18.54742583968735,
+    "south": 18.520745875749,
+    "east": 73.9935113006977,
+    "west": 73.85472158930123
+  },
+  "raster": "/asset/mula-mutha-erosion-hotspots.png",
+  "legend": "/asset/mula-mutha-erosion-hotspots-legend.png",
+  "imageCoordinates": [
+    [
+      73.85472158930123,
+      18.54742583968735
+    ],
+    [
+      73.9935113006977,
+      18.54742583968735
+    ],
+    [
+      73.9935113006977,
+      18.520745875749
+    ],
+    [
+      73.85472158930123,
+      18.520745875749
+    ]
+  ],
+  "classes": [
+    {
+      "id": 0,
+      "key": "90EE90",
+      "label": "No erosion",
+      "color": "#90ee90",
+      "class": 0,
+      "pixels": 48704,
+      "share_pct": 83.1,
+      "area_ha": 257.9
+    },
+    {
+      "id": 1,
+      "key": "FFFF00",
+      "label": "Low erosion",
+      "color": "#ffff00",
+      "class": 1,
+      "pixels": 9088,
+      "share_pct": 15.5,
+      "area_ha": 48.1
+    },
+    {
+      "id": 2,
+      "key": "FFA500",
+      "label": "Moderate erosion",
+      "color": "#ffa500",
+      "class": 2,
+      "pixels": 848,
+      "share_pct": 1.4,
+      "area_ha": 4.5
+    },
+    {
+      "id": 3,
+      "key": "FF0000",
+      "label": "High erosion",
+      "color": "#ff0000",
+      "class": 3,
+      "pixels": 0,
+      "share_pct": 0,
+      "area_ha": 0
+    },
+    {
+      "id": 4,
+      "key": "800000",
+      "label": "Very high erosion",
+      "color": "#800000",
+      "class": 4,
+      "pixels": 0,
+      "share_pct": 0,
+      "area_ha": 0
+    }
+  ],
+  "total_pixels": 58640,
+  "total_area_ha": 310.5,
+  "source_kmz": "83d9c994ab974aaea0052c4103f77abb.kmz",
+  "source_name": "Bank Erosion Hotspot (2016-2026)"
+}

@@ -286,3 +286,91 @@
 .lulc-info-body .lulc-group-head {
   margin-top: 0;
 }
+
+.lulc-sw-volume {
+  background: linear-gradient(180deg, #662506 0%, #cc4c02 50%, #fff7bc 100%);
+}
+
+.lulc-period-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 10px;
+  font-size: 12px;
+}
+
+.lulc-period-head span {
+  font-family: var(--rv-font-mono);
+  font-size: 11px;
+  color: var(--rv-muted, #6b8798);
+}
+
+.lulc-months {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+  height: 64px;
+  margin-top: 8px;
+  align-items: end;
+}
+
+.lulc-month {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  color: var(--rv-muted, #6b8798);
+}
+
+.lulc-month-bar {
+  width: 100%;
+  border-radius: 3px 3px 0 0;
+  background: #e51f1f;
+  opacity: 0.45;
+}
+
+.lulc-month.is-on .lulc-month-bar {
+  opacity: 1;
+}
+
+.lulc-month em {
+  font-style: normal;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.lulc-month.is-on em {
+  color: var(--rv-ink, #123);
+}
+
+.lulc-volume-scale {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 6px 8px;
+  align-items: center;
+  margin-top: 10px;
+  font-family: var(--rv-font-mono);
+  font-size: 10px;
+  color: var(--rv-muted, #6b8798);
+}
+
+.lulc-volume-bar {
+  height: 8px;
+  border-radius: 4px;
+  background: linear-gradient(90deg, #fff7bc, #fec44f, #d95f0e, #662506);
+}
+
+.lulc-volume-scale em {
+  grid-column: 1 / -1;
+  font-style: normal;
+  font-family: var(--rv-font-body);
+}

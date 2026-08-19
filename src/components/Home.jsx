@@ -78,7 +78,7 @@ const STATS = [
 ]
 
 const LIMITS = [
-  'Of the nine themes above, hydrology opens the reach digital twin. Water quality and salinity intrusion open TSS, NDCI, NDWI, WST and BOD–COD. Biodiversity and soil & land use open classified vegetation overlays. Climate impact opens the flood / surface-water heatmap. Geology opens satellite-derived bathymetry. Pollution and socio-economic remain intended scope.',
+  'Of the nine themes above, hydrology opens the reach digital twin. Water quality and salinity intrusion open TSS, NDCI, NDWI, WST and BOD–COD. Biodiversity opens classified vegetation overlays. Soil & land use opens monthly silt rasters plus urban vegetation. Climate impact opens the flood / surface-water heatmap. Geology opens joining streams on the map, plus satellite-derived bathymetry. Pollution and socio-economic remain intended scope.',
   'Water level, freeboard, alerts and twin discharge come from a demonstration model, not from gauges in the channel.',
   'Nothing here is fit for emergency response, land-use decisions or property-level risk.',
 ]

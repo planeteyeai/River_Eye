@@ -5,6 +5,7 @@ import { useNavigate, useLocation, useSearchParams } from 'react-router-dom'
 import { format, subDays, startOfDay, isAfter, addDays, isBefore, isEqual, isToday, subHours, parseISO } from 'date-fns'
 import { LineChart, Line, BarChart, Bar, ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceArea, Cell, Dot } from 'recharts'
 import MapComponent from './MapComponent'
+import ChainageScrubber from './ChainageScrubber'
 import MapLayersControl from './MapLayersControl'
 import MapViewsControl from './MapViewsControl'
 import BodCodMapOverlay from './BodCodMapOverlay'
@@ -13,6 +14,7 @@ import FloodMapOverlay from './FloodMapOverlay'
 import SoilLandUseMapOverlay from './SoilLandUseMapOverlay'
 import BiodiversityMapOverlay from './BiodiversityMapOverlay'
 import ClimateImpactMapOverlay from './ClimateImpactMapOverlay'
+import GeologyMapOverlay from './GeologyMapOverlay'
 import WeatherSection from './WeatherSection'
 import AQISection from './AQISection'
 import LiveDashboardCards from './LiveDashboardCards'
@@ -50,9 +52,13 @@ const Dashboard = () => {
   const [showFloodOverlay, setShowFloodOverlay] = useState(false)
   const [floodZones, setFloodZones] = useState(null)
   const [showChainageLayer, setShowChainageLayer] = useState(true)
+  const [focusChainage, setFocusChainage] = useState(null)
   const [showFloodDepthLayer, setShowFloodDepthLayer] = useState(true)
   const [showLandUseOverlay, setShowLandUseOverlay] = useState(false)
   const [showUrbanVegLayer, setShowUrbanVegLayer] = useState(true)
+  const [showSiltClassLayer, setShowSiltClassLayer] = useState(true)
+  const [showSiltVolumeLayer, setShowSiltVolumeLayer] = useState(false)
+  const [siltPeriodId, setSiltPeriodId] = useState(5)
   const [showBiodiversityOverlay, setShowBiodiversityOverlay] = useState(false)
   const [showBiodiversityTypeLayer, setShowBiodiversityTypeLayer] = useState(true)
   const [showBiodiversityHealthLayer, setShowBiodiversityHealthLayer] = useState(false)
@@ -61,6 +67,10 @@ const Dashboard = () => {
   const [showClimateFloodHeat, setShowClimateFloodHeat] = useState(true)
   const [showClimateWaterHeat, setShowClimateWaterHeat] = useState(true)
   const [showBathy, setShowBathy] = useState(false)
+  const [showGeologyOverlay, setShowGeologyOverlay] = useState(false)
+  const [showTributaryLayer, setShowTributaryLayer] = useState(true)
+  const [showMainStemLayer, setShowMainStemLayer] = useState(false)
+  const [showErosionLayer, setShowErosionLayer] = useState(true)
   const [currentViewDate, setCurrentViewDate] = useState(null) // Currently viewing date
   const [weatherData, setWeatherData] = useState(null)
   const [aqiData, setAqiData] = useState(null)
@@ -875,6 +885,7 @@ const Dashboard = () => {
     setShowAqiOverlay(false)
     setShowFlood(false)
     setShowBathy(false)
+    setShowGeologyOverlay(false)
     setShowFloodOverlay(false)
 
     try {
@@ -921,6 +932,7 @@ const Dashboard = () => {
     setShowBodCod(false)
     setShowFlood(false)
     setShowBathy(false)
+    setShowGeologyOverlay(false)
     setShowAnalysis(false)
   }
 
@@ -931,7 +943,7 @@ const Dashboard = () => {
       (id === 'landuse' && showLandUseOverlay) ||
       (id === 'biodiversity' && showBiodiversityOverlay) ||
       (id === 'climate' && showClimateOverlay) ||
-      (id === 'geology' && showBathy) ||
+      (id === 'geology' && (showGeologyOverlay || showBathy)) ||
       (id === 'flood' && showFloodOverlay)
 
     if (alreadyOn) {
@@ -995,7 +1007,10 @@ const Dashboard = () => {
     }
 
     if (id === 'geology') {
-      setShowBathy(true)
+      setShowGeologyOverlay(true)
+      setShowTributaryLayer(true)
+      setShowMainStemLayer(false)
+      setShowErosionLayer(true)
       return
     }
 
@@ -1052,9 +1067,10 @@ const Dashboard = () => {
         setShowAqiOverlay(false)
       }
       else if (requestedView === 'landuse') {
-        // Soil & land use: urban vegetation type and health.
+        // Soil & land use: silt classification plus urban vegetation.
         setShowLandUseOverlay(true)
         setShowUrbanVegLayer(true)
+        setShowSiltClassLayer(true)
         setShowBodCod(false)
         setShowBodCodOverlay(false)
         setShowFlood(false)
@@ -1095,7 +1111,11 @@ const Dashboard = () => {
         setShowAqiOverlay(false)
       }
       else if (requestedView === 'geology') {
-        setShowBathy(true)
+        setShowGeologyOverlay(true)
+        setShowTributaryLayer(true)
+        setShowMainStemLayer(false)
+        setShowErosionLayer(true)
+        setShowBathy(false)
         setShowBodCod(false)
         setShowBodCodOverlay(false)
         setShowFlood(false)
@@ -1695,6 +1715,7 @@ const Dashboard = () => {
                   setShowBodCodOverlay(false)
                   setShowAqiOverlay(false)
                   setShowBathy(false)
+                  setShowGeologyOverlay(false)
                 }}
                 title="Open BOD-COD river dashboard"
               >
@@ -1726,6 +1747,7 @@ const Dashboard = () => {
                   setShowAqiOverlay(false)
                   setShowFloodOverlay(false)
                   setShowBathy(false)
+                  setShowGeologyOverlay(false)
                 }}
                 title="Open digital twin and flood forecast dashboard"
               >
@@ -1777,10 +1799,12 @@ const Dashboard = () => {
                 type="button"
                 className="floating-back-button"
                 onClick={() => {
+                  const fromBathy = showBathy
                   setShowAnalysis(false)
                   setShowBodCod(false)
                   setShowFlood(false)
                   setShowBathy(false)
+                  if (fromBathy) setShowGeologyOverlay(true)
                 }}
               >
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -1793,14 +1817,14 @@ const Dashboard = () => {
                   showBathy
                     ? 'Mula-Mutha Bathymetry Dashboard'
                     : showFlood
-                      ? 'Mula-Mutha Flood Dashboard'
+                      ? 'Mula-Mutha Digital Twin'
                       : 'Mula-Mutha BOD-COD Dashboard'
                 }
                 src={
                   showBathy
                     ? '/asset/mula-mutha-bathymetry.html'
                     : showFlood
-                      ? '/asset/mula-mutha-flood.html'
+                      ? '/asset/mula-mutha-twin.html'
                       : '/asset/mula-mutha-bod-cod.html'
                 }
                 className="bod-cod-frame"
@@ -1825,7 +1849,9 @@ const Dashboard = () => {
                           ? 'biodiversity'
                           : showClimateOverlay
                             ? 'climate'
-                            : showFloodOverlay
+                            : showGeologyOverlay
+                              ? 'geology'
+                              : showFloodOverlay
                               ? 'flood'
                               : null
                 }
@@ -1844,6 +1870,8 @@ const Dashboard = () => {
                   onToggleWst={setShowWstLayer}
                   showChainageLayer={showChainageLayer}
                   onToggleChainage={setShowChainageLayer}
+                  focusChainage={focusChainage}
+                  onSelectChainage={(station) => setFocusChainage({ ...station, at: Date.now() })}
                 />
               )}
               {showFloodOverlay && (
@@ -1853,12 +1881,19 @@ const Dashboard = () => {
                   onToggleChainage={setShowChainageLayer}
                   showDepthLayer={showFloodDepthLayer}
                   onToggleDepth={setShowFloodDepthLayer}
+                  focusChainage={focusChainage}
                 />
               )}
               {showLandUseOverlay && (
                 <SoilLandUseMapOverlay
                   showExtentLayer={showUrbanVegLayer}
                   onToggleExtent={setShowUrbanVegLayer}
+                  showSiltClassLayer={showSiltClassLayer}
+                  onToggleSiltClass={setShowSiltClassLayer}
+                  showSiltVolumeLayer={showSiltVolumeLayer}
+                  onToggleSiltVolume={setShowSiltVolumeLayer}
+                  siltPeriodId={siltPeriodId}
+                  onSiltPeriodChange={setSiltPeriodId}
                   showChainageLayer={showChainageLayer}
                   onToggleChainage={setShowChainageLayer}
                 />
@@ -1885,6 +1920,22 @@ const Dashboard = () => {
                   onToggleChainage={setShowChainageLayer}
                 />
               )}
+              {showGeologyOverlay && (
+                <GeologyMapOverlay
+                  showErosionLayer={showErosionLayer}
+                  onToggleErosion={setShowErosionLayer}
+                  showTributaryLayer={showTributaryLayer}
+                  onToggleTributaries={setShowTributaryLayer}
+                  showMainStemLayer={showMainStemLayer}
+                  onToggleMainStem={setShowMainStemLayer}
+                  showChainageLayer={showChainageLayer}
+                  onToggleChainage={setShowChainageLayer}
+                  onOpenBathymetry={() => {
+                    setShowGeologyOverlay(false)
+                    setShowBathy(true)
+                  }}
+                />
+              )}
               {showAqiOverlay && (
                 <AqiMapOverlay
                   aqiData={aqiData}
@@ -1893,6 +1944,7 @@ const Dashboard = () => {
                   selectedHeight={selectedHeight}
                   showChainageLayer={showChainageLayer}
                   onToggleChainage={setShowChainageLayer}
+                  focusChainage={focusChainage}
                 />
               )}
               <MapComponent 
@@ -1908,18 +1960,39 @@ const Dashboard = () => {
                 showWstLayer={showBodCodOverlay && showWstLayer}
                 showDepthLayer={showFloodOverlay && showFloodDepthLayer}
                 showUrbanVegLayer={showLandUseOverlay && showUrbanVegLayer}
+                showSiltClassLayer={showLandUseOverlay && showSiltClassLayer}
+                showSiltVolumeLayer={showLandUseOverlay && showSiltVolumeLayer}
+                siltPeriodId={siltPeriodId}
                 showBiodiversityTypeLayer={showBiodiversityOverlay && showBiodiversityTypeLayer}
                 showBiodiversityHealthLayer={showBiodiversityOverlay && showBiodiversityHealthLayer}
                 showClimateFloodHeat={showClimateOverlay && showClimateFloodHeat}
                 showClimateWaterHeat={showClimateOverlay && showClimateWaterHeat}
                 climatePeriodId={climatePeriodId}
+                showTributaryLayer={showGeologyOverlay && showTributaryLayer}
+                showMainStemLayer={showGeologyOverlay && showMainStemLayer}
+                showErosionLayer={showGeologyOverlay && showErosionLayer}
                 showChainageLayer={
                   (uploadedKML?.displayName === 'Mula-Mutha River' ||
                     uploadedKML?.name?.toLowerCase().includes('mula-mutha')) &&
                   showChainageLayer
                 }
                 floodZones={showFloodOverlay ? floodZones : null}
+                focusChainage={focusChainage}
+                onSelectChainage={(station) => setFocusChainage({ ...station, at: Date.now() })}
               />
+              {(uploadedKML?.displayName === 'Mula-Mutha River' ||
+                uploadedKML?.name?.toLowerCase().includes('mula-mutha')) &&
+                showChainageLayer && (
+                  <ChainageScrubber
+                    variant={
+                      showFloodOverlay || showBodCodOverlay || showAqiOverlay
+                        ? 'above-ribbon'
+                        : 'map-edge'
+                    }
+                    activeName={focusChainage?.name}
+                    onSelect={(station) => setFocusChainage({ ...station, at: Date.now() })}
+                  />
+                )}
             </div>
           ) : (
             <div className="analysis-content">
