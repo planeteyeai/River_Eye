@@ -1,0 +1,53 @@
+# Overrides the Caddyfile Railpack generates for the built SPA. Keep the static
+# serving identical to the default and add two things it cannot express:
+#
+#   1. /api on this origin. climateye-apis.up.railway.app answers preflights
+#      with 200 but sends no Access-Control-Allow-Origin, so calling it directly
+#      from the browser fails CORS and every AQI and weather panel stays empty.
+#      Proxying keeps the request same-origin, which is what the Vite dev proxy
+#      already does locally.
+#   2. Cache headers. Without them browsers heuristically reuse index.html and
+#      keep asking for bundle filenames a later deploy has removed.
+{
+	admin off
+	persist_config off
+	auto_https off
+
+	log {
+		format json
+	}
+
+	servers {
+		trusted_proxies static private_ranges 100.0.0.0/8
+	}
+}
+
+:{$PORT:3000} {
+	log {
+		format json
+	}
+
+	respond /health 200
+
+	handle /api/* {
+		reverse_proxy https://climateye-apis.up.railway.app {
+			header_up Host climateye-apis.up.railway.app
+		}
+	}
+
+	handle {
+		root * dist
+
+		encode gzip zstd
+
+		# try_files rewrites before file_server runs, so real files still win and
+		# only unmatched routes reach index.html. The route block keeps the header
+		# directives ordered after that rewrite.
+		route {
+			try_files {path} /index.html
+			header /index.html Cache-Control "public, max-age=0, must-revalidate"
+			header /assets/* Cache-Control "public, max-age=31536000, immutable"
+			file_server
+		}
+	}
+}

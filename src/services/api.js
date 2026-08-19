@@ -1,4 +1,7 @@
-const API_BASE_URL = import.meta.env.DEV ? '/api' : 'https://climateye-apis.up.railway.app/api'
+// Same origin in every environment: Vite proxies /api in dev and preview, the
+// Caddyfile reverse-proxies it in production. Calling the API host directly
+// fails CORS because it sends no Access-Control-Allow-Origin.
+const API_BASE_URL = '/api'
 
 /**
  * Calculate the center point (centroid) of a polygon geometry

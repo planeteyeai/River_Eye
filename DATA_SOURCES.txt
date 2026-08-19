@@ -89,8 +89,11 @@ are separate time axes and the UI keeps them separate on purpose.
 --------------------------------------------------------------------------------
 2.2  ClimateEye API (AQI + weather)
 --------------------------------------------------------------------------------
-Base (prod) : https://climateye-apis.up.railway.app/api
-Base (dev)  : /api, proxied by vite.config.js to the same host
+Upstream    : https://climateye-apis.up.railway.app/api
+Base (all)  : /api on the app's own origin. vite.config.js proxies it in dev and
+              preview; the root Caddyfile reverse-proxies it in production. The
+              upstream sends no Access-Control-Allow-Origin, so a browser cannot
+              call it cross-origin — never point the frontend straight at it.
 Used in     : src/services/api.js
 Endpoints   : POST /aqi                  POST /weather
               POST /aqi/hourly           POST /weather/hourly
@@ -922,3 +925,11 @@ CHANGE LOG
             fine. vite.config.js now emits maplibre-gl-worker.mjs and
             maplibre-gl-shared.mjs beside the entry chunk. Localhost was never
             affected, so this only ever reproduced on the hosted build.
+2026-08-19  AQI and weather calls now go to /api on the app's own origin in
+            production too, instead of straight to climateye-apis.up.railway.app.
+            That host answers preflights with 200 but sends no
+            Access-Control-Allow-Origin, so every hosted AQI and weather request
+            failed CORS and those panels had no data. Added a root Caddyfile that
+            reverse-proxies /api to the same upstream and keeps the SPA fallback.
+            Same endpoints, same payloads, same upstream — only the route the
+            browser takes changed. Section 2.2 updated.
