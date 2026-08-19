@@ -79,8 +79,9 @@ const AppHome = () => {
               Hydrology opens the digital twin (modelled discharge, WSE, freeboard and alerts).
               Water quality and salinity intrusion open TSS, NDCI, NDWI, WST and the BOD–COD panel.
               Biodiversity and soil & land use open classified vegetation overlays. Climate impact
-              opens the flood and surface-water heatmap. Geology, pollution and socio-economic land
-              on the live map — their satellite layers are intended scope, not shipped screens yet.
+              opens the flood and surface-water heatmap. Geology opens the satellite-derived
+              bathymetry dashboard. Pollution and socio-economic land on the live map — their
+              satellite layers are intended scope, not shipped screens yet.
             </p>
           </section>
 
@@ -91,7 +92,8 @@ const AppHome = () => {
               BOD–COD series is demonstration data; Turbidity/TSS, NDCI, NDWI and WST (salinity
               thermal proxy) are classified overlays for July 2026 under water quality. The climate
               impact heatmap is classed sample-point density from seven 2026 image pairs, not a
-              surveyed flood line.
+              surveyed flood line. Geology bathymetry is satellite-derived (Sentinel-2, 14 Jul 2026),
+              not an in-situ sounding survey.
               {' '}<Link to="/">The project page</Link> sets out
               every source and its footing.
             </p>

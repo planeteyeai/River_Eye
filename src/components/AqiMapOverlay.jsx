@@ -12,6 +12,7 @@ import {
 } from 'recharts'
 import { extractDataByHeight } from '../utils/dataTransformers'
 import './AqiMapOverlay.css'
+import ChainageLayerCard from './ChainageLayerCard'
 
 const INK_MUTED = '#6b8798'
 const GRID_LINE = '#b8cfe0'
@@ -126,7 +127,14 @@ const ChartTooltip = ({ active, payload }) => {
   )
 }
 
-const AqiMapOverlay = ({ aqiData, chartData = [], loading = false, selectedHeight }) => {
+const AqiMapOverlay = ({
+  aqiData,
+  chartData = [],
+  loading = false,
+  selectedHeight,
+  showChainageLayer = false,
+  onToggleChainage,
+}) => {
   const [visible, setVisible] = useState({ aqi: true, pm25: true, pm10: false })
   const processed = aqiData ? extractDataByHeight(aqiData, selectedHeight) : null
   const aqi = processed?.aqi ?? null
@@ -170,6 +178,13 @@ const AqiMapOverlay = ({ aqiData, chartData = [], loading = false, selectedHeigh
 
   return (
     <div className="aqi-map-overlays">
+      <div className="aqi-map-layers">
+        <ChainageLayerCard
+          inputId="layer-aqi-chainage"
+          checked={showChainageLayer}
+          onToggle={onToggleChainage}
+        />
+      </div>
       <aside className="aqi-map-metrics" aria-label="Air quality metrics">
         <div className="aqi-metrics-head">
           <h3>

@@ -7,7 +7,8 @@
  *  WST (thermal) sits with TSS / NDCI / NDWI / BOD–COD there. Soil & land use
  *  opens the urban vegetation classification. Biodiversity opens the
  *  vegetation-type raster from the KMZ overlay. Climate impact opens the
- *  flood / surface-water heatmap from flood_water_timeseries.xlsx.
+ *  flood / surface-water heatmap from flood_water_timeseries.xlsx. Geology
+ *  opens the satellite-derived bathymetry dashboard.
  */
 
 export const MONITORING_THEMES = [
@@ -19,9 +20,9 @@ export const MONITORING_THEMES = [
   },
   {
     name: 'Geology',
-    desc: 'Lithology, fault lines, bank erosion, mining subsidence',
-    to: '/dashboard',
-    datasets: [],
+    desc: 'Satellite-derived bathymetry — 2D depth map, 3D bed and chainage profile',
+    to: '/dashboard?view=geology',
+    datasets: ['bathymetry'],
   },
   {
     name: 'Biodiversity',

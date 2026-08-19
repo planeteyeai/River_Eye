@@ -17,6 +17,8 @@ const ClimateImpactMapOverlay = ({
   showWaterHeat = true,
   onToggleFlood,
   onToggleWater,
+  showChainageLayer = false,
+  onToggleChainage,
 }) => {
   const [doc, setDoc] = useState(null)
 
@@ -74,7 +76,17 @@ const ClimateImpactMapOverlay = ({
             onChange={(event) => onToggleWater?.(event.target.checked)}
           />
           <span className="climate-sw" style={{ background: doc.classes.water.color }} />
-          <span>Surface water heatmap</span>
+          <span>Permanent water heatmap</span>
+        </label>
+        <label className="climate-check" htmlFor="climate-chainage">
+          <input
+            id="climate-chainage"
+            type="checkbox"
+            checked={Boolean(showChainageLayer)}
+            onChange={(event) => onToggleChainage?.(event.target.checked)}
+          />
+          <span className="climate-sw" style={{ background: '#ffd166' }} />
+          <span>Chainage</span>
         </label>
 
         <div className="climate-period-head">

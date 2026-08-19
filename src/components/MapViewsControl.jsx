@@ -53,6 +53,14 @@ const IconTwin = () => (
   </svg>
 )
 
+const IconGeology = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <path d="M3 20h18" />
+    <path d="M5 20 9 9l3 6 3-4 4 9" />
+    <path d="M8 14h3" />
+  </svg>
+)
+
 const VIEWS = [
   {
     id: 'aqi',
@@ -61,6 +69,13 @@ const VIEWS = [
     always: true,
     title: 'Show AQI on map',
     Icon: IconAqi,
+  },
+  {
+    id: 'geology',
+    label: 'Geology',
+    accent: 'geology',
+    title: 'Satellite-derived bathymetry: 2D map, 3D bed and depth profile',
+    Icon: IconGeology,
   },
   {
     id: 'waterquality',
@@ -94,7 +109,7 @@ const VIEWS = [
     id: 'flood',
     label: 'Digital Twin',
     accent: 'flood',
-    title: 'Show digital twin flood risk on map',
+    title: 'Digital twin layers: 10 / 25 / 100-year flood and water depth',
     Icon: IconTwin,
   },
 ]

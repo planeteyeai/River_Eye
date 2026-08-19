@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import './BodCodMapOverlay.css'
+import ChainageLayerCard from './ChainageLayerCard'
 
 const CLS = ['A', 'B', 'C', 'D', 'E']
 
@@ -286,6 +287,8 @@ const BodCodMapOverlay = ({
   onToggleNdci,
   onToggleNdwi,
   onToggleWst,
+  showChainageLayer = false,
+  onToggleChainage,
 }) => {
   const [data, setData] = useState(null)
   const [scrubIndex, setScrubIndex] = useState(0)
@@ -496,6 +499,11 @@ const BodCodMapOverlay = ({
             </div>
           )
         })}
+        <ChainageLayerCard
+          inputId="layer-wq-chainage"
+          checked={showChainageLayer}
+          onToggle={onToggleChainage}
+        />
       </div>
       <aside className="bod-cod-map-accuracy" aria-label="Accuracy measure">
         <div className="bod-acc-head">

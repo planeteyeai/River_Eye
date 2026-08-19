@@ -8,6 +8,166 @@
   grid-template-columns: minmax(0, 1fr) minmax(268px, 320px);
 }
 
+.flood-map-layers {
+  pointer-events: none;
+  grid-row: 1;
+  grid-column: 1;
+  align-self: start;
+  justify-self: start;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 84px 0 0 16px;
+}
+
+.flood-layer-card {
+  pointer-events: auto;
+  min-width: 220px;
+  max-width: 260px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--rv-line);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.97) 0%, rgba(244, 249, 252, 0.96) 100%);
+  backdrop-filter: blur(14px);
+  box-shadow: var(--rv-shadow-lg);
+  color: var(--rv-ink);
+  font-family: var(--rv-font-body);
+}
+
+.flood-layer-card.is-off {
+  opacity: 0.72;
+}
+
+.flood-layer-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.flood-layer-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 0;
+  cursor: pointer;
+}
+
+.flood-layer-check input[type='checkbox'] {
+  appearance: none;
+  -webkit-appearance: none;
+  flex: 0 0 auto;
+  width: 16px;
+  height: 16px;
+  margin: 2px 0 0;
+  border: 1.5px solid rgba(13, 36, 54, 0.4);
+  border-radius: 4px;
+  background: #fff;
+  cursor: pointer;
+  position: relative;
+}
+
+.flood-layer-check input[type='checkbox']:checked {
+  background: #0e8f9c;
+  border-color: #0e8f9c;
+}
+
+.flood-layer-check input[type='checkbox']:checked::after {
+  content: '';
+  position: absolute;
+  left: 4px;
+  top: 1px;
+  width: 5px;
+  height: 9px;
+  border: solid #fff;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.flood-layer-check-text {
+  font-family: var(--rv-font-display);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.flood-layer-info {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin: 0;
+  padding: 3px 8px;
+  border: 1px solid var(--rv-line);
+  border-radius: 999px;
+  background: var(--rv-surface, #fff);
+  color: var(--rv-ink-2, #3a5c73);
+  font-family: var(--rv-font-body);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.flood-layer-info:hover,
+.flood-layer-card.is-open .flood-layer-info {
+  border-color: #0e8f9c;
+  color: #0a6f7a;
+}
+
+.flood-layer-card.is-open .flood-layer-info {
+  background: rgba(14, 143, 156, 0.08);
+}
+
+.flood-layer-caret {
+  width: 0;
+  height: 0;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 5px solid currentColor;
+  transition: transform 0.15s ease;
+}
+
+.flood-layer-card.is-open .flood-layer-caret {
+  transform: rotate(180deg);
+}
+
+.flood-layer-body {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--rv-line);
+}
+
+.flood-layer-sub {
+  display: block;
+  margin: 0 0 8px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--rv-muted);
+}
+
+.flood-layer-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 12px;
+}
+
+.flood-layer-rows span {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.flood-layer-rows i {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
 .flood-live-card {
   min-width: 0;
   padding: 8px 10px;
@@ -718,6 +878,10 @@
 }
 
 @media (max-width: 1100px) {
+  .flood-map-layers {
+    margin: 76px 0 0 12px;
+  }
+
   .flood-map-overlays {
     grid-template-columns: 1fr;
     grid-template-rows: minmax(0, 1fr) auto auto;

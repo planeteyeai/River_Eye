@@ -154,7 +154,124 @@ const AssetHydrograph = ({ hydro, meta, threshold }) => {
   )
 }
 
-const FloodMapOverlay = ({ onZonesChange, showChainageLayer = true, onToggleChainage }) => {
+const TwinLayerPicker = ({
+  activeZones,
+  onToggleZone,
+  showDepthLayer,
+  onToggleDepth,
+  showChainageLayer,
+  onToggleChainage,
+  returnPeriods,
+  zones,
+  depthSummary,
+  openLayerId,
+  onToggleInfo,
+}) => {
+  const layers = [
+    ...RETURN_PERIODS.map((years) => {
+      const style = ZONE_STYLES[years]
+      const stats = zones?.summary?.find((row) => row.years === years)
+      return {
+        id: String(years),
+        title: `${style.label} flood`,
+        checked: activeZones.includes(years),
+        onChange: (checked) => {
+          if (checked !== activeZones.includes(years)) onToggleZone(years)
+        },
+        subtitle: style.note,
+        rows: [
+          {
+            label: `${Math.round(returnPeriods.levels[years])} m³/s`,
+            color: style.color,
+          },
+          stats
+            ? {
+                label: `${Math.round(stats.meanWidthM)} m · ${stats.areaKm2.toFixed(1)} km²`,
+                color: style.color,
+              }
+            : null,
+        ].filter(Boolean),
+      }
+    }),
+    {
+      id: 'depth',
+      title: 'Water depth',
+      checked: showDepthLayer,
+      onChange: (checked) => onToggleDepth?.(checked),
+      subtitle: 'Classed depth 1.5–2.0 m · smoothed raster',
+      rows: (depthSummary?.classes || []).map((row) => ({
+        label: `${row.label} · ${row.range_label}`,
+        color: row.color,
+      })),
+    },
+    {
+      id: 'chainage',
+      title: 'Chainage',
+      checked: showChainageLayer,
+      onChange: (checked) => onToggleChainage?.(checked),
+      subtitle: 'Centreline stations every 100 m · 0+000 to 16+400',
+      rows: [{ label: 'km marks and 100 m ticks', color: '#ffd166' }],
+    },
+  ]
+
+  return (
+    <div className="flood-map-layers" aria-label="Digital twin layers">
+      {layers.map((layer) => {
+        const isOpen = openLayerId === layer.id
+        const inputId = `twin-layer-${layer.id}`
+        return (
+          <div
+            key={layer.id}
+            className={`flood-layer-card${layer.checked ? '' : ' is-off'}${isOpen ? ' is-open' : ''}`}
+          >
+            <div className="flood-layer-head">
+              <label className="flood-layer-check" htmlFor={inputId}>
+                <input
+                  id={inputId}
+                  type="checkbox"
+                  checked={Boolean(layer.checked)}
+                  onChange={(event) => layer.onChange(event.target.checked)}
+                />
+                <span className="flood-layer-check-text">{layer.title}</span>
+              </label>
+              <button
+                type="button"
+                className="flood-layer-info"
+                aria-expanded={isOpen}
+                aria-controls={`twin-info-${layer.id}`}
+                onClick={() => onToggleInfo(layer.id)}
+              >
+                Info
+                <span className="flood-layer-caret" aria-hidden="true" />
+              </button>
+            </div>
+            {isOpen ? (
+              <div className="flood-layer-body" id={`twin-info-${layer.id}`}>
+                {layer.subtitle ? <small className="flood-layer-sub">{layer.subtitle}</small> : null}
+                <div className="flood-layer-rows">
+                  {layer.rows.map((row) => (
+                    <span key={row.label}>
+                      <i style={{ background: row.color }} />
+                      {row.label}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+const FloodMapOverlay = ({
+  onZonesChange,
+  showChainageLayer = true,
+  onToggleChainage,
+  showDepthLayer = true,
+  onToggleDepth,
+}) => {
   const [meta, setMeta] = useState(null)
   const [state, setState] = useState(null)
   const [margins, setMargins] = useState([])
@@ -166,6 +283,7 @@ const FloodMapOverlay = ({ onZonesChange, showChainageLayer = true, onToggleChai
   const [error, setError] = useState(null)
   const [depthSummary, setDepthSummary] = useState(null)
   const [activeZones, setActiveZones] = useState(RETURN_PERIODS)
+  const [openLayerId, setOpenLayerId] = useState('10')
 
   useEffect(() => {
     let cancelled = false
@@ -260,6 +378,10 @@ const FloodMapOverlay = ({ onZonesChange, showChainageLayer = true, onToggleChai
     )
   }
 
+  const toggleLayerInfo = (id) => {
+    setOpenLayerId((current) => (current === id ? null : id))
+  }
+
   const handleAdvance = async () => {
     setBusy(true)
     try {
@@ -272,9 +394,26 @@ const FloodMapOverlay = ({ onZonesChange, showChainageLayer = true, onToggleChai
     }
   }
 
+  const layerPicker = (
+    <TwinLayerPicker
+      activeZones={activeZones}
+      onToggleZone={toggleZone}
+      showDepthLayer={showDepthLayer}
+      onToggleDepth={onToggleDepth}
+      showChainageLayer={showChainageLayer}
+      onToggleChainage={onToggleChainage}
+      returnPeriods={returnPeriods}
+      zones={zones}
+      depthSummary={depthSummary}
+      openLayerId={openLayerId}
+      onToggleInfo={toggleLayerInfo}
+    />
+  )
+
   if (error && !meta) {
     return (
       <div className="flood-map-overlays">
+        {layerPicker}
         <aside className="flood-map-panel">
           <div className="flood-panel-head">
             <h3>
@@ -288,7 +427,9 @@ const FloodMapOverlay = ({ onZonesChange, showChainageLayer = true, onToggleChai
     )
   }
 
-  if (!meta || !margins.length) return null
+  if (!meta || !margins.length) {
+    return <div className="flood-map-overlays">{layerPicker}</div>
+  }
 
   const overall = worstStatus(margins)
   const counts = countByStatus(margins)
@@ -314,6 +455,7 @@ const FloodMapOverlay = ({ onZonesChange, showChainageLayer = true, onToggleChai
 
   return (
     <div className="flood-map-overlays">
+      {layerPicker}
       <aside className="flood-map-panel" aria-label="Flood forecast summary">
         <div className="flood-panel-head">
           <h3>
@@ -392,9 +534,6 @@ const FloodMapOverlay = ({ onZonesChange, showChainageLayer = true, onToggleChai
           <>
             <div className="flood-stat-chips">
               <span>
-                <em>Cells</em>{depthSummary.total_cells}
-              </span>
-              <span>
                 <em>Range</em>
                 {depthSummary.classes[0]?.range_min?.toFixed(1)}–
                 {depthSummary.classes[depthSummary.classes.length - 1]?.range_max?.toFixed(1)} m
@@ -410,7 +549,6 @@ const FloodMapOverlay = ({ onZonesChange, showChainageLayer = true, onToggleChai
                       <em>{row.range_label}</em>
                     </span>
                     <strong className="flood-depth-count">
-                      {row.count}
                       <small>{row.pct}%</small>
                     </strong>
                   </div>
@@ -426,7 +564,7 @@ const FloodMapOverlay = ({ onZonesChange, showChainageLayer = true, onToggleChai
                 </div>
               ))}
             </div>
-            <p className="flood-depth-note">Colour on map matches depth class · KML patch overlay</p>
+            <p className="flood-depth-note">Colour on map matches depth class · smoothed raster overlay</p>
           </>
         ) : (
           <div className="flood-loading">Loading depth distribution…</div>

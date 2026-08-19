@@ -34,6 +34,8 @@ const BiodiversityMapOverlay = ({
   showHealthLayer = false,
   onToggleType,
   onToggleHealth,
+  showChainageLayer = false,
+  onToggleChainage,
 }) => {
   const [doc, setDoc] = useState(null)
   const [openInfoId, setOpenInfoId] = useState('type')
@@ -125,6 +127,16 @@ const BiodiversityMapOverlay = ({
             </div>
           )
         })}
+
+        <label className="lulc-check" htmlFor="layer-biodiv-chainage">
+          <input
+            id="layer-biodiv-chainage"
+            type="checkbox"
+            checked={Boolean(showChainageLayer)}
+            onChange={(event) => onToggleChainage?.(event.target.checked)}
+          />
+          <span className="lulc-check-text">Chainage</span>
+        </label>
       </div>
     </div>
   )

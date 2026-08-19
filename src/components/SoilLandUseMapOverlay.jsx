@@ -29,7 +29,12 @@ const ClassRows = ({ heading, layer }) => (
 )
 
 /** Soil & land use overlay — urban vegetation type and health around the river. */
-const SoilLandUseMapOverlay = ({ showExtentLayer = true, onToggleExtent }) => {
+const SoilLandUseMapOverlay = ({
+  showExtentLayer = true,
+  onToggleExtent,
+  showChainageLayer = false,
+  onToggleChainage,
+}) => {
   const [doc, setDoc] = useState(null)
   const [openInfoId, setOpenInfoId] = useState('type')
 
@@ -81,6 +86,16 @@ const SoilLandUseMapOverlay = ({ showExtentLayer = true, onToggleExtent }) => {
             Show analysed area on map
             <em>outline only — the box is the image canvas, not the vegetation</em>
           </span>
+        </label>
+
+        <label className="lulc-check" htmlFor="layer-lulc-chainage">
+          <input
+            id="layer-lulc-chainage"
+            type="checkbox"
+            checked={Boolean(showChainageLayer)}
+            onChange={(event) => onToggleChainage?.(event.target.checked)}
+          />
+          <span className="lulc-check-text">Chainage</span>
         </label>
 
         {infoRows.map((row) => {

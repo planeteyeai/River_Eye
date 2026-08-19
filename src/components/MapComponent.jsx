@@ -24,10 +24,9 @@ const NDWI_RASTER = 'lyr-ndwi-raster'
 const WST_SOURCE = 'src-wst-overlay'
 const WST_RASTER = 'lyr-wst-raster'
 const WQ_JSON_URL = '/asset/mula-mutha-wq-overlays.json'
-const DEPTH_SOURCE = 'src-depth-class'
-const DEPTH_FILL = 'lyr-depth-fill'
-const DEPTH_LINE = 'lyr-depth-line'
-const DEPTH_GEOJSON_URL = '/asset/mula-mutha-depth-class.geojson'
+const DEPTH_SOURCE = 'src-depth-overlay'
+const DEPTH_RASTER = 'lyr-depth-raster'
+const DEPTH_META_URL = '/asset/mula-mutha-depth-summary.json'
 const URBAN_VEG_SOURCE = 'src-urban-veg'
 const URBAN_VEG_FILL = 'lyr-urban-veg-fill'
 const URBAN_VEG_LINE = 'lyr-urban-veg-line'
@@ -62,57 +61,6 @@ const pointsToCollection = (pairs) => ({
     geometry: { type: 'Point', coordinates },
   })),
 })
-
-const DEPTH_FILL_COLOR = [
-  'match',
-  ['get', 'depth_class'],
-  0, '#0000ff',
-  1, '#00ff00',
-  2, '#ffff00',
-  3, '#ff8000',
-  4, '#ff0000',
-  '#6b8798',
-]
-
-const ensureClassLayer = (
-  map,
-  {
-    sourceId,
-    fillId,
-    lineId,
-    colorExpr,
-    fillOpacity = 0.55,
-    lineWidth = 0.8,
-    lineOpacity = 0.85,
-    // Adjacent grid cells leave hairline seams when antialiased; disable for tiled rasters-as-polygons.
-    fillAntialias = true,
-  },
-) => {
-  if (map.getSource(sourceId)) return
-  map.addSource(sourceId, { type: 'geojson', data: EMPTY_COLLECTION })
-  map.addLayer({
-    id: fillId,
-    type: 'fill',
-    source: sourceId,
-    layout: { visibility: 'none' },
-    paint: {
-      'fill-color': colorExpr,
-      'fill-opacity': fillOpacity,
-      'fill-antialias': fillAntialias,
-    },
-  })
-  map.addLayer({
-    id: lineId,
-    type: 'line',
-    source: sourceId,
-    layout: { visibility: 'none' },
-    paint: {
-      'line-color': colorExpr,
-      'line-width': lineWidth,
-      'line-opacity': lineOpacity,
-    },
-  })
-}
 
 const parseKMLCoordinates = (kmlContent) => {
   try {
@@ -246,17 +194,6 @@ const ensureOverlayLayers = (map) => {
     })
   }
 
-  ensureClassLayer(map, {
-    sourceId: DEPTH_SOURCE,
-    fillId: DEPTH_FILL,
-    lineId: DEPTH_LINE,
-    colorExpr: DEPTH_FILL_COLOR,
-    fillOpacity: 0.92,
-    lineWidth: 1.1,
-    lineOpacity: 1,
-    fillAntialias: false,
-  })
-
   // The vegetation KML carries an extent and class shares, not per-pixel
   // geometry, so all the map can honestly show is the classified footprint.
   if (!map.getSource(URBAN_VEG_SOURCE)) {
@@ -286,7 +223,7 @@ const ensureOverlayLayers = (map) => {
   }
 
   // Classified rasters (biodiversity KMZs and July water-quality KMZs).
-  const ensureImageRaster = (sourceId, layerId, url) => {
+  const ensureImageRaster = (sourceId, layerId, url, paint = {}) => {
     if (map.getSource(sourceId)) return
     map.addSource(sourceId, {
       type: 'image',
@@ -306,9 +243,14 @@ const ensureOverlayLayers = (map) => {
       paint: {
         'raster-opacity': 0.82,
         'raster-fade-duration': 0,
+        ...paint,
       },
     })
   }
+  ensureImageRaster(DEPTH_SOURCE, DEPTH_RASTER, '/asset/mula-mutha-depth-overlay.png', {
+    'raster-opacity': 0.88,
+    'raster-resampling': 'linear',
+  })
   ensureImageRaster(TSS_SOURCE, TSS_RASTER, '/asset/mula-mutha-tss-overlay.png')
   ensureImageRaster(NDCI_SOURCE, NDCI_RASTER, '/asset/mula-mutha-ndci-overlay.png')
   ensureImageRaster(NDWI_SOURCE, NDWI_RASTER, '/asset/mula-mutha-ndwi-overlay.png')
@@ -725,9 +667,9 @@ const MapComponent = ({
     if (!map || !mapReady) return undefined
 
     const setVisibility = (visible) => {
-      const value = visible ? 'visible' : 'none'
-      if (map.getLayer(DEPTH_FILL)) map.setLayoutProperty(DEPTH_FILL, 'visibility', value)
-      if (map.getLayer(DEPTH_LINE)) map.setLayoutProperty(DEPTH_LINE, 'visibility', value)
+      if (map.getLayer(DEPTH_RASTER)) {
+        map.setLayoutProperty(DEPTH_RASTER, 'visibility', visible ? 'visible' : 'none')
+      }
     }
 
     if (!showDepthLayer) {
@@ -739,12 +681,15 @@ const MapComponent = ({
     const load = async () => {
       try {
         if (!depthLoadedRef.current) {
-          const response = await fetch(DEPTH_GEOJSON_URL, { cache: 'no-store' })
+          const response = await fetch(DEPTH_META_URL, { cache: 'no-store' })
           if (!response.ok) throw new Error(`Depth layer → ${response.status}`)
-          const geojson = await response.json()
+          const meta = await response.json()
           if (cancelled) return
-          map.getSource(DEPTH_SOURCE)?.setData(geojson)
-          depthLoadedRef.current = true
+          const source = map.getSource(DEPTH_SOURCE)
+          if (source?.updateImage && meta?.raster && meta?.imageCoordinates) {
+            source.updateImage({ url: meta.raster, coordinates: meta.imageCoordinates })
+            depthLoadedRef.current = true
+          }
         }
         if (!cancelled) setVisibility(true)
       } catch (error) {

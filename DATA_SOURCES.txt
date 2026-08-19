@@ -144,6 +144,29 @@ River boundary polygon in the same KML is not drawn — the reach outline
 TO CONFIRM: who computed the chainage, from which centreline, and the date.
 
 --------------------------------------------------------------------------------
+3.1c  public/asset/mula-mutha-depth-class.geojson (+ .kml, overlay PNG)
+--------------------------------------------------------------------------------
+Content  : Classed water-depth patches for the Mula-Mutha reach (1.5-2.0 m).
+           446 patches / 15,593 cells from KML b3ff349b41944af598e7015e55bf1c22:
+             0 Shallow        1.5-1.6 m  #0000ff   0.9%
+             1 Low depth      1.6-1.7 m  #00ff00  16.0%
+             2 Moderate depth 1.7-1.8 m  #ffff00  57.8%
+             3 High depth     1.8-1.9 m  #ff8000  20.4%
+             4 Very high depth 1.9-2.0 m #ff0000   4.9%
+           Native cells ~10 m. The Digital Twin map no longer draws the
+           polygons (those read as stair-step pixels). scripts/rasterize-
+           depth-overlay.py paints them at ~4 m and Gaussian-blurs (~one
+           cell) to mula-mutha-depth-overlay.png (3642 x 742). Class colours
+           and cell counts are unchanged. Bounds and imageCoordinates live
+           in mula-mutha-depth-summary.json.
+Used in  : MapComponent.jsx lyr-depth-raster when Digital Twin overlay is
+           open. Legend/stats in FloodMapOverlay.jsx from the summary JSON.
+UI label : Estimated
+Status   : classed product, displayed as a smoothed raster. Not a sounding
+           survey. Distinct from the Geology bathymetry dashboard (3.3b),
+           which uses the same July 2026 SDB range but a continuous grid.
+
+--------------------------------------------------------------------------------
 3.2  public/asset/dashboard_data.json
 --------------------------------------------------------------------------------
 Content  : BOD/COD water-quality figures for 7 reaches, Sangam-Bund Garden to
@@ -397,6 +420,7 @@ TO CONFIRM: sensor, algorithm and pixel size behind the classed points
 --------------------------------------------------------------------------------
 Files    : public/asset/mula-mutha-flood.html
            public/asset/mula-mutha-bod-cod.html
+           public/asset/mula-mutha-bathymetry.html
 Used in  : src/components/Dashboard.jsx, loaded in an iframe
 Status   : self-contained pages with their own inline fetches.
            mula-mutha-flood.html is twin-only (same Railway /api as 2.1):
@@ -412,6 +436,32 @@ Status   : self-contained pages with their own inline fetches.
            theme. Re-apply them whenever a new build is dropped in
            (scripts/port-bod-cod-html.mjs). Everything else in the file,
            including all analysis logic, is upstream's.
+
+--------------------------------------------------------------------------------
+3.3b  public/asset/mula-mutha-bathymetry.html
+--------------------------------------------------------------------------------
+Content  : Standalone Mula-Mutha bathymetry dashboard (2D Leaflet depth raster,
+           3D Plotly river-bed surface, chainage depth profile). Embedded
+           grid from depth_pixels_jul2026_clean.csv:
+             1148 x 222 cells, dlat=dlon=0.00012 (~13 m)
+             lat0 18.52084  lon0 73.85518
+             depth 1.53-2.00 m MSL (histogram reports 15,593 pixels;
+             non-null cells in the grid: 11,580)
+           Land-cover overlay (forest/vegetation, built-up, roads) is bundled
+           in the same file. Reach described as ~14.5 km urban channel.
+Source   : vendor HTML a808cca9ca05492284b458df1a486fd1.html (S3 messaging
+           drop, 2026-08-18). The signed URL is not stored. Depths modelled
+           from Sentinel-2 L2A bands B02/B03/B04/B08 captured 14 Jul 2026,
+           trained on filled depth points and clipped to the river AOI;
+           gaps interpolated from adjacent pixels. Vertical datum: MSL.
+Used in  : Dashboard.jsx iframe when Geology is open (?view=geology, Views
+           dropdown, hub Geology card).
+UI label : Estimated
+Status   : satellite-derived bathymetry for visualization. Not an in-situ
+           sounding survey and not used for flood-corridor or inundation
+           calculations (those still have no DEM - see section 7).
+TO CONFIRM: training soundings, SDB algorithm, and whether 15,593 histogram
+           pixels vs 11,580 grid cells is interpolation vs a different clip.
 
 --------------------------------------------------------------------------------
 3.4  public/asset/godavari-waterbody-rajahmundry.kml
@@ -593,8 +643,10 @@ Not integrated, and each would materially improve accuracy:
   - CWC / Khadakwasla observed daily gauge archive. Would replace the single
     published mean in 5.1 with a real series and remove the reliance on a
     mirrored slide deck.
-  - A DEM or bathymetry for the reach, needed before any inundation extent can
-    be claimed rather than a corridor width.
+  - A surveyed DEM or in-situ bathymetry for the reach, needed before any
+    inundation extent can be claimed rather than a corridor width. Section 3.3b
+    is satellite-derived bathymetry for visualization only and is not used in
+    the flood-corridor calculation.
   - Real hydraulics for water surface elevation, freeboard and thresholds,
     which are currently synthetic (2.1).
   - CPCB / MPCB observed BOD and COD, to replace the synthetic figures in 3.2.
@@ -623,6 +675,8 @@ Not acceptable:
   "matches Pune flood records"        (only 1958 anchors the fit)
   the climate-impact heatmap as a surveyed or official flood extent
     (it is classed sample-point density from 3.2h, not a flood line)
+  the geology bathymetry as a hydrographic survey or navigation chart
+    (it is satellite-derived SDB from 3.3b)
   any use for emergency response, land-use decisions or property-level risk
 
 
@@ -835,3 +889,13 @@ CHANGE LOG
             not in the repo. MapLibre heatmap layers, Climate impact Views
             item, hub card ?view=climate. Default period is the 3–15 Jul
             peak (69.67 ha flood). Label Estimated. Section 3.2h added.
+2026-08-18  Geology card now opens the satellite-derived bathymetry dashboard
+            (mula-mutha-bathymetry.html from vendor HTML
+            a808cca9ca05492284b458df1a486fd1). Sentinel-2 L2A 14 Jul 2026,
+            depths 1.53-2.00 m MSL on a ~13 m grid. Iframe from ?view=geology
+            and Views. Label Estimated. Not used for inundation. Section 3.3b.
+2026-08-19  Digital Twin water-depth overlay is no longer drawn as class
+            polygons (those showed as ~10 m stair-step pixels). Painted to
+            mula-mutha-depth-overlay.png at ~4 m and Gaussian-blurred, then
+            draped as a linearly resampled image. Class colours and cell
+            counts unchanged. Section 3.1c added. rasterize-depth-overlay.py.
