@@ -1,0 +1,132 @@
+{
+  "name": "Mula Mutha Spectral Lithology / Surface Material",
+  "theme": "Geology",
+  "period": "Provisional",
+  "sensor": "Classed GeoTIFF (EPSG:32643, 20 m) \u2192 display PNG in EPSG:4326",
+  "kind": "Estimated",
+  "note": "Provisional spectral lithology from Mula_Mutha_Spectral_Lithology_Map.tif. Eight class values; class 1 unused. The winding channel is spectrally Mixed rock-soil but drawn solid blue for cartographic clarity. Mixed rock-soil share includes those remapped channel pixels.",
+  "bounds": {
+    "north": 18.56235850242967,
+    "south": 18.509121676972974,
+    "east": 73.99637575213919,
+    "west": 73.8497860331936
+  },
+  "raster": "/asset/mula-mutha-spectral-lithology.png",
+  "legend": "/asset/mula-mutha-spectral-lithology-legend.png",
+  "kml": "/asset/mula-mutha-spectral-lithology.kml",
+  "imageCoordinates": [
+    [
+      73.8497860331936,
+      18.56235850242967
+    ],
+    [
+      73.99637575213919,
+      18.56235850242967
+    ],
+    [
+      73.99637575213919,
+      18.509121676972974
+    ],
+    [
+      73.8497860331936,
+      18.509121676972974
+    ]
+  ],
+  "classes": [
+    {
+      "id": 0,
+      "class": 0,
+      "key": "00FFFF",
+      "label": "Water",
+      "color": "#00ffff",
+      "pixels": 260696,
+      "share_pct": 1.9,
+      "area_ha": 168.8
+    },
+    {
+      "id": 2,
+      "class": 2,
+      "key": "8B0000",
+      "label": "Basaltic / mafic",
+      "color": "#8b0000",
+      "pixels": 2204895,
+      "share_pct": 16.4,
+      "area_ha": 1427.4
+    },
+    {
+      "id": 3,
+      "class": 3,
+      "key": "FF8C00",
+      "label": "Weathered rock",
+      "color": "#ff8c00",
+      "pixels": 1573324,
+      "share_pct": 11.7,
+      "area_ha": 1018.6
+    },
+    {
+      "id": 4,
+      "class": 4,
+      "key": "FFD700",
+      "label": "Alluvial / sedimentary",
+      "color": "#ffd700",
+      "pixels": 1101731,
+      "share_pct": 8.2,
+      "area_ha": 713.2
+    },
+    {
+      "id": 5,
+      "class": 5,
+      "key": "FF0000",
+      "label": "Ferruginous / iron-rich",
+      "color": "#ff0000",
+      "pixels": 1390203,
+      "share_pct": 10.3,
+      "area_ha": 900.0
+    },
+    {
+      "id": 6,
+      "class": 6,
+      "key": "9370DB",
+      "label": "Clay-rich",
+      "color": "#9370db",
+      "pixels": 1924700,
+      "share_pct": 14.3,
+      "area_ha": 1246.0
+    },
+    {
+      "id": 7,
+      "class": 7,
+      "key": "708090",
+      "label": "Silica-rich",
+      "color": "#708090",
+      "pixels": 4586226,
+      "share_pct": 34.1,
+      "area_ha": 2969.1
+    },
+    {
+      "id": 8,
+      "class": 8,
+      "key": "A0522D",
+      "label": "Mixed rock-soil",
+      "color": "#a0522d",
+      "pixels": 400898,
+      "share_pct": 3.0,
+      "area_ha": 259.5
+    }
+  ],
+  "river_channel": {
+    "label": "River channel (cartographic)",
+    "color": "#0066cc",
+    "note": "Shown blue; spectrally classed as Mixed rock-soil",
+    "pixels": 384671,
+    "share_pct": 2.9,
+    "area_ha": 249.0
+  },
+  "total_pixels": 13816642,
+  "classified_pixels": 13442673,
+  "total_area_ha": 8702.6,
+  "width": 6223,
+  "height": 2260,
+  "source_kmz": "b7acfdf14dfa4a5a9c0ec4c050e2d000.kmz",
+  "source_name": "Mula_Mutha_Spectral_Lithology"
+}

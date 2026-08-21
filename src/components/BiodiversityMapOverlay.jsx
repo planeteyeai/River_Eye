@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import './SoilLandUseMapOverlay.css'
 import { fetchAssetJson } from '../lib/fetchAssetJson'
+import { LayerPanelPortal } from './LayerPanelSlots'
 
 const BIODIV_URL = '/asset/mula-mutha-biodiversity.json'
 
@@ -29,15 +30,8 @@ const ClassRows = ({ layer }) => (
   </div>
 )
 
-/** Biodiversity overlay — vegetation type and health rasters from KMZ. */
-const BiodiversityMapOverlay = ({
-  showTypeLayer = true,
-  showHealthLayer = false,
-  onToggleType,
-  onToggleHealth,
-  showChainageLayer = false,
-  onToggleChainage,
-}) => {
+/** Biodiversity detail — rendered inside the Biodiversity group of the Layers panel. */
+const BiodiversityMapOverlay = ({ showTypeLayer = true, showHealthLayer = false }) => {
   const [doc, setDoc] = useState(null)
   const [openInfoId, setOpenInfoId] = useState('type')
 
@@ -63,48 +57,32 @@ const BiodiversityMapOverlay = ({
       id: 'type',
       title: 'Vegetation type',
       checked: showTypeLayer,
-      onChange: onToggleType,
       layer: typeLayer,
-      inputId: 'layer-biodiv-type',
     },
     {
       id: 'health',
       title: 'Vegetation health',
       checked: showHealthLayer,
-      onChange: onToggleHealth,
       layer: healthLayer,
-      inputId: 'layer-biodiv-health',
     },
-  ]
+  ].filter((row) => row.checked)
 
   const toggleInfo = (id) => {
     setOpenInfoId((current) => (current === id ? null : id))
   }
 
   return (
-    <div className="lulc-map-overlays">
-      <div className="lulc-legend" aria-label="Biodiversity vegetation classes">
-        <div className="lulc-legend-title">
-          <span className="lulc-check-text">Biodiversity</span>
-        </div>
-
+    <LayerPanelPortal viewId="biodiversity">
+      <div className="lulc-embed panel-embed" aria-label="Biodiversity vegetation classes">
         {rows.map((row) => {
           const isOpen = openInfoId === row.id
           return (
             <div
               key={row.id}
-              className={`lulc-info-drop${row.checked ? '' : ' is-off'}${isOpen ? ' is-open' : ''}`}
+              className={`lulc-info-drop${isOpen ? ' is-open' : ''}`}
             >
               <div className="lulc-info-head">
-                <label className="lulc-check" htmlFor={row.inputId}>
-                  <input
-                    id={row.inputId}
-                    type="checkbox"
-                    checked={Boolean(row.checked)}
-                    onChange={(event) => row.onChange?.(event.target.checked)}
-                  />
-                  <span className="lulc-check-text">{row.title}</span>
-                </label>
+                <span className="lulc-check-text">{row.title}</span>
                 <button
                   type="button"
                   className="lulc-info-toggle"
@@ -124,18 +102,8 @@ const BiodiversityMapOverlay = ({
             </div>
           )
         })}
-
-        <label className="lulc-check" htmlFor="layer-biodiv-chainage">
-          <input
-            id="layer-biodiv-chainage"
-            type="checkbox"
-            checked={Boolean(showChainageLayer)}
-            onChange={(event) => onToggleChainage?.(event.target.checked)}
-          />
-          <span className="lulc-check-text">Chainage</span>
-        </label>
       </div>
-    </div>
+    </LayerPanelPortal>
   )
 }
 

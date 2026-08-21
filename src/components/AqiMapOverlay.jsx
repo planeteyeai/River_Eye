@@ -13,6 +13,7 @@ import {
 import { extractDataByHeight } from '../utils/dataTransformers'
 import './AqiMapOverlay.css'
 import ChainageLayerCard from './ChainageLayerCard'
+import { LayerPanelPortal } from './LayerPanelSlots'
 
 const INK_MUTED = '#6b8798'
 const GRID_LINE = '#b8cfe0'
@@ -133,7 +134,6 @@ const AqiMapOverlay = ({
   loading = false,
   selectedHeight,
   showChainageLayer = false,
-  onToggleChainage,
   focusChainage = null,
 }) => {
   const [visible, setVisible] = useState({ aqi: true, pm25: true, pm10: false })
@@ -178,15 +178,15 @@ const AqiMapOverlay = ({
   }
 
   return (
-    <div className="aqi-map-overlays">
-      <div className="aqi-map-layers">
-        <ChainageLayerCard
-          inputId="layer-aqi-chainage"
-          checked={showChainageLayer}
-          onToggle={onToggleChainage}
-          focusChainage={focusChainage}
-        />
+    <>
+    <LayerPanelPortal viewId="aqi">
+      <div className="aqi-embed panel-embed" aria-label="AQI detail">
+        {showChainageLayer && (
+          <ChainageLayerCard inputId="layer-aqi-chainage" focusChainage={focusChainage} />
+        )}
       </div>
+    </LayerPanelPortal>
+    <div className="aqi-map-overlays">
       <aside className="aqi-map-metrics" aria-label="Air quality metrics">
         <div className="aqi-metrics-head">
           <h3>
@@ -344,6 +344,7 @@ const AqiMapOverlay = ({
         </div>
       </section>
     </div>
+    </>
   )
 }
 

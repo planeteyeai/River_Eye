@@ -21,7 +21,6 @@
   font-family: var(--rv-font-body);
 }
 
-.wq-map-legends,
 .theme-map-legends {
   pointer-events: none;
   grid-row: 2;
@@ -152,25 +151,30 @@
 }
 
 .wq-info-drop {
-  min-width: 220px;
-  max-width: 260px;
+  padding-top: 8px;
+  border-top: 1px solid var(--rv-line);
 }
 
-.wq-info-drop .tss-map-legend-title,
-.wq-info-drop .wq-layer-check {
-  margin-bottom: 0;
+.wq-embed > .wq-info-drop:first-child {
+  padding-top: 0;
+  border-top: 0;
+}
+
+.wq-info-drop.is-off {
+  opacity: 0.72;
 }
 
 .wq-info-head {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: 8px;
 }
 
-.wq-info-head .wq-layer-check {
+.wq-info-head .wq-layer-check-text {
   flex: 1 1 auto;
   min-width: 0;
+  font-size: 13px;
 }
 
 .wq-info-toggle {

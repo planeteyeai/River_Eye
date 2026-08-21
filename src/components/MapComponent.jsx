@@ -43,6 +43,12 @@ const SILT_CLASS_SOURCE = 'src-silt-class'
 const SILT_CLASS_RASTER = 'lyr-silt-class'
 const SILT_VOLUME_SOURCE = 'src-silt-volume'
 const SILT_VOLUME_RASTER = 'lyr-silt-volume'
+const LULC_JSON_URL = '/asset/mula-mutha-lulc.json'
+const LULC_SOURCE = 'src-lulc-overlay'
+const LULC_RASTER = 'lyr-lulc-raster'
+const LULC_POLY_SOURCE = 'src-lulc-polygons'
+const LULC_POLY_FILL = 'lyr-lulc-poly-fill'
+const LULC_POLY_LINE = 'lyr-lulc-poly-line'
 const FLOOD_ZONE_SOURCE = 'src-flood-zones'
 const FLOOD_ZONE_FILL = 'lyr-flood-zone-fill'
 const FLOOD_ZONE_LINE = 'lyr-flood-zone-line'
@@ -72,6 +78,9 @@ const TRIB_GEOJSON_URL = '/asset/mula-mutha-tributaries.geojson'
 const EROSION_SOURCE = 'src-erosion'
 const EROSION_RASTER = 'lyr-erosion'
 const EROSION_JSON_URL = '/asset/mula-mutha-erosion-hotspots.json'
+const LITHOLOGY_SOURCE = 'src-lithology'
+const LITHOLOGY_RASTER = 'lyr-lithology'
+const LITHOLOGY_JSON_URL = '/asset/mula-mutha-spectral-lithology.json'
 
 const TRIB_COLOR = [
   'match',
@@ -336,7 +345,39 @@ const ensureOverlayLayers = (map) => {
     'raster-opacity': 0.82,
     'raster-resampling': 'linear',
   })
+  ensureImageRaster(LULC_SOURCE, LULC_RASTER, '/asset/mula-mutha-lulc-2025.png', {
+    'raster-opacity': 0.82,
+    'raster-resampling': 'nearest',
+  })
+  if (!map.getSource(LULC_POLY_SOURCE)) {
+    map.addSource(LULC_POLY_SOURCE, { type: 'geojson', data: EMPTY_COLLECTION })
+    map.addLayer({
+      id: LULC_POLY_FILL,
+      type: 'fill',
+      source: LULC_POLY_SOURCE,
+      layout: { visibility: 'none' },
+      paint: {
+        'fill-color': ['coalesce', ['get', 'color'], '#888888'],
+        'fill-opacity': 0.72,
+      },
+    })
+    map.addLayer({
+      id: LULC_POLY_LINE,
+      type: 'line',
+      source: LULC_POLY_SOURCE,
+      layout: { visibility: 'none' },
+      paint: {
+        'line-color': ['coalesce', ['get', 'color'], '#555555'],
+        'line-width': 0.6,
+        'line-opacity': 0.55,
+      },
+    })
+  }
   ensureImageRaster(EROSION_SOURCE, EROSION_RASTER, '/asset/mula-mutha-erosion-hotspots.png', {
+    'raster-opacity': 0.88,
+    'raster-resampling': 'nearest',
+  })
+  ensureImageRaster(LITHOLOGY_SOURCE, LITHOLOGY_RASTER, '/asset/mula-mutha-spectral-lithology.png', {
     'raster-opacity': 0.88,
     'raster-resampling': 'nearest',
   })
@@ -614,6 +655,8 @@ const MapComponent = ({
   showSiltClassLayer = false,
   showSiltVolumeLayer = false,
   siltPeriodId = 5,
+  showLulcLayer = false,
+  lulcPeriodId = 4,
   showBiodiversityTypeLayer = false,
   showBiodiversityHealthLayer = false,
   showClimateFloodHeat = false,
@@ -623,6 +666,7 @@ const MapComponent = ({
   showTributaryLayer = false,
   showMainStemLayer = false,
   showErosionLayer = false,
+  showLithologyLayer = false,
   floodZones = null,
   focusChainage = null,
   onSelectChainage,
@@ -635,6 +679,7 @@ const MapComponent = ({
   const depthLoadedRef = useRef(false)
   const urbanVegLoadedRef = useRef(false)
   const siltMetaRef = useRef(null)
+  const lulcMetaRef = useRef(null)
   const biodiversityMetaRef = useRef(null)
   const climatePointsRef = useRef({})
   const chainageLoadedRef = useRef(false)
@@ -643,6 +688,7 @@ const MapComponent = ({
   const tributaryLoadedRef = useRef(false)
   const tributaryPopupRef = useRef(null)
   const erosionMetaRef = useRef(null)
+  const lithologyMetaRef = useRef(null)
   const drawPointsRef = useRef([])
   const drawHandlersRef = useRef({ click: null, dblclick: null })
   const [drawPointCount, setDrawPointCount] = React.useState(0)
@@ -1041,6 +1087,77 @@ const MapComponent = ({
       }
     }
 
+    if (!showLulcLayer) {
+      setVisibility(LULC_RASTER, false)
+      setVisibility(LULC_POLY_FILL, false)
+      setVisibility(LULC_POLY_LINE, false)
+      return undefined
+    }
+
+    let cancelled = false
+    const load = async () => {
+      try {
+        if (!lulcMetaRef.current) {
+          lulcMetaRef.current = await fetchAssetJson(LULC_JSON_URL, 'LULC')
+        }
+        if (cancelled) return
+
+        const periodId = Number.isFinite(lulcPeriodId) ? lulcPeriodId : 4
+        const period = lulcMetaRef.current.periods?.find((row) => row.id === periodId)
+          || lulcMetaRef.current.periods?.[0]
+        if (!period) throw new Error('LULC has no periods')
+
+        if (period.kind === 'polygons' && period.geojson) {
+          const collection = await fetchAssetJson(period.geojson, 'LULC 2026 polygons')
+          if (cancelled) return
+          map.getSource(LULC_POLY_SOURCE)?.setData(collection || EMPTY_COLLECTION)
+          setVisibility(LULC_RASTER, false)
+          setVisibility(LULC_POLY_FILL, true)
+          setVisibility(LULC_POLY_LINE, true)
+          return
+        }
+
+        const rasterSource = map.getSource(LULC_SOURCE)
+        if (
+          rasterSource?.updateImage
+          && period.raster
+          && isValidImageCoordinates(period.imageCoordinates)
+        ) {
+          rasterSource.updateImage({
+            url: period.raster,
+            coordinates: period.imageCoordinates,
+          })
+        }
+        map.getSource(LULC_POLY_SOURCE)?.setData(EMPTY_COLLECTION)
+        setVisibility(LULC_POLY_FILL, false)
+        setVisibility(LULC_POLY_LINE, false)
+        setVisibility(LULC_RASTER, true)
+      } catch (error) {
+        console.error('Failed to load LULC overlay', error)
+        if (!cancelled) {
+          setVisibility(LULC_RASTER, false)
+          setVisibility(LULC_POLY_FILL, false)
+          setVisibility(LULC_POLY_LINE, false)
+        }
+      }
+    }
+    load()
+
+    return () => {
+      cancelled = true
+    }
+  }, [showLulcLayer, lulcPeriodId, mapReady])
+
+  useEffect(() => {
+    const map = mapRef.current
+    if (!map || !mapReady) return undefined
+
+    const setVisibility = (layerId, visible) => {
+      if (map.getLayer(layerId)) {
+        map.setLayoutProperty(layerId, 'visibility', visible ? 'visible' : 'none')
+      }
+    }
+
     const anyOn = showBiodiversityTypeLayer || showBiodiversityHealthLayer
     if (!anyOn) {
       setVisibility(BIODIV_TYPE_RASTER, false)
@@ -1299,6 +1416,45 @@ const MapComponent = ({
       cancelled = true
     }
   }, [showErosionLayer, mapReady])
+
+  useEffect(() => {
+    const map = mapRef.current
+    if (!map || !mapReady) return undefined
+
+    const setVisibility = (visible) => {
+      if (map.getLayer(LITHOLOGY_RASTER)) {
+        map.setLayoutProperty(LITHOLOGY_RASTER, 'visibility', visible ? 'visible' : 'none')
+      }
+    }
+
+    if (!showLithologyLayer) {
+      setVisibility(false)
+      return undefined
+    }
+
+    let cancelled = false
+    const load = async () => {
+      try {
+        if (!lithologyMetaRef.current) {
+          lithologyMetaRef.current = await fetchAssetJson(LITHOLOGY_JSON_URL, 'Spectral lithology')
+        }
+        if (cancelled) return
+        const doc = lithologyMetaRef.current
+        const source = map.getSource(LITHOLOGY_SOURCE)
+        if (source?.updateImage && doc?.raster && isValidImageCoordinates(doc.imageCoordinates)) {
+          source.updateImage({ url: doc.raster, coordinates: doc.imageCoordinates })
+        }
+        if (!cancelled) setVisibility(true)
+      } catch (error) {
+        console.error('Failed to load spectral lithology overlay', error)
+        if (!cancelled) setVisibility(false)
+      }
+    }
+    load()
+    return () => {
+      cancelled = true
+    }
+  }, [showLithologyLayer, mapReady])
 
   useEffect(() => {
     const map = mapRef.current

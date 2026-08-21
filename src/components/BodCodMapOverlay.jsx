@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import './BodCodMapOverlay.css'
 import ChainageLayerCard from './ChainageLayerCard'
+import { LayerPanelPortal } from './LayerPanelSlots'
 import { fetchAssetJson } from '../lib/fetchAssetJson'
 import {
   chainageFromRibbonKm,
@@ -291,12 +292,7 @@ const BodCodMapOverlay = ({
   showNdciLayer = false,
   showNdwiLayer = false,
   showWstLayer = false,
-  onToggleTss,
-  onToggleNdci,
-  onToggleNdwi,
-  onToggleWst,
   showChainageLayer = false,
-  onToggleChainage,
   focusChainage = null,
   onSelectChainage,
 }) => {
@@ -311,13 +307,6 @@ const BodCodMapOverlay = ({
     ndci: showNdciLayer,
     ndwi: showNdwiLayer,
     wst: showWstLayer,
-  }
-
-  const layerToggle = {
-    tss: onToggleTss,
-    ndci: onToggleNdci,
-    ndwi: onToggleNdwi,
-    wst: onToggleWst,
   }
 
   const toggleInfo = (id) => {
@@ -490,26 +479,18 @@ const BodCodMapOverlay = ({
   ]
 
   return (
-    <div className="bod-cod-map-overlays">
-      <div className="wq-map-legends" aria-label="Water quality layers">
-        {WQ_LAYERS.map((layer) => {
-          const isOn = Boolean(layerOn[layer.id])
+    <>
+    <LayerPanelPortal viewId="waterquality">
+      <div className="wq-embed panel-embed" aria-label="Water quality detail">
+        {WQ_LAYERS.filter((layer) => layerOn[layer.id]).map((layer) => {
           const isOpen = openInfoId === layer.id
           return (
             <div
               key={layer.id}
-              className={`tss-map-legend wq-info-drop${isOn ? '' : ' is-off'}${isOpen ? ' is-open' : ''}`}
+              className={`wq-info-drop${isOpen ? ' is-open' : ''}`}
             >
               <div className="wq-info-head">
-                <label className="wq-layer-check" htmlFor={`layer-${layer.id}`}>
-                  <input
-                    id={`layer-${layer.id}`}
-                    type="checkbox"
-                    checked={isOn}
-                    onChange={(event) => layerToggle[layer.id]?.(event.target.checked)}
-                  />
-                  <span className="wq-layer-check-text">{layer.title}</span>
-                </label>
+                <span className="wq-layer-check-text">{layer.title}</span>
                 <button
                   type="button"
                   className="wq-info-toggle"
@@ -537,13 +518,12 @@ const BodCodMapOverlay = ({
             </div>
           )
         })}
-        <ChainageLayerCard
-          inputId="layer-wq-chainage"
-          checked={showChainageLayer}
-          onToggle={onToggleChainage}
-          focusChainage={focusChainage}
-        />
+        {showChainageLayer && (
+          <ChainageLayerCard inputId="layer-wq-chainage" focusChainage={focusChainage} />
+        )}
       </div>
+    </LayerPanelPortal>
+    <div className="bod-cod-map-overlays">
       <aside className="bod-cod-map-accuracy" aria-label="Accuracy measure">
         <div className="bod-acc-head">
           <h3>
@@ -857,6 +837,7 @@ const BodCodMapOverlay = ({
         </aside>
       </section>
     </div>
+    </>
   )
 }
 

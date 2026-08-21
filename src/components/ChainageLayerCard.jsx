@@ -2,12 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react'
 import './ChainageLayerCard.css'
 import { binBoundsForChainage, formatChainage } from '../lib/chainageBins'
 
-const ChainageLayerCard = ({
-  checked = false,
-  onToggle,
-  inputId = 'layer-chainage',
-  focusChainage = null,
-}) => {
+const ChainageLayerCard = ({ inputId = 'layer-chainage', focusChainage = null }) => {
   const [open, setOpen] = useState(false)
   const selection = useMemo(() => {
     if (!focusChainage) return null
@@ -26,17 +21,9 @@ const ChainageLayerCard = ({
   }, [selection?.bin?.name, selection?.station])
 
   return (
-    <div className={`chainage-layer-card${checked ? '' : ' is-off'}${open ? ' is-open' : ''}`}>
+    <div className={`chainage-layer-card${open ? ' is-open' : ''}`}>
       <div className="chainage-layer-head">
-        <label className="chainage-layer-check" htmlFor={inputId}>
-          <input
-            id={inputId}
-            type="checkbox"
-            checked={Boolean(checked)}
-            onChange={(event) => onToggle?.(event.target.checked)}
-          />
-          <span className="chainage-layer-check-text">Chainage</span>
-        </label>
+        <span className="chainage-layer-check-text">Chainage</span>
         <button
           type="button"
           className="chainage-layer-info"

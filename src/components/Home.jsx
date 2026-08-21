@@ -60,7 +60,6 @@ const Icon = {
 
 const NAV = [
   { label: 'Features', to: '/#features' },
-  { label: 'Data & limits', to: '/#data' },
   { label: 'Dashboard', to: '/dashboard' },
 ]
 
@@ -75,12 +74,6 @@ const STATS = [
   { value: '8', unit: '', label: 'Assets watched on the reach' },
   { value: '1698', unit: '', label: 'Model cells along the reach' },
   { value: '72', unit: 'h', label: 'Forecast horizon' },
-]
-
-const LIMITS = [
-  'Of the nine themes above, hydrology opens the reach digital twin. Water quality and salinity intrusion open TSS, NDCI, NDWI, WST and BOD–COD. Biodiversity opens classified vegetation overlays. Soil & land use opens monthly silt rasters plus urban vegetation. Climate impact opens the flood / surface-water heatmap. Geology opens joining streams on the map, plus satellite-derived bathymetry. Pollution and socio-economic remain intended scope.',
-  'Water level, freeboard, alerts and twin discharge come from a demonstration model, not from gauges in the channel.',
-  'Nothing here is fit for emergency response, land-use decisions or property-level risk.',
 ]
 
 /* ----------------------------------------------------------------- utils */
@@ -405,61 +398,6 @@ const Themes = () => {
   )
 }
 
-const DataLimits = () => {
-  const [ref, shown] = useReveal()
-
-  return (
-    <section className="lp-section is-inset" id="data" ref={ref}>
-      <SectionHead
-        tag="Data & limits"
-        title={
-          <>
-            Honest about <span className="lp-gradient-text">what each number is worth</span>
-          </>
-        }
-        sub="Flood discharge and water level on this reach come from the digital twin demonstration model. They are labelled Model — not gauge readings, and not a global flood forecast."
-      />
-
-      <div className="lp-limits">
-        <div className={`lp-limits-card lp-reveal ${shown ? 'is-in' : ''}`}>
-          <h3>What the flood panel shows</h3>
-          <ol>
-            <li>
-              <strong>Discharge.</strong> The twin&rsquo;s current <code>q_now</code> from{' '}
-              <code>/api/state</code> — synthetic, advanced with the simulation clock.
-            </li>
-            <li>
-              <strong>Water level.</strong> Modelled WSE, freeboard and thresholds at eight assets
-              along the reach.
-            </li>
-            <li>
-              <strong>Hydrographs.</strong> Per-asset ensemble curves from the twin hydrograph
-              endpoint, not from a live gauge.
-            </li>
-            <li>
-              <strong>Air &amp; weather.</strong> Separate ClimateEye backend calls when you analyse
-              an area on the map — unrelated to the flood twin.
-            </li>
-          </ol>
-        </div>
-
-        <div className={`lp-limits-card is-caution lp-reveal ${shown ? 'is-in' : ''}`} style={stagger(1)}>
-          <h3>What this is not</h3>
-          <ul>
-            {LIMITS.map((limit) => (
-              <li key={limit}>{limit}</li>
-            ))}
-          </ul>
-          <p>
-            The repository carries a <code>DATA_SOURCES.txt</code> recording every endpoint, the file
-            that consumes it, its attribution and its caveats.
-          </p>
-        </div>
-      </div>
-    </section>
-  )
-}
-
 const Footer = () => (
   <footer className="lp-footer">
     <div className="lp-footer-inner">
@@ -512,7 +450,6 @@ const Home = () => {
         <Hero enterTo={enterTo} enterLabel={enterLabel} />
         <Stats />
         <Themes />
-        <DataLimits />
       </main>
       <Footer />
     </div>

@@ -1,0 +1,550 @@
+{
+  "name": "Mula-Mutha land use / land cover",
+  "theme": "Soil & land use",
+  "captured": "2021\u20132026",
+  "kind": "Estimated",
+  "sensor": "Unconfirmed in KMZ/KML (classed LULC product)",
+  "note": "2021\u20132025 are GroundOverlay rasters from MulaMutha_LULC_YYYY.kmz with legend Forest / Crop land / Barren land / Water bodies / Settlements. 2026 is a polygon KML (Classified Raster smoothed) with a different class-id order: Water / Settlements / Forest/dense Vegetation / Cropland / Barren land.",
+  "default_period": 4,
+  "classes": [
+    {
+      "class": 0,
+      "label": "Forest",
+      "color": "#006400"
+    },
+    {
+      "class": 1,
+      "label": "Crop land",
+      "color": "#e6a23c"
+    },
+    {
+      "class": 2,
+      "label": "Barren land",
+      "color": "#a9a9a9"
+    },
+    {
+      "class": 3,
+      "label": "Water bodies",
+      "color": "#2196f3"
+    },
+    {
+      "class": 4,
+      "label": "Settlements",
+      "color": "#c62828"
+    }
+  ],
+  "classes_2026": [
+    {
+      "class": 0,
+      "label": "Water bodies",
+      "color": "#2196f3"
+    },
+    {
+      "class": 1,
+      "label": "Settlements",
+      "color": "#c62828"
+    },
+    {
+      "class": 2,
+      "label": "Forest/dense Vegetation",
+      "color": "#006400"
+    },
+    {
+      "class": 3,
+      "label": "Cropland",
+      "color": "#f4c430"
+    },
+    {
+      "class": 4,
+      "label": "Barren land",
+      "color": "#8d6e63"
+    }
+  ],
+  "periods": [
+    {
+      "id": 0,
+      "year": 2021,
+      "label": "2021",
+      "kind": "raster",
+      "source_kmz": "MulaMutha_LULC_2021.kmz",
+      "bounds": {
+        "north": 18.56235850242967,
+        "south": 18.509203857291638,
+        "east": 73.9963853971848,
+        "west": 73.84988078051396
+      },
+      "imageCoordinates": [
+        [
+          73.84988078051396,
+          18.56235850242967
+        ],
+        [
+          73.9963853971848,
+          18.56235850242967
+        ],
+        [
+          73.9963853971848,
+          18.509203857291638
+        ],
+        [
+          73.84988078051396,
+          18.509203857291638
+        ]
+      ],
+      "raster": "/asset/mula-mutha-lulc-2021.png",
+      "kml": "/asset/mula-mutha-lulc-2021.kml",
+      "bytes": 92037,
+      "classes": [
+        {
+          "id": 0,
+          "class": 0,
+          "label": "Forest",
+          "color": "#006400",
+          "pixels": 157636,
+          "share_pct": 17.6,
+          "area_ha": 1603.1
+        },
+        {
+          "id": 1,
+          "class": 1,
+          "label": "Crop land",
+          "color": "#e6a23c",
+          "pixels": 130769,
+          "share_pct": 14.6,
+          "area_ha": 1329.9
+        },
+        {
+          "id": 2,
+          "class": 2,
+          "label": "Barren land",
+          "color": "#a9a9a9",
+          "pixels": 58922,
+          "share_pct": 6.6,
+          "area_ha": 599.2
+        },
+        {
+          "id": 3,
+          "class": 3,
+          "label": "Water bodies",
+          "color": "#2196f3",
+          "pixels": 29471,
+          "share_pct": 3.3,
+          "area_ha": 299.7
+        },
+        {
+          "id": 4,
+          "class": 4,
+          "label": "Settlements",
+          "color": "#c62828",
+          "pixels": 516599,
+          "share_pct": 57.8,
+          "area_ha": 5253.6
+        }
+      ],
+      "total_pixels": 893397,
+      "total_area_ha": 9085.5,
+      "width": 1543,
+      "height": 579
+    },
+    {
+      "id": 1,
+      "year": 2022,
+      "label": "2022",
+      "kind": "raster",
+      "source_kmz": "MulaMutha_LULC_2022.kmz",
+      "bounds": {
+        "north": 18.56235850242967,
+        "south": 18.509203857291638,
+        "east": 73.9963853971848,
+        "west": 73.84988078051396
+      },
+      "imageCoordinates": [
+        [
+          73.84988078051396,
+          18.56235850242967
+        ],
+        [
+          73.9963853971848,
+          18.56235850242967
+        ],
+        [
+          73.9963853971848,
+          18.509203857291638
+        ],
+        [
+          73.84988078051396,
+          18.509203857291638
+        ]
+      ],
+      "raster": "/asset/mula-mutha-lulc-2022.png",
+      "kml": "/asset/mula-mutha-lulc-2022.kml",
+      "bytes": 91010,
+      "classes": [
+        {
+          "id": 0,
+          "class": 0,
+          "label": "Forest",
+          "color": "#006400",
+          "pixels": 154844,
+          "share_pct": 17.3,
+          "area_ha": 1574.7
+        },
+        {
+          "id": 1,
+          "class": 1,
+          "label": "Crop land",
+          "color": "#e6a23c",
+          "pixels": 130569,
+          "share_pct": 14.6,
+          "area_ha": 1327.8
+        },
+        {
+          "id": 2,
+          "class": 2,
+          "label": "Barren land",
+          "color": "#a9a9a9",
+          "pixels": 57101,
+          "share_pct": 6.4,
+          "area_ha": 580.7
+        },
+        {
+          "id": 3,
+          "class": 3,
+          "label": "Water bodies",
+          "color": "#2196f3",
+          "pixels": 30404,
+          "share_pct": 3.4,
+          "area_ha": 309.2
+        },
+        {
+          "id": 4,
+          "class": 4,
+          "label": "Settlements",
+          "color": "#c62828",
+          "pixels": 520479,
+          "share_pct": 58.3,
+          "area_ha": 5293.1
+        }
+      ],
+      "total_pixels": 893397,
+      "total_area_ha": 9085.5,
+      "width": 1543,
+      "height": 579
+    },
+    {
+      "id": 2,
+      "year": 2023,
+      "label": "2023",
+      "kind": "raster",
+      "source_kmz": "MulaMutha_LULC_2023.kmz",
+      "bounds": {
+        "north": 18.56235850242967,
+        "south": 18.509203857291638,
+        "east": 73.9963853971848,
+        "west": 73.84988078051396
+      },
+      "imageCoordinates": [
+        [
+          73.84988078051396,
+          18.56235850242967
+        ],
+        [
+          73.9963853971848,
+          18.56235850242967
+        ],
+        [
+          73.9963853971848,
+          18.509203857291638
+        ],
+        [
+          73.84988078051396,
+          18.509203857291638
+        ]
+      ],
+      "raster": "/asset/mula-mutha-lulc-2023.png",
+      "kml": "/asset/mula-mutha-lulc-2023.kml",
+      "bytes": 98344,
+      "classes": [
+        {
+          "id": 0,
+          "class": 0,
+          "label": "Forest",
+          "color": "#006400",
+          "pixels": 144511,
+          "share_pct": 16.2,
+          "area_ha": 1469.6
+        },
+        {
+          "id": 1,
+          "class": 1,
+          "label": "Crop land",
+          "color": "#e6a23c",
+          "pixels": 124276,
+          "share_pct": 13.9,
+          "area_ha": 1263.8
+        },
+        {
+          "id": 2,
+          "class": 2,
+          "label": "Barren land",
+          "color": "#a9a9a9",
+          "pixels": 71569,
+          "share_pct": 8.0,
+          "area_ha": 727.8
+        },
+        {
+          "id": 3,
+          "class": 3,
+          "label": "Water bodies",
+          "color": "#2196f3",
+          "pixels": 29426,
+          "share_pct": 3.3,
+          "area_ha": 299.3
+        },
+        {
+          "id": 4,
+          "class": 4,
+          "label": "Settlements",
+          "color": "#c62828",
+          "pixels": 523615,
+          "share_pct": 58.6,
+          "area_ha": 5325.0
+        }
+      ],
+      "total_pixels": 893397,
+      "total_area_ha": 9085.5,
+      "width": 1543,
+      "height": 579
+    },
+    {
+      "id": 3,
+      "year": 2024,
+      "label": "2024",
+      "kind": "raster",
+      "source_kmz": "MulaMutha_LULC_2024.kmz",
+      "bounds": {
+        "north": 18.56235850242967,
+        "south": 18.509203857291638,
+        "east": 73.9963853971848,
+        "west": 73.84988078051396
+      },
+      "imageCoordinates": [
+        [
+          73.84988078051396,
+          18.56235850242967
+        ],
+        [
+          73.9963853971848,
+          18.56235850242967
+        ],
+        [
+          73.9963853971848,
+          18.509203857291638
+        ],
+        [
+          73.84988078051396,
+          18.509203857291638
+        ]
+      ],
+      "raster": "/asset/mula-mutha-lulc-2024.png",
+      "kml": "/asset/mula-mutha-lulc-2024.kml",
+      "bytes": 91504,
+      "classes": [
+        {
+          "id": 0,
+          "class": 0,
+          "label": "Forest",
+          "color": "#006400",
+          "pixels": 126963,
+          "share_pct": 14.2,
+          "area_ha": 1291.2
+        },
+        {
+          "id": 1,
+          "class": 1,
+          "label": "Crop land",
+          "color": "#e6a23c",
+          "pixels": 109182,
+          "share_pct": 12.2,
+          "area_ha": 1110.3
+        },
+        {
+          "id": 2,
+          "class": 2,
+          "label": "Barren land",
+          "color": "#a9a9a9",
+          "pixels": 75925,
+          "share_pct": 8.5,
+          "area_ha": 772.1
+        },
+        {
+          "id": 3,
+          "class": 3,
+          "label": "Water bodies",
+          "color": "#2196f3",
+          "pixels": 27914,
+          "share_pct": 3.1,
+          "area_ha": 283.9
+        },
+        {
+          "id": 4,
+          "class": 4,
+          "label": "Settlements",
+          "color": "#c62828",
+          "pixels": 553413,
+          "share_pct": 61.9,
+          "area_ha": 5628.0
+        }
+      ],
+      "total_pixels": 893397,
+      "total_area_ha": 9085.5,
+      "width": 1543,
+      "height": 579
+    },
+    {
+      "id": 4,
+      "year": 2025,
+      "label": "2025",
+      "kind": "raster",
+      "source_kmz": "MulaMutha_LULC_2025.kmz",
+      "bounds": {
+        "north": 18.56235850242967,
+        "south": 18.509203857291638,
+        "east": 73.9963853971848,
+        "west": 73.84988078051396
+      },
+      "imageCoordinates": [
+        [
+          73.84988078051396,
+          18.56235850242967
+        ],
+        [
+          73.9963853971848,
+          18.56235850242967
+        ],
+        [
+          73.9963853971848,
+          18.509203857291638
+        ],
+        [
+          73.84988078051396,
+          18.509203857291638
+        ]
+      ],
+      "raster": "/asset/mula-mutha-lulc-2025.png",
+      "kml": "/asset/mula-mutha-lulc-2025.kml",
+      "bytes": 94320,
+      "classes": [
+        {
+          "id": 0,
+          "class": 0,
+          "label": "Forest",
+          "color": "#006400",
+          "pixels": 148238,
+          "share_pct": 16.6,
+          "area_ha": 1507.5
+        },
+        {
+          "id": 1,
+          "class": 1,
+          "label": "Crop land",
+          "color": "#e6a23c",
+          "pixels": 102813,
+          "share_pct": 11.5,
+          "area_ha": 1045.6
+        },
+        {
+          "id": 2,
+          "class": 2,
+          "label": "Barren land",
+          "color": "#a9a9a9",
+          "pixels": 67563,
+          "share_pct": 7.6,
+          "area_ha": 687.1
+        },
+        {
+          "id": 3,
+          "class": 3,
+          "label": "Water bodies",
+          "color": "#2196f3",
+          "pixels": 30546,
+          "share_pct": 3.4,
+          "area_ha": 310.6
+        },
+        {
+          "id": 4,
+          "class": 4,
+          "label": "Settlements",
+          "color": "#c62828",
+          "pixels": 544237,
+          "share_pct": 60.9,
+          "area_ha": 5534.7
+        }
+      ],
+      "total_pixels": 893397,
+      "total_area_ha": 9085.5,
+      "width": 1543,
+      "height": 579
+    },
+    {
+      "id": 5,
+      "year": 2026,
+      "label": "2026",
+      "kind": "polygons",
+      "source_kml": "e2fb7e9804ee41f9a30672734067ffc1.kml / lulc2026.kml",
+      "bounds": {
+        "north": 18.561529389648026,
+        "south": 18.50999977916272,
+        "east": 73.99602658349323,
+        "west": 73.85023001288063
+      },
+      "geojson": "/asset/mula-mutha-lulc-2026.geojson",
+      "feature_count": 3022,
+      "classes": [
+        {
+          "id": 0,
+          "class": 0,
+          "label": "Water bodies",
+          "color": "#2196f3",
+          "polygons": 82,
+          "share_pct": 2.7
+        },
+        {
+          "id": 1,
+          "class": 1,
+          "label": "Settlements",
+          "color": "#c62828",
+          "polygons": 220,
+          "share_pct": 7.3
+        },
+        {
+          "id": 2,
+          "class": 2,
+          "label": "Forest/dense Vegetation",
+          "color": "#006400",
+          "polygons": 1211,
+          "share_pct": 40.1
+        },
+        {
+          "id": 3,
+          "class": 3,
+          "label": "Cropland",
+          "color": "#f4c430",
+          "polygons": 640,
+          "share_pct": 21.2
+        },
+        {
+          "id": 4,
+          "class": 4,
+          "label": "Barren land",
+          "color": "#8d6e63",
+          "polygons": 869,
+          "share_pct": 28.8
+        }
+      ],
+      "note": "Polygon classes from smoothed classified raster (lulc2026.kml). Legend: 0 Water bodies, 1 Settlements, 2 Forest/dense Vegetation, 3 Cropland, 4 Barren land. Display colours remapped to named legend (blue/red/green/yellow/brown); class ids differ from 2021\u20132025."
+    }
+  ],
+  "source_folder": "9c8abfb75e894e2c8ca7deb87177a63a / LULC UPTO2025",
+  "source_2026": "e2fb7e9804ee41f9a30672734067ffc1.kml"
+}

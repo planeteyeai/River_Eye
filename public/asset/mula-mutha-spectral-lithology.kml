@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+<Document>
+<name>Mula Mutha Spectral Lithology / Surface Material</name>
+<description><![CDATA[
+Provisional spectral lithology classification derived from Mula_Mutha_Spectral_Lithology_Map.tif.
+Source raster: single-band classified GeoTIFF, EPSG:32643 (WGS 84 / UTM zone 43N), 20 m pixel size, 772 x 290 pixels.
+Processing applied for cartographic display only (classification values and spatial pattern unchanged):
+  1. Each of the 8 classes was isolated into a binary mask.
+  2. Each mask was upsampled 8x (bilinear) and lightly Gaussian-smoothed (sigma ~0.5 source pixel) to soften pixel-block edges.
+  3. Per-pixel winner-take-all (argmax across the 8 smoothed masks) reassigned every output pixel back to one of the original 8 class values only - no new classes, no value blending.
+  4. Result reprojected (nearest neighbor on class raster, then bilinear on the colorized RGB) from EPSG:32643 to EPSG:4326 for display.
+Note: the visually dominant winding channel through the AOI is spectrally classified as "8 - Mixed Rock-Soil" rather than "0 - Water" (true Water pixels are small scattered ponds elsewhere). Per user preference, this channel is displayed filled solid blue (with a darker blue edge) as a cartographic annotation for visual clarity, rather than its native sienna class color; the legend notes its true spectral classification for transparency.
+Output raster: 6223 x 2260 px, ~4.9 MB PNG, single GroundOverlay (no tiling needed at this size).
+]]></description>
+
+<GroundOverlay>
+  <name>Spectral Lithology / Surface Material</name>
+  <description>Provisional spectral interpretation - 8-class raster classification, smoothed for display</description>
+  <Icon>
+    <href>files/overlay.png</href>
+  </Icon>
+  <LatLonBox>
+    <north>18.56235850242967</north>
+    <south>18.509121676972974</south>
+    <east>73.99637575213919</east>
+    <west>73.8497860331936</west>
+    <rotation>0</rotation>
+  </LatLonBox>
+</GroundOverlay>
+
+<ScreenOverlay>
+  <name>Legend</name>
+  <Icon>
+    <href>files/legend.png</href>
+  </Icon>
+  <overlayXY x="0" y="0" xunits="fraction" yunits="fraction"/>
+  <screenXY x="0.02" y="0.03" xunits="fraction" yunits="fraction"/>
+  <rotationXY x="0" y="0" xunits="fraction" yunits="fraction"/>
+  <size x="384" y="292" xunits="pixels" yunits="pixels"/>
+</ScreenOverlay>
+
+</Document>
+</kml>

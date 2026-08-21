@@ -21,6 +21,7 @@ import {
   getReturnPeriods,
 } from '../lib/floodZones'
 import { binBoundsForChainage, formatChainage } from '../lib/chainageBins'
+import { LayerPanelPortal } from './LayerPanelSlots'
 import './FloodMapOverlay.css'
 
 const LEAD_OPTIONS = [6, 24, 48, 72]
@@ -159,9 +160,7 @@ const TwinLayerPicker = ({
   activeZones,
   onToggleZone,
   showDepthLayer,
-  onToggleDepth,
   showChainageLayer,
-  onToggleChainage,
   returnPeriods,
   zones,
   depthSummary,
@@ -199,7 +198,7 @@ const TwinLayerPicker = ({
       id: 'depth',
       title: 'Water depth',
       checked: showDepthLayer,
-      onChange: (checked) => onToggleDepth?.(checked),
+      hideCheck: true,
       subtitle: 'Classed depth 1.5–2.0 m · smoothed raster',
       rows: (depthSummary?.classes || []).map((row) => ({
         label: `${row.label} · ${row.range_label}`,
@@ -210,16 +209,17 @@ const TwinLayerPicker = ({
       id: 'chainage',
       title: 'Chainage',
       checked: showChainageLayer,
-      onChange: (checked) => onToggleChainage?.(checked),
+      hideCheck: true,
       subtitle: chainageSelection
         ? `Selected ${chainageSelection.bin.name} · station ${chainageSelection.station}`
         : 'Centreline stations every 100 m · 0+000 to 16+400',
       rows: [{ label: 'km marks and 100 m ticks', color: '#ffd166' }],
     },
-  ]
+    // The zone rows carry their own checkbox, so they stay listed when off.
+  ].filter((layer) => !layer.hideCheck || layer.checked)
 
   return (
-    <div className="flood-map-layers" aria-label="Digital twin layers">
+    <div className="flood-map-layers panel-embed" aria-label="Digital twin layers">
       {layers.map((layer) => {
         const isOpen = openLayerId === layer.id
         const inputId = `twin-layer-${layer.id}`
@@ -229,15 +229,19 @@ const TwinLayerPicker = ({
             className={`flood-layer-card${layer.checked ? '' : ' is-off'}${isOpen ? ' is-open' : ''}`}
           >
             <div className="flood-layer-head">
-              <label className="flood-layer-check" htmlFor={inputId}>
-                <input
-                  id={inputId}
-                  type="checkbox"
-                  checked={Boolean(layer.checked)}
-                  onChange={(event) => layer.onChange(event.target.checked)}
-                />
+              {layer.hideCheck ? (
                 <span className="flood-layer-check-text">{layer.title}</span>
-              </label>
+              ) : (
+                <label className="flood-layer-check" htmlFor={inputId}>
+                  <input
+                    id={inputId}
+                    type="checkbox"
+                    checked={Boolean(layer.checked)}
+                    onChange={(event) => layer.onChange(event.target.checked)}
+                  />
+                  <span className="flood-layer-check-text">{layer.title}</span>
+                </label>
+              )}
               <button
                 type="button"
                 className="flood-layer-info"
@@ -272,9 +276,7 @@ const TwinLayerPicker = ({
 const FloodMapOverlay = ({
   onZonesChange,
   showChainageLayer = true,
-  onToggleChainage,
   showDepthLayer = true,
-  onToggleDepth,
   focusChainage = null,
 }) => {
   const [meta, setMeta] = useState(null)
@@ -434,20 +436,20 @@ const FloodMapOverlay = ({
   }
 
   const layerPicker = (
-    <TwinLayerPicker
-      activeZones={activeZones}
-      onToggleZone={toggleZone}
-      showDepthLayer={showDepthLayer}
-      onToggleDepth={onToggleDepth}
-      showChainageLayer={showChainageLayer}
-      onToggleChainage={onToggleChainage}
-      returnPeriods={returnPeriods}
-      zones={zones}
-      depthSummary={depthSummary}
-      openLayerId={openLayerId}
-      onToggleInfo={toggleLayerInfo}
-      chainageSelection={chainageSelection}
-    />
+    <LayerPanelPortal viewId="flood">
+      <TwinLayerPicker
+        activeZones={activeZones}
+        onToggleZone={toggleZone}
+        showDepthLayer={showDepthLayer}
+        showChainageLayer={showChainageLayer}
+        returnPeriods={returnPeriods}
+        zones={zones}
+        depthSummary={depthSummary}
+        openLayerId={openLayerId}
+        onToggleInfo={toggleLayerInfo}
+        chainageSelection={chainageSelection}
+      />
+    </LayerPanelPortal>
   )
 
   if (error && !meta) {

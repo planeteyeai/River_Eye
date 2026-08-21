@@ -214,6 +214,12 @@
   box-shadow: 0 0 0 1px rgba(142, 210, 245, 0.4), 0 6px 16px rgba(47, 155, 214, 0.2);
 }
 
+.header-mode-btn.is-bathy.active {
+  background: linear-gradient(180deg, rgba(62, 148, 168, 0.32), rgba(30, 110, 130, 0.12));
+  color: #7ecfdf;
+  box-shadow: 0 0 0 1px rgba(126, 207, 223, 0.4), 0 6px 16px rgba(62, 148, 168, 0.2);
+}
+
 .header-mode-icon {
   width: 34px;
   height: 24px;

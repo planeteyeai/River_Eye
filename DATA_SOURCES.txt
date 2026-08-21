@@ -397,6 +397,46 @@ TO CONFIRM: volume unit; whether monthly overlays are a single Sentinel-2
            scene or a composite; exact acquisition dates.
 
 --------------------------------------------------------------------------------
+3.2fb  public/asset/mula-mutha-lulc.json
+       (+ mula-mutha-lulc-2021.png … 2025.png, .kml; mula-mutha-lulc-2026.geojson)
+--------------------------------------------------------------------------------
+Content  : Yearly land use / land cover for the Mula–Mutha corridor, 2021–2026.
+           2021–2025 are GroundOverlay rasters from MulaMutha_LULC_YYYY.kmz
+           with classes from the KMZ description:
+             0 Forest        #006400
+             1 Crop land     #E6A23C
+             2 Barren land   #A9A9A9
+             3 Water bodies  #2196F3
+             4 Settlements   #C62828
+           2025 shares (sampled opaque pixels): Forest 16.6%, Crop 11.5%,
+           Barren 7.6%, Water 3.4%, Settlements 60.9%. Extent (2025):
+           N 18.562359 S 18.509204 E 73.996385 W 73.849881.
+           2026 is polygon GeoJSON (3,022 patches) from
+           e2fb7e9804ee41f9a30672734067ffc1.kml / lulc2026.kml (“Classified
+           Raster smoothed”). Class ids differ from 2021–2025; legend
+           confirmed for display as:
+             0 Water bodies              #2196f3 (blue)
+             1 Settlements               #c62828 (red)
+             2 Forest/dense Vegetation   #006400 (green)
+             3 Cropland                  #f4c430 (yellow)
+             4 Barren land               #8d6e63 (brown)
+           Polygon shares (by feature count): Water 2.7%, Settlements 7.3%,
+           Forest 40.1%, Cropland 21.2%, Barren 28.8%. Display colours are
+           remapped to the named legend; raw KML PolyStyle hexes differed.
+Source   : folder 9c8abfb75e894e2c8ca7deb87177a63a / LULC UPTO2025
+           (MulaMutha_LULC_2021.kmz … 2025.kmz) and
+           e2fb7e9804ee41f9a30672734067ffc1.kml. Bundled by
+           scripts/convert-lulc.py.
+Used in  : MapComponent.jsx lyr-lulc-raster (2021–2025) and
+           lyr-lulc-poly-fill/-line (2026); Layers menu Land use → one
+           LULC checkbox; year timeseries bars (tap year, like the climate
+           flood bars) + class legend in SoilLandUseMapOverlay when on.
+Kind     : MODELLED / classed product. Not a cadastral survey.
+UI label : Estimated
+TO CONFIRM: sensor and method for yearly rasters; whether 2026 display
+           colours should instead keep the original KML PolyStyle hexes.
+
+--------------------------------------------------------------------------------
 3.2g  public/asset/mula-mutha-biodiversity.json (+ type/health .kml + .png)
 --------------------------------------------------------------------------------
 Content  : Vegetation type AND vegetation health classification for the
@@ -516,9 +556,9 @@ Source   : vendor HTML a808cca9ca05492284b458df1a486fd1.html (S3 messaging
            from Sentinel-2 L2A bands B02/B03/B04/B08 captured 14 Jul 2026,
            trained on filled depth points and clipped to the river AOI;
            gaps interpolated from adjacent pixels. Vertical datum: MSL.
-Used in  : Dashboard.jsx iframe when Geology → Open bathymetry dashboard
-           (?view=geology still lands on the joining-streams map; the
-           iframe is a second step from that panel).
+Used in  : Dashboard.jsx header “Bathymetry” mode button (after Digital Twin),
+           which opens the iframe. Same Mula-Mutha-only gate as BOD-COD and
+           Digital Twin.
 UI label : Estimated
 Status   : satellite-derived bathymetry for visualization. Not an in-situ
            sounding survey and not used for flood-corridor or inundation
@@ -541,9 +581,11 @@ Source   : user-supplied KML e026fb3446f44831a85a726f4f98a06c.kml, copied to
            public/asset/mula-mutha-tributaries.kml and converted by
            scripts/convert-tributaries-kml.mjs. Attributes include OSM
            osm_id / waterway where present.
-Used in  : Geology map view (GeologyMapOverlay.jsx + MapComponent.jsx
-           src-tributaries). Main stem off by default because the river
-           outline already comes from mula-mutha-river.kml (3.1).
+Used in  : Geology map view (MapComponent.jsx src-tributaries). Class counts
+           are now shown from the static legend table in src/lib/layerLegends.js
+           inside the Layers panel, so GeologyMapOverlay.jsx no longer fetches
+           this file. Main stem off by default because the river outline
+           already comes from mula-mutha-river.kml (3.1).
 Kind     : REAL geometry from OpenStreetMap, clipped. Not a surveyed
            drainage or flood network.
 UI label : Estimated
@@ -566,8 +608,10 @@ Content  : Bank erosion hotspot classification for 2016–2026, GroundOverlay
 Source   : user-supplied KMZ 83d9c994ab974aaea0052c4103f77abb.kmz
            (inner document Erosion_Hotspots_2016_2026.kml / Bank Erosion
            Hotspot (2016-2026)). Bundled by scripts/convert-erosion-kmz.mjs.
-Used in  : Geology map (GeologyMapOverlay.jsx + MapComponent.jsx lyr-erosion).
-           On by default when Geology is open. Year-to-year ha series is 3.3e.
+Used in  : Geology map (MapComponent.jsx lyr-erosion). Class shares are now
+           shown from the static legend table in src/lib/layerLegends.js
+           inside the Layers panel, so GeologyMapOverlay.jsx no longer fetches
+           this file. Year-to-year ha series is 3.3e.
 Kind     : MODELLED / classed product from the KMZ. Not a bank survey.
 UI label : Estimated
 TO CONFIRM: sensor, method, year-to-year periods counted, and the clip
@@ -595,6 +639,38 @@ Kind     : MODELLED water-edge change from Landsat MNDWI. Not a survey.
 UI label : Estimated
 TO CONFIRM: AOI, whether percents are of old-water area, and whether
            2016-2026 hotspot counts match these ten periods.
+
+--------------------------------------------------------------------------------
+3.3f  public/asset/mula-mutha-spectral-lithology.png
+      (+ .json, .kml, legend.png)
+--------------------------------------------------------------------------------
+Content  : Provisional spectral lithology / surface-material GroundOverlay for
+           the Mula–Mutha AOI. Eight class values from a single-band classified
+           GeoTIFF (EPSG:32643, 20 m, 772×290) smoothed and reprojected to
+           EPSG:4326 for display (6223×2260 PNG). Class 1 is unused.
+           Sampled opaque shares (nearest legend colour, ±48 RGB):
+             0 #00FFFF Water                         1.9% / 168.8 ha
+             2 #8B0000 Basaltic / mafic             16.4% / 1427.4 ha
+             3 #FF8C00 Weathered rock               11.7% / 1018.6 ha
+             4 #FFD700 Alluvial / sedimentary        8.2% / 713.2 ha
+             5 #FF0000 Ferruginous / iron-rich      10.3% / 900.0 ha
+             6 #9370DB Clay-rich                    14.3% / 1246.0 ha
+             7 #708090 Silica-rich                  34.1% / 2969.1 ha
+             8 #A0522D Mixed rock-soil               3.0% / 259.5 ha
+           Mixed rock-soil share includes the winding channel remapped to
+           solid blue (#0066CC / #00408C) for cartographic clarity; the
+           legend labels that channel as Mixed rock-soil, not Water.
+           LatLonBox N 18.562359 S 18.509122 E 73.996376 W 73.849786.
+Source   : user-supplied KMZ b7acfdf14dfa4a5a9c0ec4c050e2d000.kmz
+           (Mula_Mutha_Spectral_Lithology). Bundled by
+           scripts/convert-lithology-kmz.py.
+Used in  : Geology map (MapComponent.jsx lyr-lithology). Class shares in
+           Layers panel from src/lib/layerLegends.js (lithology).
+Kind     : MODELLED / provisional spectral classification. Not a field
+           lithology survey.
+UI label : Estimated
+TO CONFIRM: classifier recipe, training labels, and whether class 1 was
+           intentionally omitted.
 
 --------------------------------------------------------------------------------
 3.4  public/asset/godavari-waterbody-rajahmundry.kml
@@ -1105,3 +1181,36 @@ CHANGE LOG
             Bank_Erosion_2016_2026.csv (18a4fe57b29043a4b371ba19a17dd597.csv).
             Landsat 8/9 MNDWI, 30 m. Estimated. Section 3.3e.
             convert-erosion-csv.py.
+2026-08-20  Soil & land use: LULC 2021–2025 GroundOverlays from
+            LULC UPTO2025 (MulaMutha_LULC_YYYY.kmz) plus 2026 polygon
+            classes from e2fb7e9804ee41f9a30672734067ffc1.kml / lulc2026.
+            Year picker on the panel. Estimated. Section 3.2fb.
+            convert-lulc.py.
+2026-08-20  UI only, no new data. The per-theme legend cards that floated
+            over the map now render inside the matching group of the Layers
+            panel (src/components/LayerPanelSlots.jsx portals them there).
+            Duplicate layer checkboxes were dropped from those cards because
+            the panel owns them. GeologyMapOverlay.jsx stopped fetching
+            mula-mutha-tributaries.geojson (3.3c) and
+            mula-mutha-erosion-hotspots.json (3.3d); those class shares now
+            come from the static table in src/lib/layerLegends.js, so that
+            table is what must be re-checked if either asset is regenerated.
+2026-08-20  Bathymetry dashboard (3.3b) opens from a header mode button
+            placed after Digital Twin, not from the Geology layers card.
+2026-08-21  UI only. LULC year timeseries segregated in Layers → Land use
+            as six exclusive checkboxes (LULC 2021 … LULC 2026), each with
+            its own class legend. The old year-tab picker was removed;
+            SoilLandUseMapOverlay shows a Forest/Settlements % table across
+            years plus classes for the active year. Same assets (3.2fb).
+2026-08-21  UI only. Reverted to a single LULC checkbox; year change is a
+            flood-style timeseries bar strip under the layer (2021–2026),
+            with class colours updating for the selected year. Same 3.2fb.
+2026-08-21  Geology: provisional spectral lithology / surface-material
+            GroundOverlay from b7acfdf14dfa4a5a9c0ec4c050e2d000.kmz
+            (Mula_Mutha_Spectral_Lithology). Eight classes; river channel
+            drawn blue but spectrally Mixed rock-soil. Estimated.
+            Section 3.3f. convert-lithology-kmz.py.
+2026-08-21  LULC 2026 class legend confirmed (lulc2026.kml): 0 Water
+            bodies, 1 Settlements, 2 Forest/dense Vegetation, 3 Cropland,
+            4 Barren land. Display colours remapped to blue/red/green/
+            yellow/brown; polygon shares unchanged. Section 3.2fb.

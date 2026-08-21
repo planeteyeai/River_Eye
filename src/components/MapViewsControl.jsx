@@ -1,4 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
+import { legendForLayer } from '../lib/layerLegends'
+import { LayerPanelSlot } from './LayerPanelSlots'
 import './MapViewsControl.css'
 
 const IconAqi = () => (
@@ -61,71 +63,89 @@ const IconGeology = () => (
   </svg>
 )
 
-const VIEWS = [
+const IconChevron = ({ left = false }) => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4">
+    {left ? (
+      <polyline points="15 6 9 12 15 18" />
+    ) : (
+      <polyline points="9 6 15 12 9 18" />
+    )}
+  </svg>
+)
+
+export const VIEW_GROUPS = [
   {
     id: 'aqi',
     label: 'AQI',
     accent: 'aqi',
     always: true,
-    title: 'Show AQI on map',
+    title: 'Air quality on the selected area',
     Icon: IconAqi,
   },
   {
     id: 'geology',
     label: 'Geology',
     accent: 'geology',
-    title: 'Geology: joining streams and satellite-derived bathymetry',
+    title: 'Spectral lithology, bank erosion, joining streams and bathymetry',
     Icon: IconGeology,
   },
   {
     id: 'waterquality',
     label: 'Water quality',
     accent: 'water',
-    title: 'Water quality: TSS, NDCI, NDWI, WST and BOD–COD',
+    title: 'TSS, NDCI, NDWI, WST and BOD–COD',
     Icon: IconWater,
   },
   {
     id: 'landuse',
     label: 'Land use',
     accent: 'land',
-    title: 'Soil & land use: silt classification and urban vegetation',
+    title: 'Silt classification and urban vegetation',
     Icon: IconLand,
   },
   {
     id: 'biodiversity',
     label: 'Biodiversity',
     accent: 'biodiv',
-    title: 'Biodiversity: vegetation type and health',
+    title: 'Vegetation type and health',
     Icon: IconBiodiv,
   },
   {
     id: 'climate',
     label: 'Climate impact',
     accent: 'climate',
-    title: 'Flood and surface-water heatmap from image pairs',
+    title: 'Flood and surface-water heatmap',
     Icon: IconClimate,
   },
   {
     id: 'flood',
     label: 'Digital Twin',
     accent: 'flood',
-    title: 'Digital twin layers: 10 / 25 / 100-year flood and water depth',
+    title: 'Flood zones, water depth and chainage',
     Icon: IconTwin,
   },
 ]
 
 const MapViewsControl = ({
-  activeView = null,
   loading = false,
   isMulaMutha = false,
-  onSelect,
+  layersByView = {},
 }) => {
   const [isOpen, setIsOpen] = useState(false)
+  const [docked, setDocked] = useState(false)
+  const [expanded, setExpanded] = useState({})
   const containerRef = useRef(null)
-  const active = VIEWS.find((view) => view.id === activeView)
-  const visibleViews = VIEWS.filter((view) => view.always || isMulaMutha)
+  const visibleViews = VIEW_GROUPS.filter((view) => view.always || isMulaMutha)
+  const activeLayerCount = visibleViews.reduce((total, view) => {
+    const layers = layersByView[view.id] || []
+    return total + layers.filter((layer) => layer.checked).length
+  }, 0)
+  const primaryActiveView = visibleViews.find((view) =>
+    (layersByView[view.id] || []).some((layer) => layer.checked),
+  )
 
   useEffect(() => {
+    if (docked) return undefined
     const handleClickOutside = (event) => {
       if (containerRef.current && !containerRef.current.contains(event.target)) {
         setIsOpen(false)
@@ -133,85 +153,218 @@ const MapViewsControl = ({
     }
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [])
+  }, [docked])
 
-  const handleSelect = (view) => {
+  const toggleGroup = (view) => {
     if (view.id === 'aqi' && loading) return
-    onSelect?.(view.id)
-    setIsOpen(false)
+    const nextOpen = !expanded[view.id]
+    setExpanded((current) => ({ ...current, [view.id]: nextOpen }))
+  }
+
+  const toggleLayer = (layer, checked) => {
+    layer.onToggle?.(checked)
+  }
+
+  const dockPanel = () => {
+    setDocked(true)
+  }
+
+  const undockPanel = () => {
+    setDocked(false)
+    setIsOpen(true)
   }
 
   return (
-    <div className="map-views-control" ref={containerRef}>
+    <div
+      className={`map-views-control${docked ? ' is-docked' : ''}`}
+      ref={containerRef}
+    >
       <button
         type="button"
-        className={`map-views-toggle ${isOpen ? 'open' : ''} ${active ? `is-${active.accent}` : ''}`}
-        onClick={() => setIsOpen((prev) => !prev)}
-        title="Choose map view"
-        aria-expanded={isOpen}
-        aria-haspopup="listbox"
+        className="map-views-dock-tab"
+        onClick={undockPanel}
+        title="Show layers panel"
+        aria-label="Show layers panel"
+        tabIndex={docked ? 0 : -1}
+        aria-hidden={!docked}
       >
-        <span className="map-views-toggle-icon" aria-hidden="true">
-          {active ? <active.Icon /> : (
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <rect x="3" y="3" width="7" height="7" rx="1" />
-              <rect x="14" y="3" width="7" height="7" rx="1" />
-              <rect x="3" y="14" width="7" height="7" rx="1" />
-              <rect x="14" y="14" width="7" height="7" rx="1" />
-            </svg>
-          )}
-        </span>
-        <div className="map-views-toggle-text">
-          <span className="map-views-toggle-label">Views</span>
-          <span className="map-views-toggle-value">
-            {loading && activeView === 'aqi' ? 'Loading…' : active?.label || 'Choose a view'}
-          </span>
-        </div>
-        <svg
-          className={`map-views-chevron ${isOpen ? 'rotated' : ''}`}
-          width="14"
-          height="14"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-        >
-          <polyline points="6 9 12 15 18 9" />
-        </svg>
+        <IconChevron />
+        <span className="map-views-dock-label">Layers</span>
+        {activeLayerCount > 0 && (
+          <em className="map-views-dock-count">{activeLayerCount}</em>
+        )}
       </button>
 
-      {isOpen && (
-        <div className="map-views-menu" role="listbox" aria-label="Map views">
-          {visibleViews.map((view) => {
-            const isActive = activeView === view.id
-            const disabled = view.id === 'aqi' && loading
-            return (
-              <button
-                key={view.id}
-                type="button"
-                role="option"
-                aria-selected={isActive}
-                disabled={disabled}
-                title={view.title}
-                className={`map-views-item accent-${view.accent} ${isActive ? 'active' : ''}`}
-                onClick={() => handleSelect(view)}
-              >
-                <span className="map-views-item-icon">
-                  <view.Icon />
-                </span>
-                <span className="map-views-item-label">
-                  {disabled ? 'Loading…' : view.label}
-                </span>
-                {isActive && (
-                  <svg className="map-views-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                    <polyline points="20 6 9 17 4 12" />
-                  </svg>
-                )}
-              </button>
-            )
-          })}
+      <div className="map-views-panel" aria-hidden={docked}>
+        <div className="map-views-shell">
+          <button
+            type="button"
+            className={`map-views-toggle ${isOpen ? 'open' : ''} ${primaryActiveView ? `is-${primaryActiveView.accent}` : ''}`}
+            onClick={() => setIsOpen((prev) => !prev)}
+            title="Choose map view and layers"
+            aria-expanded={isOpen}
+            aria-haspopup="true"
+            tabIndex={docked ? -1 : 0}
+          >
+            <span className="map-views-toggle-icon" aria-hidden="true">
+              {primaryActiveView ? <primaryActiveView.Icon /> : (
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <rect x="3" y="3" width="7" height="7" rx="1" />
+                  <rect x="14" y="3" width="7" height="7" rx="1" />
+                  <rect x="3" y="14" width="7" height="7" rx="1" />
+                  <rect x="14" y="14" width="7" height="7" rx="1" />
+                </svg>
+              )}
+            </span>
+            <div className="map-views-toggle-text">
+              <span className="map-views-toggle-label">Layers</span>
+              <span className="map-views-toggle-value">
+                {loading ? 'Loading…' : activeLayerCount > 0 ? `${activeLayerCount} layer${activeLayerCount === 1 ? '' : 's'} on` : 'Choose layers'}
+              </span>
+            </div>
+            <svg
+              className={`map-views-chevron ${isOpen ? 'rotated' : ''}`}
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <polyline points="6 9 12 15 18 9" />
+            </svg>
+          </button>
+
+          <button
+            type="button"
+            className="map-views-slide"
+            onClick={dockPanel}
+            title="Hide panel to left corner"
+            aria-label="Hide layers panel to left corner"
+            tabIndex={docked ? -1 : 0}
+          >
+            <IconChevron left />
+          </button>
         </div>
-      )}
+
+        {isOpen && (
+          <div className="map-views-menu" aria-label="Map views and layers">
+            <div className="map-views-menu-bar">
+              <span>Map layers</span>
+              <button
+                type="button"
+                className="map-views-slide is-menu"
+                onClick={dockPanel}
+                title="Hide panel to left corner"
+                aria-label="Hide layers panel to left corner"
+                tabIndex={docked ? -1 : 0}
+              >
+                <IconChevron left />
+              </button>
+            </div>
+            {visibleViews.map((view) => {
+              const isExpanded = Boolean(expanded[view.id])
+              const disabled = view.id === 'aqi' && loading
+              const layers = layersByView[view.id] || []
+              const onCount = layers.filter((layer) => layer.checked).length
+              const isActive = onCount > 0
+              return (
+                <div
+                  key={view.id}
+                  className={`map-views-group accent-${view.accent}${isActive ? ' is-active' : ''}${isExpanded ? ' is-open' : ''}`}
+                >
+                  <button
+                    type="button"
+                    disabled={disabled}
+                    title={view.title}
+                    className="map-views-group-head"
+                    aria-expanded={isExpanded}
+                    onClick={() => toggleGroup(view)}
+                    tabIndex={docked ? -1 : 0}
+                  >
+                    <span className="map-views-item-icon">
+                      <view.Icon />
+                    </span>
+                    <span className="map-views-item-label">
+                      {disabled ? 'Loading…' : view.label}
+                    </span>
+                    {onCount > 0 && (
+                      <span className="map-views-count">{onCount}</span>
+                    )}
+                    <svg
+                      className={`map-views-group-chevron${isExpanded ? ' rotated' : ''}`}
+                      width="14"
+                      height="14"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    >
+                      <polyline points="6 9 12 15 18 9" />
+                    </svg>
+                  </button>
+                  {isExpanded && layers.length > 0 && (
+                    <div className="map-views-layers">
+                      {layers.map((layer) => {
+                        const legend = legendForLayer(layer.id)
+                        const colors = layer.colors || legend?.colors || []
+                        return (
+                          <div
+                            key={layer.id}
+                            className={`map-views-layer-block${layer.checked ? ' is-on' : ''}`}
+                          >
+                            <label
+                              className={`map-views-layer${layer.checked ? ' is-on' : ''}`}
+                              htmlFor={`view-layer-${view.id}-${layer.id}`}
+                            >
+                              <input
+                                id={`view-layer-${view.id}-${layer.id}`}
+                                type="checkbox"
+                                checked={Boolean(layer.checked)}
+                                disabled={disabled || docked}
+                                onChange={(event) => toggleLayer(layer, event.target.checked)}
+                              />
+                              <span className="map-views-layer-copy">
+                                <strong>{layer.label}</strong>
+                                {layer.hint ? <em>{layer.hint}</em> : null}
+                              </span>
+                            </label>
+                            {layer.checked && (
+                              <LayerPanelSlot
+                                viewId={view.id}
+                                layerId={layer.id}
+                                className="map-views-layer-extra"
+                              />
+                            )}
+                            {layer.checked && colors.length > 0 && (
+                              <div
+                                className="map-views-layer-colors"
+                                aria-label={`${layer.label} colors`}
+                              >
+                                {colors.map((row) => (
+                                  <div
+                                    key={`${layer.id}-${row.label}`}
+                                    className="map-views-swatch"
+                                  >
+                                    <i style={{ background: row.color }} />
+                                    <span>{row.label}</span>
+                                    {row.value != null ? <strong>{row.value}</strong> : null}
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        )
+                      })}
+                    </div>
+                  )}
+                  {isExpanded && <LayerPanelSlot viewId={view.id} />}
+                </div>
+              )
+            })}
+          </div>
+        )}
+      </div>
     </div>
   )
 }

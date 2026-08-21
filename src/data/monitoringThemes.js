@@ -21,9 +21,9 @@ export const MONITORING_THEMES = [
   },
   {
     name: 'Geology',
-    desc: 'Bank erosion hotspots, joining streams, and satellite-derived bathymetry',
+    desc: 'Spectral lithology, bank erosion hotspots, joining streams, and satellite-derived bathymetry',
     to: '/dashboard?view=geology',
-    datasets: ['erosion', 'tributaries', 'bathymetry'],
+    datasets: ['lithology', 'erosion', 'tributaries', 'bathymetry'],
   },
   {
     name: 'Biodiversity',
@@ -33,9 +33,9 @@ export const MONITORING_THEMES = [
   },
   {
     name: 'Soil & land use',
-    desc: 'River silt class and volume, plus urban vegetation in the 1 km buffer',
+    desc: 'LULC 2021–2026, river silt class and volume, plus urban vegetation',
     to: '/dashboard?view=landuse',
-    datasets: ['silt', 'urbanveg'],
+    datasets: ['lulc', 'silt', 'urbanveg'],
   },
   {
     name: 'Salinity intrusion',

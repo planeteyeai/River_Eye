@@ -1,154 +1,20 @@
-.geo-map-overlays {
-  position: absolute;
-  inset: 0;
-  z-index: 1100;
-  pointer-events: none;
-}
-
-.geo-legend {
-  pointer-events: auto;
-  position: absolute;
-  top: 84px;
-  left: 12px;
-  width: 286px;
-  max-height: calc(100% - 120px);
-  overflow-y: auto;
-  padding: 12px;
-  border-radius: 12px;
-  border: 1px solid var(--rv-line);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.97) 0%, rgba(244, 249, 252, 0.96) 100%);
-  backdrop-filter: blur(14px);
-  box-shadow: var(--rv-shadow-lg);
-  color: var(--rv-ink);
-  font-family: var(--rv-font-body);
-}
-
-.geo-legend-title {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 8px;
-  font-family: var(--rv-font-display);
-  font-size: 14px;
-  font-weight: 600;
-}
-
-.geo-legend-title em {
-  font-style: normal;
-  font-size: 10px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--rv-ink-2);
-  font-weight: 650;
-}
-
 .geo-note,
 .geo-prov {
-  margin: 8px 0 10px;
+  margin: 0;
   font-size: 11px;
   line-height: 1.45;
   color: var(--rv-ink-2);
 }
 
 .geo-prov {
-  margin: 10px 0 0;
   letter-spacing: 0.04em;
   text-transform: uppercase;
   font-size: 10px;
   font-weight: 650;
 }
 
-.geo-check {
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-  margin: 0 0 8px;
-  cursor: pointer;
-  font-size: 13px;
-  font-weight: 600;
-}
-
-.geo-check input[type='checkbox'] {
-  appearance: none;
-  -webkit-appearance: none;
-  flex: 0 0 auto;
-  width: 16px;
-  height: 16px;
-  margin: 2px 0 0;
-  border: 1.5px solid rgba(13, 36, 54, 0.4);
-  border-radius: 4px;
-  background: #fff;
-  cursor: pointer;
-  position: relative;
-}
-
-.geo-check input[type='checkbox']:checked {
-  background: #0e8f9c;
-  border-color: #0e8f9c;
-}
-
-.geo-check input[type='checkbox']:checked::after {
-  content: '';
-  position: absolute;
-  left: 4px;
-  top: 1px;
-  width: 5px;
-  height: 9px;
-  border: solid #fff;
-  border-width: 0 2px 2px 0;
-  transform: rotate(45deg);
-}
-
-.geo-check-text {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.geo-check-text em,
-.geo-check span em {
-  display: block;
-  font-style: normal;
-  font-size: 11px;
-  font-weight: 500;
-  color: var(--rv-ink-2);
-}
-
-.geo-sw {
-  flex: 0 0 auto;
-  width: 12px;
-  height: 12px;
-  margin-top: 3px;
-  border-radius: 99px;
-  box-shadow: inset 0 0 0 1px rgba(13, 36, 54, 0.18);
-}
-
-.geo-classes {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  margin: 0 0 10px 24px;
-}
-
-.geo-classes.is-off {
-  opacity: 0.45;
-}
-
-.geo-class {
-  display: grid;
-  grid-template-columns: 12px minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 8px;
-  font-size: 12px;
-}
-
-.geo-class strong {
-  font-family: var(--rv-font-mono);
-  font-size: 12px;
-}
-
 .geo-series {
-  margin: 0 0 12px;
+  margin: 0;
   padding-top: 8px;
   border-top: 1px solid var(--rv-line);
 }
@@ -248,20 +114,7 @@
   color: #1c8a55;
 }
 
-.geo-bathy-btn {
-  width: 100%;
-  margin-top: 6px;
-  padding: 8px 10px;
-  border-radius: 10px;
-  border: 1px solid var(--rv-line);
-  background: #fff;
-  color: var(--rv-blue);
-  font-family: var(--rv-font-body);
-  font-size: 12px;
-  font-weight: 650;
-  cursor: pointer;
+.geo-series .geo-note {
+  margin-top: 8px;
 }
 
-.geo-bathy-btn:hover {
-  background: var(--rv-surface-2, #f4f9fc);
-}

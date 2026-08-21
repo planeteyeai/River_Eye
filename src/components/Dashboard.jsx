@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import { transformRecordsByHeight } from '../utils/dataTransformers'
 import { useAuth } from '../context/AuthContext'
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom'
@@ -8,6 +8,8 @@ import MapComponent from './MapComponent'
 import ChainageScrubber from './ChainageScrubber'
 import MapLayersControl from './MapLayersControl'
 import MapViewsControl from './MapViewsControl'
+import { LayerPanelSlotProvider } from './LayerPanelSlots'
+import { legendForLayer } from '../lib/layerLegends'
 import BodCodMapOverlay from './BodCodMapOverlay'
 import AqiMapOverlay from './AqiMapOverlay'
 import FloodMapOverlay from './FloodMapOverlay'
@@ -43,7 +45,7 @@ const Dashboard = () => {
   const [showAnalysis, setShowAnalysis] = useState(false) 
   const [showBodCod, setShowBodCod] = useState(false) 
   const [showBodCodOverlay, setShowBodCodOverlay] = useState(false) 
-  const [showTssLayer, setShowTssLayer] = useState(true)
+  const [showTssLayer, setShowTssLayer] = useState(false)
   const [showNdciLayer, setShowNdciLayer] = useState(false)
   const [showNdwiLayer, setShowNdwiLayer] = useState(false)
   const [showWstLayer, setShowWstLayer] = useState(false)
@@ -51,26 +53,29 @@ const Dashboard = () => {
   const [showFlood, setShowFlood] = useState(false)
   const [showFloodOverlay, setShowFloodOverlay] = useState(false)
   const [floodZones, setFloodZones] = useState(null)
-  const [showChainageLayer, setShowChainageLayer] = useState(true)
+  const [showChainageLayer, setShowChainageLayer] = useState(false)
   const [focusChainage, setFocusChainage] = useState(null)
-  const [showFloodDepthLayer, setShowFloodDepthLayer] = useState(true)
+  const [showFloodDepthLayer, setShowFloodDepthLayer] = useState(false)
   const [showLandUseOverlay, setShowLandUseOverlay] = useState(false)
-  const [showUrbanVegLayer, setShowUrbanVegLayer] = useState(true)
-  const [showSiltClassLayer, setShowSiltClassLayer] = useState(true)
+  const [showUrbanVegLayer, setShowUrbanVegLayer] = useState(false)
+  const [showSiltClassLayer, setShowSiltClassLayer] = useState(false)
   const [showSiltVolumeLayer, setShowSiltVolumeLayer] = useState(false)
   const [siltPeriodId, setSiltPeriodId] = useState(5)
+  const [showLulcLayer, setShowLulcLayer] = useState(false)
+  const [lulcPeriodId, setLulcPeriodId] = useState(4)
   const [showBiodiversityOverlay, setShowBiodiversityOverlay] = useState(false)
-  const [showBiodiversityTypeLayer, setShowBiodiversityTypeLayer] = useState(true)
+  const [showBiodiversityTypeLayer, setShowBiodiversityTypeLayer] = useState(false)
   const [showBiodiversityHealthLayer, setShowBiodiversityHealthLayer] = useState(false)
   const [showClimateOverlay, setShowClimateOverlay] = useState(false)
   const [climatePeriodId, setClimatePeriodId] = useState(4)
-  const [showClimateFloodHeat, setShowClimateFloodHeat] = useState(true)
-  const [showClimateWaterHeat, setShowClimateWaterHeat] = useState(true)
+  const [showClimateFloodHeat, setShowClimateFloodHeat] = useState(false)
+  const [showClimateWaterHeat, setShowClimateWaterHeat] = useState(false)
   const [showBathy, setShowBathy] = useState(false)
   const [showGeologyOverlay, setShowGeologyOverlay] = useState(false)
-  const [showTributaryLayer, setShowTributaryLayer] = useState(true)
+  const [showTributaryLayer, setShowTributaryLayer] = useState(false)
   const [showMainStemLayer, setShowMainStemLayer] = useState(false)
-  const [showErosionLayer, setShowErosionLayer] = useState(true)
+  const [showErosionLayer, setShowErosionLayer] = useState(false)
+  const [showLithologyLayer, setShowLithologyLayer] = useState(false)
   const [currentViewDate, setCurrentViewDate] = useState(null) // Currently viewing date
   const [weatherData, setWeatherData] = useState(null)
   const [aqiData, setAqiData] = useState(null)
@@ -922,103 +927,31 @@ const Dashboard = () => {
     }
   }
 
-  const closeMapViews = () => {
-    setShowAqiOverlay(false)
-    setShowBodCodOverlay(false)
-    setShowLandUseOverlay(false)
-    setShowBiodiversityOverlay(false)
-    setShowClimateOverlay(false)
-    setShowFloodOverlay(false)
-    setShowBodCod(false)
-    setShowFlood(false)
-    setShowBathy(false)
-    setShowGeologyOverlay(false)
-    setShowAnalysis(false)
-  }
-
-  const handleSelectMapView = async (id) => {
-    const alreadyOn =
-      (id === 'aqi' && showAqiOverlay) ||
-      (id === 'waterquality' && showBodCodOverlay) ||
-      (id === 'landuse' && showLandUseOverlay) ||
-      (id === 'biodiversity' && showBiodiversityOverlay) ||
-      (id === 'climate' && showClimateOverlay) ||
-      (id === 'geology' && (showGeologyOverlay || showBathy)) ||
-      (id === 'flood' && showFloodOverlay)
-
-    if (alreadyOn) {
-      closeMapViews()
+  const handleAqiLayerToggle = useCallback(async (checked) => {
+    if (!checked) {
+      setShowAqiOverlay(false)
       return
     }
-
-    if (id === 'aqi') {
-      if (!drawnGeometry && !uploadedKML) {
-        alert('Please draw an area or upload a KML file first')
-        return
+    if (!drawnGeometry && !uploadedKML) {
+      alert('Please draw an area or upload a KML file first')
+      return
+    }
+    setShowAqiOverlay(true)
+    try {
+      let geometry = drawnGeometry
+      if (!geometry && uploadedKML) {
+        geometry = parseKMLToGeometry(uploadedKML.content)
       }
-      closeMapViews()
-      setShowAqiOverlay(true)
-      try {
-        let geometry = drawnGeometry
-        if (!geometry && uploadedKML) {
-          geometry = parseKMLToGeometry(uploadedKML.content)
-        }
-        if (!geometry) throw new Error('Could not parse geometry')
-        const center = calculateGeometryCenter(geometry)
-        if (!center) throw new Error('Could not calculate center coordinates')
-        await fetchAllLiveData(center.latitude, center.longitude)
-      } catch (err) {
-        setError(err.message)
-        alert(`Error: ${err.message}`)
-        setShowAqiOverlay(false)
-      }
-      return
+      if (!geometry) throw new Error('Could not parse geometry')
+      const center = calculateGeometryCenter(geometry)
+      if (!center) throw new Error('Could not calculate center coordinates')
+      await fetchAllLiveData(center.latitude, center.longitude)
+    } catch (err) {
+      setError(err.message)
+      alert(`Error: ${err.message}`)
+      setShowAqiOverlay(false)
     }
-
-    closeMapViews()
-
-    if (id === 'waterquality') {
-      setShowBodCodOverlay(true)
-      setShowTssLayer(true)
-      setShowNdciLayer(false)
-      setShowNdwiLayer(false)
-      setShowWstLayer(false)
-      return
-    }
-
-    if (id === 'landuse') {
-      setShowLandUseOverlay(true)
-      setShowUrbanVegLayer(true)
-      return
-    }
-
-    if (id === 'biodiversity') {
-      setShowBiodiversityOverlay(true)
-      setShowBiodiversityTypeLayer(true)
-      setShowBiodiversityHealthLayer(false)
-      return
-    }
-
-    if (id === 'climate') {
-      setShowClimateOverlay(true)
-      setShowClimateFloodHeat(true)
-      setShowClimateWaterHeat(true)
-      return
-    }
-
-    if (id === 'geology') {
-      setShowGeologyOverlay(true)
-      setShowTributaryLayer(true)
-      setShowMainStemLayer(false)
-      setShowErosionLayer(true)
-      return
-    }
-
-    if (id === 'flood') {
-      setShowFloodOverlay(true)
-      setShowFloodDepthLayer(true)
-    }
-  }
+  }, [drawnGeometry, uploadedKML])
 
   // ?view= lets the hub land straight in a view. Applied once, then dropped from
   // the URL so the header buttons stay the only owner of which view is showing.
@@ -1067,8 +1000,9 @@ const Dashboard = () => {
         setShowAqiOverlay(false)
       }
       else if (requestedView === 'landuse') {
-        // Soil & land use: silt classification plus urban vegetation.
+        // Soil & land use: LULC, silt classification, urban vegetation.
         setShowLandUseOverlay(true)
+        setShowLulcLayer(true)
         setShowUrbanVegLayer(true)
         setShowSiltClassLayer(true)
         setShowBodCod(false)
@@ -1115,6 +1049,7 @@ const Dashboard = () => {
         setShowTributaryLayer(true)
         setShowMainStemLayer(false)
         setShowErosionLayer(true)
+        setShowLithologyLayer(false)
         setShowBathy(false)
         setShowBodCod(false)
         setShowBodCodOverlay(false)
@@ -1667,6 +1602,207 @@ const Dashboard = () => {
   //   // eslint-disable-next-line react-hooks/exhaustive-deps
   // }, [viewMode])
 
+  const isMulaMuthaRiver =
+    uploadedKML?.displayName === 'Mula-Mutha River' ||
+    uploadedKML?.name?.toLowerCase().includes('mula-mutha')
+
+  const geologyLayersOn =
+    showErosionLayer || showLithologyLayer || showTributaryLayer || showMainStemLayer
+  const waterQualityLayersOn =
+    showTssLayer || showNdciLayer || showNdwiLayer || showWstLayer
+  const landUseLayersOn =
+    showSiltClassLayer || showSiltVolumeLayer || showUrbanVegLayer || showLulcLayer
+  const biodiversityLayersOn =
+    showBiodiversityTypeLayer || showBiodiversityHealthLayer
+  const climateLayersOn = showClimateFloodHeat || showClimateWaterHeat
+
+  const chainageLayer = {
+    id: 'chainage',
+    label: 'Chainage',
+    hint: '100 m stations · 0+000 to 16+400',
+    checked: showChainageLayer,
+    onToggle: setShowChainageLayer,
+  }
+
+  const lulcYear = 2021 + (Number.isFinite(lulcPeriodId) ? lulcPeriodId : 4)
+  const lulcLegend = legendForLayer(`lulc-${lulcYear}`) || legendForLayer('lulc')
+
+  const layersByView = useMemo(() => ({
+    aqi: [
+      {
+        id: 'aqi',
+        label: 'Live AQI',
+        hint: 'Gauge, pollutants and trend',
+        checked: showAqiOverlay,
+        onToggle: handleAqiLayerToggle,
+      },
+      ...(isMulaMuthaRiver ? [chainageLayer] : []),
+    ],
+    geology: [
+      {
+        id: 'lithology',
+        label: 'Spectral lithology',
+        hint: 'Provisional surface-material classes',
+        checked: showLithologyLayer,
+        onToggle: setShowLithologyLayer,
+      },
+      {
+        id: 'erosion',
+        label: 'Bank erosion hotspots',
+        hint: '2016–2026 classified overlay',
+        checked: showErosionLayer,
+        onToggle: setShowErosionLayer,
+      },
+      {
+        id: 'tributaries',
+        label: 'Joining streams',
+        hint: 'OSM waterways on the reach',
+        checked: showTributaryLayer,
+        onToggle: setShowTributaryLayer,
+      },
+      {
+        id: 'mainstem',
+        label: 'Main stem',
+        hint: 'Mula / Mutha OSM ways',
+        checked: showMainStemLayer,
+        onToggle: setShowMainStemLayer,
+      },
+      chainageLayer,
+    ],
+    waterquality: [
+      {
+        id: 'tss',
+        label: 'Turbidity / TSS',
+        hint: 'July 2026 classified overlay',
+        checked: showTssLayer,
+        onToggle: setShowTssLayer,
+      },
+      {
+        id: 'ndci',
+        label: 'NDCI — Chlorophyll',
+        hint: 'July 2026 classified overlay',
+        checked: showNdciLayer,
+        onToggle: setShowNdciLayer,
+      },
+      {
+        id: 'ndwi',
+        label: 'NDWI — Water Detection',
+        hint: 'July 2026 classified overlay',
+        checked: showNdwiLayer,
+        onToggle: setShowNdwiLayer,
+      },
+      {
+        id: 'wst',
+        label: 'WST — Temperature',
+        hint: 'Salinity thermal proxy',
+        checked: showWstLayer,
+        onToggle: setShowWstLayer,
+      },
+      chainageLayer,
+    ],
+    landuse: [
+      {
+        id: 'lulc',
+        label: 'LULC',
+        hint: `Land use / land cover · ${lulcYear}`,
+        checked: showLulcLayer,
+        onToggle: setShowLulcLayer,
+        colors: lulcLegend?.colors,
+      },
+      {
+        id: 'silt-class',
+        label: 'Silt classification',
+        hint: 'Monthly classed raster',
+        checked: showSiltClassLayer,
+        onToggle: setShowSiltClassLayer,
+      },
+      {
+        id: 'silt-volume',
+        label: 'Silt volume surface',
+        hint: 'Monthly volume overlay',
+        checked: showSiltVolumeLayer,
+        onToggle: setShowSiltVolumeLayer,
+      },
+      {
+        id: 'urban-veg',
+        label: 'Vegetation extent',
+        hint: '1 km urban vegetation box',
+        checked: showUrbanVegLayer,
+        onToggle: setShowUrbanVegLayer,
+      },
+      chainageLayer,
+    ],
+    biodiversity: [
+      {
+        id: 'type',
+        label: 'Vegetation type',
+        hint: 'Trees, shrub, grass, mixed',
+        checked: showBiodiversityTypeLayer,
+        onToggle: setShowBiodiversityTypeLayer,
+      },
+      {
+        id: 'health',
+        label: 'Vegetation health',
+        hint: 'Score bands from KMZ',
+        checked: showBiodiversityHealthLayer,
+        onToggle: setShowBiodiversityHealthLayer,
+      },
+      chainageLayer,
+    ],
+    climate: [
+      {
+        id: 'flood-heat',
+        label: 'Flood heatmap',
+        hint: 'Classed flood points by image pair',
+        checked: showClimateFloodHeat,
+        onToggle: setShowClimateFloodHeat,
+      },
+      {
+        id: 'water-heat',
+        label: 'Surface-water heatmap',
+        hint: 'Classed water points by image pair',
+        checked: showClimateWaterHeat,
+        onToggle: setShowClimateWaterHeat,
+      },
+      chainageLayer,
+    ],
+    flood: [
+      {
+        id: 'depth',
+        label: 'Water depth',
+        hint: 'Classed depth 1.5–2.0 m',
+        checked: showFloodDepthLayer,
+        onToggle: setShowFloodDepthLayer,
+      },
+      chainageLayer,
+    ],
+  }), [
+    isMulaMuthaRiver,
+    showAqiOverlay,
+    handleAqiLayerToggle,
+    showChainageLayer,
+    showErosionLayer,
+    showLithologyLayer,
+    showTributaryLayer,
+    showMainStemLayer,
+    showTssLayer,
+    showNdciLayer,
+    showNdwiLayer,
+    showWstLayer,
+    showSiltClassLayer,
+    showSiltVolumeLayer,
+    showLulcLayer,
+    lulcPeriodId,
+    lulcYear,
+    lulcLegend,
+    showUrbanVegLayer,
+    showBiodiversityTypeLayer,
+    showBiodiversityHealthLayer,
+    showClimateFloodHeat,
+    showClimateWaterHeat,
+    showFloodDepthLayer,
+  ])
+
   return (
     <div className={`dashboard ${isFullscreen ? 'is-fullscreen' : ''}`}>
       <header className="dashboard-header">
@@ -1764,6 +1900,36 @@ const Dashboard = () => {
                 </span>
               </button>
             )}
+            {(uploadedKML?.displayName === 'Mula-Mutha River' ||
+              uploadedKML?.name?.toLowerCase().includes('mula-mutha')) && (
+              <button
+                type="button"
+                className={`header-mode-btn is-bathy ${showBathy ? 'active' : ''}`}
+                onClick={() => {
+                  setShowBathy(true)
+                  setShowFlood(false)
+                  setShowBodCod(false)
+                  setShowAnalysis(false)
+                  setShowBodCodOverlay(false)
+                  setShowAqiOverlay(false)
+                  setShowFloodOverlay(false)
+                  setShowGeologyOverlay(false)
+                }}
+                title="Open bathymetry dashboard"
+              >
+                <span className="header-mode-icon" aria-hidden="true">
+                  <svg viewBox="0 0 32 18" fill="none">
+                    <path d="M1 4h30" stroke="currentColor" strokeOpacity="0.28" />
+                    <path d="M2 5c4 6 7 10 10 10s5-7 8-7 5 6 9 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                    <path d="M2 14h28" stroke="currentColor" strokeWidth="1.4" strokeOpacity="0.55" strokeLinecap="round" />
+                  </svg>
+                </span>
+                <span className="header-mode-copy">
+                  <strong>Bathymetry</strong>
+                  <small>Depth survey</small>
+                </span>
+              </button>
+            )}
           </div>
         </div>
         
@@ -1831,111 +1997,58 @@ const Dashboard = () => {
               />
             </div>
           ) : !showAnalysis ? (
+            <LayerPanelSlotProvider>
             <div className="map-wrapper">
               <MapViewsControl
                 loading={loading}
-                isMulaMutha={
-                  uploadedKML?.displayName === 'Mula-Mutha River' ||
-                  uploadedKML?.name?.toLowerCase().includes('mula-mutha')
-                }
-                activeView={
-                  showAqiOverlay
-                    ? 'aqi'
-                    : showBodCodOverlay
-                      ? 'waterquality'
-                      : showLandUseOverlay
-                        ? 'landuse'
-                        : showBiodiversityOverlay
-                          ? 'biodiversity'
-                          : showClimateOverlay
-                            ? 'climate'
-                            : showGeologyOverlay
-                              ? 'geology'
-                              : showFloodOverlay
-                              ? 'flood'
-                              : null
-                }
-                onSelect={handleSelectMapView}
+                isMulaMutha={isMulaMuthaRiver}
+                layersByView={layersByView}
               />
               <MapLayersControl mapLayer={mapLayer} onLayerChange={setMapLayer} />
-              {showBodCodOverlay && (
+              {waterQualityLayersOn && (
                 <BodCodMapOverlay
                   showTssLayer={showTssLayer}
                   showNdciLayer={showNdciLayer}
                   showNdwiLayer={showNdwiLayer}
                   showWstLayer={showWstLayer}
-                  onToggleTss={setShowTssLayer}
-                  onToggleNdci={setShowNdciLayer}
-                  onToggleNdwi={setShowNdwiLayer}
-                  onToggleWst={setShowWstLayer}
                   showChainageLayer={showChainageLayer}
-                  onToggleChainage={setShowChainageLayer}
                   focusChainage={focusChainage}
                   onSelectChainage={(station) => setFocusChainage({ ...station, at: Date.now() })}
                 />
               )}
-              {showFloodOverlay && (
+              {showFloodDepthLayer && (
                 <FloodMapOverlay
                   onZonesChange={setFloodZones}
                   showChainageLayer={showChainageLayer}
-                  onToggleChainage={setShowChainageLayer}
                   showDepthLayer={showFloodDepthLayer}
-                  onToggleDepth={setShowFloodDepthLayer}
                   focusChainage={focusChainage}
                 />
               )}
-              {showLandUseOverlay && (
+              {landUseLayersOn && (
                 <SoilLandUseMapOverlay
                   showExtentLayer={showUrbanVegLayer}
-                  onToggleExtent={setShowUrbanVegLayer}
                   showSiltClassLayer={showSiltClassLayer}
-                  onToggleSiltClass={setShowSiltClassLayer}
                   showSiltVolumeLayer={showSiltVolumeLayer}
-                  onToggleSiltVolume={setShowSiltVolumeLayer}
                   siltPeriodId={siltPeriodId}
                   onSiltPeriodChange={setSiltPeriodId}
-                  showChainageLayer={showChainageLayer}
-                  onToggleChainage={setShowChainageLayer}
+                  showLulcLayer={showLulcLayer}
+                  lulcPeriodId={lulcPeriodId}
+                  onLulcPeriodChange={setLulcPeriodId}
                 />
               )}
-              {showBiodiversityOverlay && (
+              {biodiversityLayersOn && (
                 <BiodiversityMapOverlay
                   showTypeLayer={showBiodiversityTypeLayer}
                   showHealthLayer={showBiodiversityHealthLayer}
-                  onToggleType={setShowBiodiversityTypeLayer}
-                  onToggleHealth={setShowBiodiversityHealthLayer}
-                  showChainageLayer={showChainageLayer}
-                  onToggleChainage={setShowChainageLayer}
                 />
               )}
-              {showClimateOverlay && (
+              {climateLayersOn && (
                 <ClimateImpactMapOverlay
                   periodId={climatePeriodId}
                   onPeriodChange={setClimatePeriodId}
-                  showFloodHeat={showClimateFloodHeat}
-                  showWaterHeat={showClimateWaterHeat}
-                  onToggleFlood={setShowClimateFloodHeat}
-                  onToggleWater={setShowClimateWaterHeat}
-                  showChainageLayer={showChainageLayer}
-                  onToggleChainage={setShowChainageLayer}
                 />
               )}
-              {showGeologyOverlay && (
-                <GeologyMapOverlay
-                  showErosionLayer={showErosionLayer}
-                  onToggleErosion={setShowErosionLayer}
-                  showTributaryLayer={showTributaryLayer}
-                  onToggleTributaries={setShowTributaryLayer}
-                  showMainStemLayer={showMainStemLayer}
-                  onToggleMainStem={setShowMainStemLayer}
-                  showChainageLayer={showChainageLayer}
-                  onToggleChainage={setShowChainageLayer}
-                  onOpenBathymetry={() => {
-                    setShowGeologyOverlay(false)
-                    setShowBathy(true)
-                  }}
-                />
-              )}
+              {geologyLayersOn && <GeologyMapOverlay />}
               {showAqiOverlay && (
                 <AqiMapOverlay
                   aqiData={aqiData}
@@ -1943,7 +2056,6 @@ const Dashboard = () => {
                   loading={loading}
                   selectedHeight={selectedHeight}
                   showChainageLayer={showChainageLayer}
-                  onToggleChainage={setShowChainageLayer}
                   focusChainage={focusChainage}
                 />
               )}
@@ -1954,29 +2066,32 @@ const Dashboard = () => {
                 isDrawing={isDrawing}
                 onGeometryComplete={handleGeometryComplete}
                 onCancelDrawing={handleCancelDrawing}
-                showTssLayer={showBodCodOverlay && showTssLayer}
-                showNdciLayer={showBodCodOverlay && showNdciLayer}
-                showNdwiLayer={showBodCodOverlay && showNdwiLayer}
-                showWstLayer={showBodCodOverlay && showWstLayer}
-                showDepthLayer={showFloodOverlay && showFloodDepthLayer}
-                showUrbanVegLayer={showLandUseOverlay && showUrbanVegLayer}
-                showSiltClassLayer={showLandUseOverlay && showSiltClassLayer}
-                showSiltVolumeLayer={showLandUseOverlay && showSiltVolumeLayer}
+                showTssLayer={showTssLayer}
+                showNdciLayer={showNdciLayer}
+                showNdwiLayer={showNdwiLayer}
+                showWstLayer={showWstLayer}
+                showDepthLayer={showFloodDepthLayer}
+                showUrbanVegLayer={showUrbanVegLayer}
+                showSiltClassLayer={showSiltClassLayer}
+                showSiltVolumeLayer={showSiltVolumeLayer}
                 siltPeriodId={siltPeriodId}
-                showBiodiversityTypeLayer={showBiodiversityOverlay && showBiodiversityTypeLayer}
-                showBiodiversityHealthLayer={showBiodiversityOverlay && showBiodiversityHealthLayer}
-                showClimateFloodHeat={showClimateOverlay && showClimateFloodHeat}
-                showClimateWaterHeat={showClimateOverlay && showClimateWaterHeat}
+                showLulcLayer={showLulcLayer}
+                lulcPeriodId={lulcPeriodId}
+                showBiodiversityTypeLayer={showBiodiversityTypeLayer}
+                showBiodiversityHealthLayer={showBiodiversityHealthLayer}
+                showClimateFloodHeat={showClimateFloodHeat}
+                showClimateWaterHeat={showClimateWaterHeat}
                 climatePeriodId={climatePeriodId}
-                showTributaryLayer={showGeologyOverlay && showTributaryLayer}
-                showMainStemLayer={showGeologyOverlay && showMainStemLayer}
-                showErosionLayer={showGeologyOverlay && showErosionLayer}
+                showTributaryLayer={showTributaryLayer}
+                showMainStemLayer={showMainStemLayer}
+                showErosionLayer={showErosionLayer}
+                showLithologyLayer={showLithologyLayer}
                 showChainageLayer={
                   (uploadedKML?.displayName === 'Mula-Mutha River' ||
                     uploadedKML?.name?.toLowerCase().includes('mula-mutha')) &&
                   showChainageLayer
                 }
-                floodZones={showFloodOverlay ? floodZones : null}
+                floodZones={showFloodDepthLayer ? floodZones : null}
                 focusChainage={focusChainage}
                 onSelectChainage={(station) => setFocusChainage({ ...station, at: Date.now() })}
               />
@@ -1985,7 +2100,7 @@ const Dashboard = () => {
                 showChainageLayer && (
                   <ChainageScrubber
                     variant={
-                      showFloodOverlay || showBodCodOverlay || showAqiOverlay
+                      showFloodDepthLayer || waterQualityLayersOn || showAqiOverlay
                         ? 'above-ribbon'
                         : 'map-edge'
                     }
@@ -1994,6 +2109,7 @@ const Dashboard = () => {
                   />
                 )}
             </div>
+            </LayerPanelSlotProvider>
           ) : (
             <div className="analysis-content">
               <button
