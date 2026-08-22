@@ -71,34 +71,6 @@ const AppHome = () => {
             </Link>
           ))}
         </div>
-
-        <div className="hub-notes">
-          <section className="hub-note">
-            <h3>What opens today</h3>
-            <p>
-              Hydrology opens the digital twin (modelled discharge, WSE, freeboard and alerts).
-              Water quality and salinity intrusion open TSS, NDCI, NDWI, WST and the BOD–COD panel.
-              Biodiversity opens classified vegetation overlays. Soil & land use opens monthly silt rasters plus urban vegetation. Climate impact
-              opens the flood and surface-water heatmap. Geology opens joining streams on the map,
-              with the satellite-derived bathymetry dashboard from that panel. Pollution and socio-economic land on the live map — their
-              satellite layers are intended scope, not shipped screens yet.
-            </p>
-          </section>
-
-          <section className="hub-note">
-            <h3>Before you quote a number</h3>
-            <p>
-              Water level, freeboard, alerts and discharge come from a demonstration twin, and the
-              BOD–COD series is demonstration data; Turbidity/TSS, NDCI, NDWI and WST (salinity
-              thermal proxy) are classified overlays for July 2026 under water quality. The climate
-              impact heatmap is classed sample-point density from seven 2026 image pairs, not a
-              surveyed flood line. Geology bathymetry is satellite-derived (Sentinel-2, 14 Jul 2026),
-              not an in-situ sounding survey.
-              {' '}<Link to="/">The project page</Link> sets out
-              every source and its footing.
-            </p>
-          </section>
-        </div>
       </main>
     </div>
   )

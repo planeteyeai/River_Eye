@@ -300,8 +300,8 @@ const Hero = ({ enterTo, enterLabel }) => (
         </span>
 
         <h1 className="lp-anim" style={stagger(1)}>
-          Environmental Intelligence for the{' '}
-          <span className="lp-gradient-text">Mula–Mutha River</span>
+          Digital twin Intelligence and Climate Intelligence for{' '}
+          <span className="lp-gradient-text">River</span>
         </h1>
 
         <p className="lp-anim" style={stagger(2)}>
