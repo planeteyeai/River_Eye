@@ -1,0 +1,26 @@
+{
+  "name": "Mula-Mutha WRD red / blue / green flood lines",
+  "kind": "Estimated",
+  "source_pdf": "Mula Mutha River Sangam bridge Mudhava KTW.pdf",
+  "geojson": "/asset/mula-mutha-wrd-floodlines.geojson",
+  "counts": {
+    "red": 34,
+    "blue": 22,
+    "green": 58
+  },
+  "styles": {
+    "red": {
+      "color": "#c62828",
+      "label": "Red line"
+    },
+    "blue": {
+      "color": "#1565c0",
+      "label": "Blue line"
+    },
+    "green": {
+      "color": "#2e7d32",
+      "label": "Green line"
+    }
+  },
+  "note": "Colour-traced from Khadakwasla Irrigation Division plane-table sheets (1:4000), georeferenced with measured bridge GCPs and filtered to within ~450 m of the twin centreline. Not official WRD GIS."
+}

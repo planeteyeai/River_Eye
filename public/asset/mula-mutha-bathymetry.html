@@ -44,7 +44,7 @@ header .sub{color:var(--sub);margin-top:4px;font-size:13px}
 input[type=range]{accent-color:var(--accent)}
 #leaflet-map{height:560px;background:#06101f}
 #plot3d{height:620px}
-#histplot{height:440px}
+#histplot{height:520px}
 .panel{display:none}.panel.active{display:block}
 .legend{position:absolute;z-index:800;right:12px;bottom:24px;background:rgba(10,16,30,.88);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:11px;backdrop-filter:blur(4px)}
 .legend .bar{width:160px;height:12px;border-radius:6px;margin:6px 0}
@@ -61,7 +61,177 @@ input[type=range]{accent-color:var(--accent)}
 .notes h3{color:var(--txt);font-size:13px;margin-bottom:6px}
 .notes p{margin-bottom:12px}
 footer{color:var(--sub);text-align:center;font-size:11px;padding:10px 0 26px}
+.leaflet-popup.depth-popup .leaflet-popup-content-wrapper{background:rgba(8,14,28,.95);border:1px solid #38bdf8;border-radius:8px;color:#e8eefc;font-family:Inter,sans-serif;font-size:12px;padding:0;box-shadow:0 4px 18px rgba(56,189,248,.3)}
+.leaflet-popup.depth-popup .leaflet-popup-content{margin:8px 12px}
+.leaflet-popup.depth-popup .leaflet-popup-tip{background:rgba(8,14,28,.95)}
+@keyframes depthPulse{0%{opacity:.7;transform:scale(1)}50%{opacity:.2;transform:scale(1.5)}100%{opacity:.7;transform:scale(1)}}
+.deep-ring{animation:depthPulse 2s ease-in-out infinite}
+.loc-label-box{background:rgba(8,14,28,.88);border-radius:5px;padding:2px 7px;font-size:11px;font-weight:700;font-family:Inter,sans-serif;white-space:nowrap;pointer-events:none;box-shadow:0 2px 8px rgba(0,0,0,.5)}
+.section-box{position:absolute;z-index:950;right:12px;width:290px;background:rgba(10,16,30,.94);border:1px solid var(--line);border-radius:10px;padding:8px 10px 4px;backdrop-filter:blur(4px);box-shadow:0 4px 18px rgba(0,0,0,.4)}
+.section-box .sb-title{font-size:11px;color:var(--sub);font-weight:600;margin-bottom:2px}
+.section-box .sb-close{position:absolute;top:5px;right:8px;cursor:pointer;color:var(--sub);font-size:13px;line-height:1;padding:2px}
+.section-box .sb-close:hover{color:var(--txt)}
+.section-box .sb-stats{font-size:10px;color:var(--sub);margin-top:2px}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* RIVEREYE_FULLSCREEN_START */
+/* RiverEye chrome.
+   The vendor markup nests .stats/.tabs inside .wrap and .viewhead inside the
+   panel, so the chrome is pinned with position:fixed (iframe viewport) rather
+   than inheriting those offsets. --rv-chrome is the bar height the stage is
+   inset by; --rv-backgap clears the host app's "Back to Map" button. */
+:root{--rv-chrome:104px;--rv-backgap:180px}
+
+html,body{height:100%;width:100%;overflow:hidden;margin:0}
+body{position:relative;min-height:100%;background:#06101f}
+
+/* ---------- docked chrome ---------- */
+header{
+  position:fixed;top:0;left:0;right:0;height:var(--rv-chrome);
+  padding:0;margin:0;z-index:1000;pointer-events:none;
+  background:#0b1220;border-bottom:1px solid var(--line)
+}
+header h1{
+  position:absolute;top:17px;left:var(--rv-backgap);max-width:min(38vw,420px);
+  margin:0;pointer-events:auto;font-size:13px;font-weight:650;letter-spacing:.2px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis
+}
+header .sub,.badges{display:none !important}
+
+/* row 1 right — Min / Max / Mean chips */
+.stats{
+  position:fixed;top:12px;right:14px;left:auto;bottom:auto;z-index:1100;
+  display:flex;gap:8px;pointer-events:none
+}
+.stats .card{
+  pointer-events:auto;display:flex;align-items:baseline;gap:7px;
+  margin:0;padding:5px 11px;border-radius:8px;
+  background:var(--panel2);border:1px solid var(--line);box-shadow:none
+}
+.stats .card .k{font-size:9px;letter-spacing:.07em;white-space:nowrap;margin:0}
+.stats .card .v{font-size:14px;font-weight:650;margin:0;white-space:nowrap}
+
+/* row 2 left — view tabs (below the host Back button, which ends at y=56) */
+.tabs{
+  position:fixed;top:58px;left:16px;right:auto;bottom:auto;z-index:1100;
+  display:flex;gap:6px
+}
+.tab{padding:6px 12px;font-size:12px;border-radius:8px;background:var(--panel2)}
+
+/* row 2 right — the active panel's toolbar */
+.viewhead{
+  position:fixed;top:58px;right:14px;left:auto;bottom:auto;z-index:1100;
+  display:flex;justify-content:flex-end;align-items:center;
+  margin:0;padding:0;border:none !important;background:none !important;
+  box-shadow:none;max-width:calc(100vw - 540px)
+}
+.viewhead h2{display:none}
+.ctrls{
+  display:flex;align-items:center;gap:13px;font-size:11px;
+  flex-wrap:nowrap;white-space:nowrap
+}
+.ctrls label{display:flex;align-items:center;gap:6px;white-space:nowrap}
+.ctrls input[type=range]{width:92px}
+.btn{padding:6px 11px;font-size:11px;border-radius:8px;white-space:nowrap}
+
+/* ---------- stage ---------- */
+.wrap{
+  position:absolute;top:var(--rv-chrome);left:0;right:0;bottom:0;
+  max-width:none;width:auto;height:auto;
+  margin:0;padding:0;gap:0;display:block;box-sizing:border-box;z-index:auto
+}
+.viewbox{
+  position:absolute !important;inset:0 !important;z-index:auto;
+  border:none !important;border-radius:0 !important;
+  background:transparent !important;overflow:visible
+}
+.panel{display:none !important}
+.panel.active{display:block !important}
+
+#panel-2d > div[style*="relative"],
+#panel-3d > div[style*="relative"],
+#panel-an > div[style*="padding"]{
+  position:absolute !important;inset:0 !important;
+  display:block !important;padding:0 !important;min-height:0;z-index:0
+}
+#leaflet-map,#plot3d,#histplot{
+  position:absolute !important;inset:0 !important;
+  width:100% !important;height:100% !important;min-height:0 !important;
+  border-radius:0;z-index:0;background:#06101f
+}
+#plot3d .js-plotly-plot,#plot3d .plot-container,#plot3d .svg-container,
+#histplot .js-plotly-plot,#histplot .plot-container{
+  width:100% !important;height:100% !important
+}
+
+/* ---------- in-stage overlays ---------- */
+.legend{
+  right:14px !important;bottom:58px !important;z-index:900 !important;
+  background:rgba(11,18,32,.92) !important;border-color:var(--line) !important
+}
+#legend3d{right:14px !important;bottom:58px !important}
+.hovertip,.section-box{z-index:950 !important}
+
+.measure{
+  position:absolute;left:14px;right:14px;bottom:14px;z-index:900;
+  margin:0;border:1px solid var(--line);border-radius:10px;
+  background:rgba(11,18,32,.94)
+}
+#draw-graph-panel{
+  position:absolute;left:14px;right:14px;bottom:62px;z-index:900;
+  border:1px solid var(--line);border-radius:10px;
+  background:rgba(11,18,32,.96);max-height:38vh;overflow:auto
+}
+#ch-stats,.notes{
+  position:absolute;left:14px;right:14px;bottom:14px;z-index:900;
+  background:rgba(11,18,32,.92);border-radius:10px;border:1px solid var(--line)
+}
+footer{display:none}
+
+@keyframes depthPulse{0%,100%{opacity:1;transform:none}}
+.deep-ring{animation:none !important;opacity:0 !important;display:none !important}
+
+/* the toolbar takes its own row once it can no longer sit beside the tabs */
+@media (max-width:1400px){
+  :root{--rv-chrome:150px}
+  .viewhead{
+    top:104px;left:16px;right:14px;max-width:none;justify-content:flex-start
+  }
+  .ctrls{flex-wrap:wrap;row-gap:8px;white-space:normal}
+}
+/* narrow: everything stacks below the host Back button */
+@media (max-width:900px){
+  :root{--rv-chrome:210px;--rv-backgap:16px}
+  header h1{top:64px;left:16px;max-width:calc(100vw - 32px)}
+  .stats{top:92px;left:16px;right:14px;flex-wrap:wrap}
+  .tabs{top:134px;flex-wrap:wrap}
+  .viewhead{top:176px}
+}
+/* RIVEREYE_FULLSCREEN_END */
+
 </style>
+<script type="application/json" id="kml-chainage">[{"n": "0+100", "lat": 18.5318389, "lon": 73.8570054}, {"n": "0+200", "lat": 18.531492, "lon": 73.8578792}, {"n": "0+300", "lat": 18.5313123, "lon": 73.8588051}, {"n": "0+400", "lat": 18.5313961, "lon": 73.8597439}, {"n": "0+500", "lat": 18.5317486, "lon": 73.8606129}, {"n": "0+600", "lat": 18.5322669, "lon": 73.8613878}, {"n": "0+700", "lat": 18.532855, "lon": 73.8621069}, {"n": "0+800", "lat": 18.5334564, "lon": 73.862814}, {"n": "0+900", "lat": 18.5340443, "lon": 73.8635334}, {"n": "1+000", "lat": 18.5346186, "lon": 73.8642648}, {"n": "1+100", "lat": 18.5352058, "lon": 73.8649848}, {"n": "1+200", "lat": 18.5358319, "lon": 73.8656677}, {"n": "1+300", "lat": 18.5364772, "lon": 73.8663308}, {"n": "1+400", "lat": 18.5371074, "lon": 73.8670098}, {"n": "1+500", "lat": 18.5377012, "lon": 73.8677236}, {"n": "1+600", "lat": 18.5382477, "lon": 73.8684779}, {"n": "1+700", "lat": 18.538748, "lon": 73.8692666}, {"n": "1+800", "lat": 18.5392099, "lon": 73.8700808}, {"n": "1+900", "lat": 18.5396379, "lon": 73.8709151}, {"n": "2+000", "lat": 18.5400346, "lon": 73.8717662}, {"n": "2+100", "lat": 18.5404047, "lon": 73.8726305}, {"n": "2+200", "lat": 18.5407541, "lon": 73.8735042}, {"n": "2+300", "lat": 18.5410861, "lon": 73.8743853}, {"n": "2+400", "lat": 18.5413996, "lon": 73.8752738}, {"n": "2+500", "lat": 18.5416909, "lon": 73.8761706}, {"n": "2+600", "lat": 18.5419556, "lon": 73.8770764}, {"n": "2+700", "lat": 18.5421911, "lon": 73.877991}, {"n": "2+800", "lat": 18.5423968, "lon": 73.8789135}, {"n": "2+900", "lat": 18.5425734, "lon": 73.8798426}, {"n": "3+000", "lat": 18.5427243, "lon": 73.8807766}, {"n": "3+100", "lat": 18.5428556, "lon": 73.881714}, {"n": "3+200", "lat": 18.5429746, "lon": 73.8826531}, {"n": "3+300", "lat": 18.5430881, "lon": 73.883593}, {"n": "3+400", "lat": 18.5431979, "lon": 73.8845334}, {"n": "3+500", "lat": 18.5432992, "lon": 73.8854748}, {"n": "3+600", "lat": 18.5433851, "lon": 73.8864179}, {"n": "3+700", "lat": 18.5434525, "lon": 73.8873626}, {"n": "3+800", "lat": 18.5435027, "lon": 73.8883086}, {"n": "3+900", "lat": 18.5435319, "lon": 73.8892554}, {"n": "4+000", "lat": 18.5435235, "lon": 73.8902027}, {"n": "4+100", "lat": 18.5434552, "lon": 73.8911471}, {"n": "4+200", "lat": 18.5433205, "lon": 73.8920838}, {"n": "4+300", "lat": 18.5431347, "lon": 73.8930108}, {"n": "4+400", "lat": 18.5429227, "lon": 73.8939318}, {"n": "4+500", "lat": 18.5427062, "lon": 73.8948516}, {"n": "4+600", "lat": 18.5424968, "lon": 73.8957732}, {"n": "4+700", "lat": 18.5422974, "lon": 73.8966973}, {"n": "4+800", "lat": 18.5421067, "lon": 73.8976233}, {"n": "4+900", "lat": 18.5419243, "lon": 73.8985512}, {"n": "5+000", "lat": 18.541755, "lon": 73.8994818}, {"n": "5+100", "lat": 18.5416066, "lon": 73.9004163}, {"n": "5+200", "lat": 18.5414837, "lon": 73.9013549}, {"n": "5+300", "lat": 18.5413856, "lon": 73.9022967}, {"n": "5+400", "lat": 18.5413098, "lon": 73.9032407}, {"n": "5+500", "lat": 18.5412513, "lon": 73.9041861}, {"n": "5+600", "lat": 18.5411979, "lon": 73.9051318}, {"n": "5+700", "lat": 18.5411353, "lon": 73.9060769}, {"n": "5+800", "lat": 18.5410592, "lon": 73.907021}, {"n": "5+900", "lat": 18.5409699, "lon": 73.9079637}, {"n": "6+000", "lat": 18.5408581, "lon": 73.9089038}, {"n": "6+100", "lat": 18.5407108, "lon": 73.9098384}, {"n": "6+200", "lat": 18.5405274, "lon": 73.9107661}, {"n": "6+300", "lat": 18.5403228, "lon": 73.9116888}, {"n": "6+400", "lat": 18.5401139, "lon": 73.9126106}, {"n": "6+500", "lat": 18.5399112, "lon": 73.9135338}, {"n": "6+600", "lat": 18.539723, "lon": 73.9144604}, {"n": "6+700", "lat": 18.5395607, "lon": 73.9153924}, {"n": "6+800", "lat": 18.5394327, "lon": 73.9163301}, {"n": "6+900", "lat": 18.539335, "lon": 73.9172719}, {"n": "7+000", "lat": 18.5392551, "lon": 73.9182156}, {"n": "7+100", "lat": 18.5391798, "lon": 73.9191597}, {"n": "7+200", "lat": 18.5390977, "lon": 73.9201032}, {"n": "7+300", "lat": 18.5390021, "lon": 73.9210452}, {"n": "7+400", "lat": 18.5388936, "lon": 73.9219858}, {"n": "7+500", "lat": 18.5387745, "lon": 73.9229249}, {"n": "7+600", "lat": 18.5386408, "lon": 73.9238618}, {"n": "7+700", "lat": 18.5384818, "lon": 73.9247944}, {"n": "7+800", "lat": 18.5382893, "lon": 73.92572}, {"n": "7+900", "lat": 18.5380614, "lon": 73.9266367}, {"n": "8+000", "lat": 18.5378004, "lon": 73.9275436}, {"n": "8+100", "lat": 18.5375125, "lon": 73.9284416}, {"n": "8+200", "lat": 18.5372133, "lon": 73.9293356}, {"n": "8+300", "lat": 18.5369248, "lon": 73.9302333}, {"n": "8+400", "lat": 18.5366657, "lon": 73.9311409}, {"n": "8+500", "lat": 18.5364444, "lon": 73.9320593}, {"n": "8+600", "lat": 18.536257, "lon": 73.932986}, {"n": "8+700", "lat": 18.5360922, "lon": 73.9339175}, {"n": "8+800", "lat": 18.5359466, "lon": 73.9348525}, {"n": "8+900", "lat": 18.5358425, "lon": 73.9357934}, {"n": "9+000", "lat": 18.5358266, "lon": 73.9367399}, {"n": "9+100", "lat": 18.5359416, "lon": 73.9376785}, {"n": "9+200", "lat": 18.5362169, "lon": 73.9385791}, {"n": "9+300", "lat": 18.5366753, "lon": 73.9393928}, {"n": "9+400", "lat": 18.5373047, "lon": 73.9400697}, {"n": "9+500", "lat": 18.5380453, "lon": 73.9406109}, {"n": "9+600", "lat": 18.5388402, "lon": 73.9410609}, {"n": "9+700", "lat": 18.5396574, "lon": 73.9414652}, {"n": "9+800", "lat": 18.5404786, "lon": 73.9418606}, {"n": "9+900", "lat": 18.5412912, "lon": 73.9422751}, {"n": "10+000", "lat": 18.5420859, "lon": 73.9427259}, {"n": "10+100", "lat": 18.5428506, "lon": 73.9432303}, {"n": "10+200", "lat": 18.5435633, "lon": 73.9438117}, {"n": "10+300", "lat": 18.5441934, "lon": 73.9444896}, {"n": "10+400", "lat": 18.5447054, "lon": 73.9452687}, {"n": "10+500", "lat": 18.5450631, "lon": 73.946137}, {"n": "10+600", "lat": 18.5452645, "lon": 73.9470595}, {"n": "10+700", "lat": 18.5453557, "lon": 73.9480018}, {"n": "10+800", "lat": 18.5453903, "lon": 73.9489485}, {"n": "10+900", "lat": 18.5454118, "lon": 73.9498956}, {"n": "11+000", "lat": 18.5454609, "lon": 73.9508416}, {"n": "11+100", "lat": 18.545562, "lon": 73.9517829}, {"n": "11+200", "lat": 18.5457038, "lon": 73.9527186}, {"n": "11+300", "lat": 18.5458607, "lon": 73.9536516}, {"n": "11+400", "lat": 18.5460225, "lon": 73.9545837}, {"n": "11+500", "lat": 18.5461884, "lon": 73.9555151}, {"n": "11+600", "lat": 18.5463478, "lon": 73.9564476}, {"n": "11+700", "lat": 18.5464758, "lon": 73.9573854}, {"n": "11+800", "lat": 18.5465302, "lon": 73.9583306}, {"n": "11+900", "lat": 18.5464573, "lon": 73.9592738}, {"n": "12+000", "lat": 18.5462253, "lon": 73.9601881}, {"n": "12+100", "lat": 18.5458575, "lon": 73.9610527}, {"n": "12+200", "lat": 18.5454155, "lon": 73.961879}, {"n": "12+300", "lat": 18.5449583, "lon": 73.9626962}, {"n": "12+400", "lat": 18.5445248, "lon": 73.9635274}, {"n": "12+500", "lat": 18.5441392, "lon": 73.964384}, {"n": "12+600", "lat": 18.5438147, "lon": 73.965268}, {"n": "12+700", "lat": 18.543547, "lon": 73.9661728}, {"n": "12+800", "lat": 18.5433158, "lon": 73.9670886}, {"n": "12+900", "lat": 18.543096, "lon": 73.9680076}, {"n": "13+000", "lat": 18.5428629, "lon": 73.968923}, {"n": "13+100", "lat": 18.5425943, "lon": 73.9698274}, {"n": "13+200", "lat": 18.542271, "lon": 73.9707119}, {"n": "13+300", "lat": 18.5418701, "lon": 73.9715604}, {"n": "13+400", "lat": 18.5413631, "lon": 73.9723436}, {"n": "13+500", "lat": 18.5407457, "lon": 73.9730341}, {"n": "13+600", "lat": 18.5400403, "lon": 73.973625}, {"n": "13+700", "lat": 18.5392676, "lon": 73.9741152}, {"n": "13+800", "lat": 18.5384472, "lon": 73.9745116}, {"n": "13+900", "lat": 18.5376013, "lon": 73.9748446}, {"n": "14+000", "lat": 18.5367492, "lon": 73.9751601}, {"n": "14+100", "lat": 18.5359053, "lon": 73.9754986}, {"n": "14+200", "lat": 18.5350776, "lon": 73.9758788}, {"n": "14+300", "lat": 18.5342703, "lon": 73.9763041}, {"n": "14+400", "lat": 18.5334901, "lon": 73.9767818}, {"n": "14+500", "lat": 18.5327507, "lon": 73.9773259}, {"n": "14+600", "lat": 18.5320622, "lon": 73.9779389}, {"n": "14+700", "lat": 18.5314225, "lon": 73.9786079}, {"n": "14+800", "lat": 18.5308226, "lon": 73.9793162}, {"n": "14+900", "lat": 18.5302526, "lon": 73.9800513}, {"n": "15+000", "lat": 18.5297061, "lon": 73.9808058}, {"n": "15+100", "lat": 18.5291809, "lon": 73.9815766}, {"n": "15+200", "lat": 18.5286758, "lon": 73.9823622}, {"n": "15+300", "lat": 18.5281865, "lon": 73.9831586}, {"n": "15+400", "lat": 18.5277055, "lon": 73.9839606}, {"n": "15+500", "lat": 18.527232, "lon": 73.9847675}, {"n": "15+600", "lat": 18.526769, "lon": 73.985581}, {"n": "15+700", "lat": 18.5263095, "lon": 73.9863968}, {"n": "15+800", "lat": 18.5258359, "lon": 73.9872036}, {"n": "15+900", "lat": 18.525336, "lon": 73.9879927}, {"n": "16+000", "lat": 18.5248089, "lon": 73.9887621}, {"n": "16+100", "lat": 18.5242547, "lon": 73.9895102}, {"n": "16+200", "lat": 18.5236716, "lon": 73.9902339}, {"n": "16+300", "lat": 18.5230659, "lon": 73.9909369}, {"n": "16+400", "lat": 18.5224561, "lon": 73.991636}]
+</script>
 </head>
 <body>
 <header>
@@ -84,12 +254,13 @@ footer{color:var(--sub);text-align:center;font-size:11px;padding:10px 0 26px}
 
   <div class="viewbox panel active" id="panel-2d">
     <div class="viewhead">
-      <h2>Leaflet Map · Depth Raster Overlay</h2>
+      <h2>Leaflet Map · Water Depth Raster Overlay</h2>
       <div class="ctrls">
         <label>Overlay opacity <input type="range" id="op" min="20" max="100" value="85"></label>
         <label>Contour <input type="range" id="cl" min="0" max="100" value="50"> <span id="cl-lbl"></span></label>
-        <button class="btn" id="btn-measure">📏 Measure</button>
-        <button class="btn on" id="btn-land">🌳 Land cover</button>
+        <button class="btn" id="btn-draw">📏 Measure</button>
+        <button class="btn" id="btn-section">📐 River Section</button>
+        <label>Section size <input type="range" id="secsize" min="50" max="300" value="100"> <span id="secsize-lbl">100%</span></label>
         <button class="btn" id="btn-base">🛰 Basemap</button>
       </div>
     </div>
@@ -98,62 +269,108 @@ footer{color:var(--sub);text-align:center;font-size:11px;padding:10px 0 26px}
       <div class="legend" id="legend">
         <div>Water depth (m)</div><div class="bar" id="legbar"></div>
         <div class="lr"><span id="leg-min"></span><span id="leg-max"></span></div>
-        <div style="margin-top:8px">Land cover</div>
-        <div id="leg-lc" style="margin-top:4px;display:grid;grid-template-columns:1fr 1fr;gap:3px 10px;color:var(--sub)"></div>
+        <div class="lr" style="margin-top:4px;border-top:1px solid var(--line);padding-top:4px">
+          <span>Min <b id="leg-mindepth"></b></span><span>Median <b id="leg-meddepth"></b></span>
+        </div>
       </div>
       <div class="hovertip" id="tip"></div>
+      <div class="section-box" id="section-box-t" style="top:12px;display:none">
+        <span class="sb-close" id="sb-close-t">✕</span>
+        <div class="sb-title">↔ Transverse Section (across river)</div>
+        <div id="sectionTransversePlot" style="height:160px"></div>
+        <div class="sb-stats" id="sb-stats-t"></div>
+      </div>
+      <div class="section-box" id="section-box-l" style="top:226px;display:none">
+        <span class="sb-close" id="sb-close-l">✕</span>
+        <div class="sb-title">↕ Lateral Section (along river)</div>
+        <div id="sectionLateralPlot" style="height:160px"></div>
+        <div class="sb-stats" id="sb-stats-l"></div>
+      </div>
     </div>
-    <div class="measure" id="measure-panel">
-      <span>Point A: <b id="m-a">—</b></span>
-      <span>Point B: <b id="m-b">—</b></span>
-      <span>Distance: <b id="m-d">—</b></span>
-      <span>Δ Depth: <b id="m-dz">—</b></span>
-      <span>Mean gradient: <b id="m-g">—</b></span>
-      <span style="color:var(--warn)" id="m-hint">Click two points on the river to measure.</span>
+    <div class="measure" id="draw-panel">
+      <span id="draw-stats" style="color:var(--sub)">Click points along the river to measure, then click "Measure" again to finish and see the depth profile. Each point clicked shows its depth.</span>
+    </div>
+    <div id="draw-graph-panel" style="display:none;padding:12px 16px;border-top:1px solid var(--line)">
+      <div id="drawplot"></div>
     </div>
   </div>
 
   <div class="viewbox panel" id="panel-3d">
     <div class="viewhead">
-      <h2>3D Terrain — Land Cover + Riverbed Bathymetry (vertical exaggeration)</h2>
+      <h2>3D Terrain — Water Depth + DEM Visualization</h2>
       <div class="ctrls">
         <label>Z-exaggeration <input type="range" id="zx" min="1" max="30" value="12"> <span id="zx-lbl">12×</span></label>
         <label>Contour slice <input type="range" id="c3" min="0" max="100" value="50"> <span id="c3-lbl"></span></label>
+        <button class="btn" id="btn-wave">🌊 Water Sim</button>
       </div>
     </div>
     <div style="position:relative">
       <div id="plot3d"></div>
+      <div class="hovertip" id="tip3d"></div>
       <div class="legend" id="legend3d" style="right:16px;bottom:16px;position:absolute">
         <div>Water depth (m)</div><div class="bar" id="legbar3d"></div>
         <div class="lr"><span id="leg3d-min"></span><span id="leg3d-max"></span></div>
-        <div style="margin-top:8px">Land cover</div>
-        <div id="leg-lc3d" style="margin-top:4px;display:grid;grid-template-columns:1fr;gap:3px;color:var(--sub)"></div>
+        <div style="margin-top:8px;color:var(--sub);font-size:11px">
+          <span style="display:inline-block;width:10px;height:10px;background:#ffd700;border-radius:2px;margin-right:5px"></span>Land
+        </div>
+        <div style="margin-top:4px;color:var(--sub);font-size:10px">Click the terrain to pin depth / elevation</div>
       </div>
     </div>
   </div>
 
   <div class="viewbox panel" id="panel-an">
-    <div class="viewhead"><h2>Depth Profile along River Chainage</h2></div>
-    <div class="grid2">
-      <div><div id="histplot"></div><div id="ch-stats" class="notes" style="padding:0 16px 14px;font-size:12px"></div></div>
-      <div class="notes">
-        <h3>Location context</h3>
-        <p>The Mula–Mutha River flows through the heart of Pune, Maharashtra, formed by the confluence of the Mula and Mutha rivers. The surveyed reach spans roughly 14.5 km of urban river channel.</p>
-        <h3>Hydrology notes</h3>
-        <p>Depths across the surveyed reach are shallow and remarkably uniform (≈1.5–2.0 m), typical of a regulated urban river during the July monsoon-onset window. Depth values are satellite-derived estimates and should be verified against in-situ soundings for navigation or engineering use.</p>
-        <h3>Data provenance</h3>
-        <p>Depths modelled from Sentinel-2 L2A bands (B02/B03/B04/B08) captured 14 Jul 2026, trained on filled depth points and clipped to the river AOI. Grid resolution ≈13 m; gaps interpolated from adjacent pixels.</p>
-      </div>
+    <div class="viewhead"><h2>Depth Analytics</h2></div>
+    <div style="padding:0">
+      <div id="histplot" style="height:520px"></div>
+      <div id="ch-stats" class="notes" style="padding:8px 16px 14px;font-size:12px"></div>
     </div>
   </div>
 
-  <footer>Generated from bathymetry pipeline outputs · depth_pixels_jul2026_clean.csv · Vertical datum: MSL · For visualization only — verify against primary survey data before operational use.</footer>
+  <footer></footer>
 </div>
 
 <script>
 const G = JSON.parse(document.getElementById('depth-grid-data').textContent);
 const H = JSON.parse(document.getElementById('hist-data').textContent);
-const Z = G.z, NY=G.ny, NX=G.nx, ZMIN=G.zmin, ZMAX=G.zmax;
+const NY=G.ny, NX=G.nx, ZMIN=G.zmin, ZMAX=G.zmax;
+
+// ---------- AUTO DEPTH MODEL (bank → mid-channel) ----------
+// The surveyed grid tells us exactly which cells are water (non-null) and which
+// are bank/land (null). We use that real water extent to auto-derive a depth
+// surface that is shallow at the water's edge and deepest mid-channel, instead
+// of relying on the raw survey values. This feeds the 2D raster, the 3D surface
+// (via depthAt) and the Depth Analysis chart all at once — nothing else changes.
+const Z_SURVEY = G.z; // original surveyed grid, kept so this can be toggled off
+function bankToMidDepth(){
+ const dist=new Float32Array(NY*NX).fill(Infinity);
+ const qi=new Int32Array(NY*NX); let qn=0;
+ for(let i=0;i<NY;i++)for(let j=0;j<NX;j++)if(Z_SURVEY[i][j]==null){dist[i*NX+j]=0;qi[qn++]=i*NX+j;}
+ let head=0;
+ while(head<qn){
+  const cur=qi[head++], ci=(cur/NX)|0, cj=cur-ci*NX;
+  const step=dist[cur]+1;
+  if(ci>0&&dist[cur-NX]>step){dist[cur-NX]=step;qi[qn++]=cur-NX;}
+  if(ci<NY-1&&dist[cur+NX]>step){dist[cur+NX]=step;qi[qn++]=cur+NX;}
+  if(cj>0&&dist[cur-1]>step){dist[cur-1]=step;qi[qn++]=cur-1;}
+  if(cj<NX-1&&dist[cur+1]>step){dist[cur+1]=step;qi[qn++]=cur+1;}
+ }
+ let maxD=1;
+ for(let i=0;i<NY;i++)for(let j=0;j<NX;j++)if(Z_SURVEY[i][j]!=null){const d=dist[i*NX+j];if(isFinite(d)&&d>maxD)maxD=d;}
+ const out=[];
+ for(let i=0;i<NY;i++){
+  const row=[];
+  for(let j=0;j<NX;j++){
+   if(Z_SURVEY[i][j]==null){row.push(null);continue;}
+   const d=dist[i*NX+j], t=isFinite(d)?Math.min(1,d/maxD):1;
+   row.push(+(ZMIN+Math.sqrt(t)*(ZMAX-ZMIN)).toFixed(2)); // sqrt => quick shallowing near the bank
+  }
+  out.push(row);
+ }
+ return out;
+}
+const Z_AUTO = bankToMidDepth();
+let Z = Z_AUTO; // auto bank→mid depth is ON by default
+
 const latAt=i=>G.lat0+i*G.dlat, lonAt=j=>G.lon0+j*G.dlon;
 const latN=latAt(NY-1), lonE=lonAt(NX-1);
 
@@ -163,6 +380,18 @@ function cmap(t){t=Math.max(0,Math.min(1,t));
  for(let i=1;i<stops.length;i++){if(t<=stops[i][0]){const [t0,c0]=stops[i-1],[t1,c1]=stops[i];const f=(t-t0)/(t1-t0);
   return c0.map((v,k)=>Math.round(v+f*(c1[k]-v)));}}return stops[stops.length-1][1];}
 const norm=d=>(d-ZMIN)/(ZMAX-ZMIN||1);
+
+// Named locations along river — from Mula_Mutha_Start_to_End_Alphabetical.kml (A–H, Sangam → Manjari)
+const NAMED_LOCS=[
+ {name:'A - Sangam',        ch:'0+000',  lon:73.85531491, lat:18.53203371, color:'#ff6b6b', icon:'⭐', side:1},
+ {name:'B - Bund Garden',   ch:'2+200',  lon:73.87350417, lat:18.54075413, color:'#ffd700', icon:'🌳', side:-1},
+ {name:'C - Dhanori',       ch:'4+500',  lon:73.89485160, lat:18.54270616, color:'#f97316', icon:'📍', side:1},
+ {name:'D - Wadgaon Sheri', ch:'6+900',  lon:73.91727193, lat:18.53933496, color:'#a78bfa', icon:'📍', side:-1},
+ {name:'E - Hadapsar',      ch:'9+300',  lon:73.93939281, lat:18.53667527, color:'#fb923c', icon:'📍', side:1},
+ {name:'F - Mundhwa',       ch:'11+700', lon:73.95738540, lat:18.54647583, color:'#34d399', icon:'📍', side:-1},
+ {name:'G - Kharadi',       ch:'14+000', lon:73.97516014, lat:18.53674922, color:'#60a5fa', icon:'📍', side:1},
+ {name:'H - Manjari',       ch:'16+400', lon:73.99163603, lat:18.52245607, color:'#f472b6', icon:'📍', side:-1},
+];
 
 // stats cards
 const flat=[];for(const r of Z)for(const v of r)if(v!=null)flat.push(v);
@@ -177,16 +406,30 @@ document.getElementById('stats').innerHTML=[
 
 // tabs
 document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{
+ /* RIVEREYE_TAB_RESIZE */
  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
  document.querySelectorAll('.panel').forEach(x=>x.classList.remove('active'));
  t.classList.add('active');document.getElementById(t.dataset.t).classList.add('active');
- if(t.dataset.t==='panel-3d')build3d();
- if(t.dataset.t==='panel-an')buildHist();
- if(t.dataset.t==='panel-2d')map.invalidateSize();
+ if(t.dataset.t==='panel-3d'){build3d();setTimeout(()=>{try{Plotly.Plots.resize('plot3d')}catch(e){}},120);}
+ if(t.dataset.t==='panel-an'){buildHist();setTimeout(()=>{try{Plotly.Plots.resize('histplot')}catch(e){}},120);}
+ if(t.dataset.t==='panel-2d'){map.invalidateSize();setTimeout(()=>map.invalidateSize(),120);}
 });
 
 // ---------- 2D MAP ----------
 const map=L.map('leaflet-map',{zoomControl:true}).fitBounds([[G.lat0,G.lon0],[latN,lonE]]);
+/* RIVEREYE_BATHY_RESIZE */
+window.__bathyMap=map;
+window.addEventListener('resize',function(){{
+  try{{map.invalidateSize()}}catch(e){{}}
+  try{{if(window.Plotly){{Plotly.Plots.resize('plot3d');Plotly.Plots.resize('histplot')}}}}catch(e){{}}
+}});
+setTimeout(function(){{try{{map.invalidateSize()}}catch(e){{}}}},250);
+setTimeout(function(){{try{{map.invalidateSize()}}catch(e){{}}}},800);
+
+
+
+
+
 const bases=[
  L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,attribution:'Esri World Imagery'}),
  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}),
@@ -198,14 +441,19 @@ document.getElementById('btn-base').onclick=()=>{map.removeLayer(bases[baseIdx])
 const cnv=document.createElement('canvas');cnv.width=NX;cnv.height=NY;
 const ctx=cnv.getContext('2d');const img=ctx.createImageData(NX,NY);
 let contourDepth=(ZMIN+ZMAX)/2;
+const CONTOUR_BANDS=10,bandSize=(ZMAX-ZMIN)/CONTOUR_BANDS||1;
 function paint(){
  const d=img.data;
  for(let i=0;i<NY;i++)for(let j=0;j<NX;j++){
   const v=Z[i][j],p=((NY-1-i)*NX+j)*4;
   if(v==null){d[p+3]=0;continue;}
-  let c=cmap(norm(v));
-  // contour band highlight
-  if(Math.abs(v-contourDepth)<0.015)c=[255,255,255];
+  // quantize into contour bands so color reflects the depth contour it falls in
+  const band=Math.min(CONTOUR_BANDS-1,Math.floor((v-ZMIN)/bandSize));
+  const bandMid=ZMIN+(band+0.5)*bandSize;
+  let c=cmap(norm(bandMid));
+  const bandLo=ZMIN+band*bandSize,bandHi=bandLo+bandSize;
+  if(Math.min(v-bandLo,bandHi-v)<0.015*bandSize)c=c.map(x=>Math.round((x+255)/2)); // faint line at each contour band edge
+  if(Math.abs(v-contourDepth)<0.02)c=[255,255,255]; // bright line at the selected contour
   d[p]=c[0];d[p+1]=c[1];d[p+2]=c[2];d[p+3]=235;
  }
  ctx.putImageData(img,0,0);
@@ -223,52 +471,24 @@ const lg=document.getElementById('legbar');
 lg.style.background='linear-gradient(90deg,'+[0,.25,.5,.75,1].map(t=>`rgb(${cmap(t).join(',')}) ${t*100}%`).join(',')+')';
 document.getElementById('leg-min').textContent=ZMIN.toFixed(1)+' (shallow)';
 document.getElementById('leg-max').textContent=ZMAX.toFixed(1)+' (deep)';
+document.getElementById('leg-mindepth').textContent=ZMIN.toFixed(2)+' m';
+document.getElementById('leg-meddepth').textContent=med.toFixed(2)+' m';
 
+// Auto bank→mid depth model is always on — Z stays Z_AUTO for every view
+// (2D raster, 3D surface, Depth Analytics) so the stats above (min/max/mean)
+// never change from what was computed at load.
 
-// ---------- LAND COVER ----------
+// ---------- LAND COVER (3D DEM only) ----------
 const LC=JSON.parse(document.getElementById('landcover-data').textContent);
-const LCC={ // class colors [r,g,b]
- 1:[34,139,34],    // forest / vegetation - green
- 5:[34,139,34],    // grass merged into vegetation - green
- 2:[255,215,0],    // built-up - yellow
- 3:[255,215,0],    // built-up - yellow
- 4:[220,40,40]     // roads / dark surface - red
-};
-const LCN={1:'Forest / vegetation',5:'Forest / vegetation',2:'Built-up',3:'Built-up',4:'Roads / dark surface',0:'Water (bathymetry)'};
-const LEG_KEYS=[1,2,4];
-document.getElementById('leg-lc').innerHTML=LEG_KEYS.map(k=>
- `<span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:rgb(${LCC[k].join(',')});margin-right:5px"></span>${LCN[k]}</span>`).join('')+
- `<span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:linear-gradient(90deg,#87cefa,#051448);margin-right:5px"></span>Water depth</span>`;
-document.getElementById('leg-lc3d').innerHTML=LEG_KEYS.map(k=>
- `<span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:rgb(${LCC[k].join(',')});margin-right:5px"></span>${LCN[k]}</span>`).join('');
+const lcLatTop=LC.lat0+(LC.ny-1)*LC.dlat;
+
+// 3D legend
 (function(){const b=document.getElementById('legbar3d');
  b.style.background='linear-gradient(90deg,'+[0,.25,.5,.75,1].map(x=>`rgb(${cmap(x).join(',')}) ${x*100}%`).join(',')+')';
  document.getElementById('leg3d-min').textContent=ZMIN.toFixed(1)+' (shallow)';
  document.getElementById('leg3d-max').textContent=ZMAX.toFixed(1)+' (deep)';})();
-const lcLatTop=LC.lat0+(LC.ny-1)*LC.dlat; // rows are north->south
-const lcCnv=document.createElement('canvas');lcCnv.width=LC.nx;lcCnv.height=LC.ny;
-(function(){
- const c=lcCnv.getContext('2d'),im=c.createImageData(LC.nx,LC.ny),d=im.data;
- for(let i=0;i<LC.ny;i++){const row=LC.rows[i];
-  for(let j=0;j<LC.nx;j++){const k=+row[j],p=(i*LC.nx+j)*4;
-   if(k===0){d[p+3]=0;continue;} // water transparent -> bathy shows
-   const col=LCC[k];d[p]=col[0];d[p+1]=col[1];d[p+2]=col[2];d[p+3]=200;}}
- c.putImageData(im,0,0);
-})();
-const lcOverlay=L.imageOverlay(lcCnv.toDataURL(),
- [[LC.lat0-LC.dlat/2,LC.lon0-LC.dlon/2],[lcLatTop+LC.dlat/2,LC.lon0+(LC.nx-1)*LC.dlon+LC.dlon/2]],
- {opacity:.75,interactive:false}).addTo(map);
-let lcOn=true;
-document.getElementById('btn-land').onclick=function(){
- lcOn=!lcOn;this.classList.toggle('on',lcOn);
- if(lcOn)lcOverlay.addTo(map);else map.removeLayer(lcOverlay);
-};
-function lcAt(lat,lon){
- const i=Math.round((lcLatTop-lat)/LC.dlat),j=Math.round((lon-LC.lon0)/LC.dlon);
- if(i<0||j<0||i>=LC.ny||j>=LC.nx)return null;return +LC.rows[i][j];
-}
 
-// hover tooltip
+// hover tooltip (water-only)
 const tip=document.getElementById('tip');
 function depthAt(lat,lon){
  const i=Math.round((lat-G.lat0)/G.dlat),j=Math.round((lon-G.lon0)/G.dlon);
@@ -276,107 +496,401 @@ function depthAt(lat,lon){
 }
 map.on('mousemove',e=>{
  const d=depthAt(e.latlng.lat,e.latlng.lng);
- const k=lcAt(e.latlng.lat,e.latlng.lng);
- if(d==null&&(k==null||!lcOn)){tip.style.display='none';return;}
+ if(d==null){tip.style.display='none';return;}
  tip.style.display='block';
  const pt=map.latLngToContainerPoint(e.latlng);
  tip.style.left=(pt.x+14)+'px';tip.style.top=(pt.y+14)+'px';
- tip.innerHTML=(d!=null?`Water depth: <b>${d.toFixed(2)} m</b><br>`:(k!=null?`Class: <b>${LCN[k]||'—'}</b><br>`:''))+
-  `Lat ${e.latlng.lat.toFixed(5)} · Lon ${e.latlng.lng.toFixed(5)}`;
+ const col=cmap(norm(d));
+ tip.innerHTML=`<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:rgb(${col.join(',')});margin-right:5px;vertical-align:middle"></span>`+
+  `Water depth: <b>${d.toFixed(2)} m</b><br><span style="color:#93a4c7;font-size:11px">Lat ${e.latlng.lat.toFixed(5)} · Lon ${e.latlng.lng.toFixed(5)}</span>`;
 });
 map.on('mouseout',()=>tip.style.display='none');
 
-// measure tool
-let measuring=false,mPts=[],mLayer=L.layerGroup().addTo(map);
-const mp=document.getElementById('measure-panel');
-document.getElementById('btn-measure').onclick=function(){
- measuring=!measuring;this.classList.toggle('on',measuring);
- mp.classList.toggle('show',measuring);
- if(!measuring){mPts=[];mLayer.clearLayers();}
-};
+// measure tool (click points along the river to build a line + depth profile)
 function hav(a,b){const R=6371000,r=x=>x*Math.PI/180;
  const dl=r(b.lat-a.lat),dn=r(b.lng-a.lng);
  const h=Math.sin(dl/2)**2+Math.cos(r(a.lat))*Math.cos(r(b.lat))*Math.sin(dn/2)**2;
  return 2*R*Math.asin(Math.sqrt(h));}
+
+// draw-a-line tool — click points to draw a line, see a depth profile graph
+let drawing=false,dPts=[],dLine=null,dLayer=L.layerGroup().addTo(map);
+const dp=document.getElementById('draw-panel'),dgp=document.getElementById('draw-graph-panel');
+document.getElementById('btn-draw').onclick=function(){
+ drawing=!drawing;this.classList.toggle('on',drawing);
+ dp.classList.toggle('show',drawing);
+ if(drawing){
+  if(sectioning){sectioning=false;document.getElementById('btn-section').classList.remove('on');}
+  dPts=[];dLine=null;dLayer.clearLayers();dgp.style.display='none';
+  document.getElementById('draw-stats').textContent='Click points along the river to measure…';
+ } else {
+  finishDraw();
+ }
+};
 map.on('click',e=>{
- if(!measuring)return;
- if(mPts.length>=2){mPts=[];mLayer.clearLayers();}
- mPts.push(e.latlng);
- L.circleMarker(e.latlng,{radius:5,color:'#fbbf24',fillOpacity:1}).addTo(mLayer);
- const set=(id,v)=>document.getElementById(id).textContent=v;
- if(mPts.length===1){set('m-a',`${e.latlng.lat.toFixed(5)}, ${e.latlng.lng.toFixed(5)}`);set('m-b','—');set('m-d','—');set('m-dz','—');set('m-g','—');document.getElementById('m-hint').textContent='Click second point…';}
- else{
-  set('m-b',`${e.latlng.lat.toFixed(5)}, ${e.latlng.lng.toFixed(5)}`);
-  L.polyline(mPts,{color:'#fbbf24',weight:2,dashArray:'6 4'}).addTo(mLayer);
-  const d=hav(mPts[0],mPts[1]);
-  const z1=depthAt(mPts[0].lat,mPts[0].lng),z2=depthAt(mPts[1].lat,mPts[1].lng);
-  set('m-d',d>1000?(d/1000).toFixed(2)+' km':d.toFixed(0)+' m');
-  if(z1!=null&&z2!=null){const dz=z2-z1;set('m-dz',dz.toFixed(2)+' m');set('m-g',(Math.abs(dz)/d*100).toFixed(3)+' %');}
-  else{set('m-dz','no data');set('m-g','—');}
-  document.getElementById('m-hint').textContent='Click again to start a new measurement.';
+ if(!drawing)return;
+ const dPt=depthAt(e.latlng.lat,e.latlng.lng);
+ dPts.push(e.latlng);
+ const dStr=dPt!=null?`${dPt.toFixed(2)} m`:'no data';
+ L.circleMarker(e.latlng,{radius:5,color:'#34d399',fillColor:'#34d399',fillOpacity:0.9,weight:2}).addTo(dLayer);
+ L.popup({closeButton:false,autoClose:false,closeOnClick:false,className:'depth-popup'})
+  .setLatLng(e.latlng)
+  .setContent(`<b style="color:#34d399">Depth: ${dStr}</b><br><span style="font-size:10px;color:#93a4c7">${e.latlng.lat.toFixed(5)}, ${e.latlng.lng.toFixed(5)}</span>`)
+  .addTo(dLayer);
+ if(dPts.length>1){
+  if(!dLine)dLine=L.polyline(dPts,{color:'#34d399',weight:2}).addTo(dLayer);
+  else dLine.setLatLngs(dPts);
+ }
+ document.getElementById('draw-stats').textContent=
+  `${dPts.length} point${dPts.length>1?'s':''} placed. Click "Measure" again to finish and see the depth profile.`;
+});
+function sampleDrawnLine(pts,step){
+ const out=[{dist:0,lat:pts[0].lat,lon:pts[0].lng,depth:depthAt(pts[0].lat,pts[0].lng)}];
+ let cum=0;
+ for(let i=1;i<pts.length;i++){
+  const a=pts[i-1],b=pts[i],segDist=hav(a,b),n=Math.max(1,Math.round(segDist/step));
+  for(let s=1;s<=n;s++){
+   const f=s/n,lat=a.lat+(b.lat-a.lat)*f,lon=a.lng+(b.lng-a.lng)*f;
+   cum+=segDist/n;
+   out.push({dist:cum,lat,lon,depth:depthAt(lat,lon)});
+  }
+ }
+ return out;
+}
+function finishDraw(){
+ if(dPts.length<2){
+  dgp.style.display='none';
+  document.getElementById('draw-stats').textContent='Click points along the river to measure, then click "Measure" again to finish and see the depth profile. Each point clicked shows its depth.';
+  return;
+ }
+ const samples=sampleDrawnLine(dPts,15);
+ const valid=samples.filter(s=>s.depth!=null);
+ const distKm=samples.map(s=>s.dist/1000);
+ const depths=samples.map(s=>s.depth);
+ const labels=samples.map(s=>`${s.lat.toFixed(5)}, ${s.lon.toFixed(5)}`);
+ dgp.style.display='block';
+ Plotly.newPlot('drawplot',[
+  {type:'scatter',mode:'lines',x:distKm,y:depths,name:'Depth along measured line',
+   connectgaps:true,fill:'tozeroy',fillcolor:'rgba(52,211,153,0.22)',
+   line:{color:'#34d399',width:2},customdata:labels,
+   hovertemplate:'%{customdata}<br>Depth <b>%{y:.2f} m</b><extra></extra>'}
+ ],{
+  paper_bgcolor:'#111a2e',plot_bgcolor:'#111a2e',
+  title:{text:'Measured Depth Profile — click anywhere on the line for its depth',font:{size:13,color:'#e8eefc'}},
+  xaxis:{title:'Distance along line (km)',color:'#93a4c7',gridcolor:'#1f2c47'},
+  yaxis:{title:'Depth (m)',color:'#93a4c7',gridcolor:'#1f2c47',autorange:'reversed'},
+  margin:{l:56,r:16,t:36,b:44},font:{family:'Inter',color:'#93a4c7'},height:220
+ },{responsive:true});
+ // click anywhere on the profile line to pin the exact depth at that distance
+ const drawplotEl=document.getElementById('drawplot');
+ drawplotEl.removeAllListeners&&drawplotEl.removeAllListeners('plotly_click');
+ drawplotEl.on('plotly_click',function(ev){
+  const pt=ev.points[0];if(!pt)return;
+  Plotly.relayout('drawplot',{annotations:[{
+   x:pt.x,y:pt.y,text:`${pt.y.toFixed(2)} m`,showarrow:true,arrowhead:2,arrowcolor:'#34d399',
+   ax:0,ay:-32,font:{color:'#0b1220',size:11,family:'Inter'},
+   bgcolor:'#34d399',bordercolor:'#111a2e',borderwidth:1,borderpad:4
+  }]});
+ });
+ const totalDist=samples[samples.length-1].dist;
+ const distStr=totalDist>1000?(totalDist/1000).toFixed(2)+' km':totalDist.toFixed(0)+' m';
+ if(valid.length){
+  const mn=Math.min(...valid.map(v=>v.depth)),mx=Math.max(...valid.map(v=>v.depth)),
+        av=valid.reduce((a,v)=>a+v.depth,0)/valid.length;
+  document.getElementById('draw-stats').innerHTML=
+   `<b>Length</b> ${distStr} · <b>Min depth</b> ${mn.toFixed(2)} m · <b>Max depth</b> ${mx.toFixed(2)} m · <b>Mean depth</b> ${av.toFixed(2)} m`;
+ } else {
+  document.getElementById('draw-stats').innerHTML=`<b>Length</b> ${distStr} · no depth data along this line`;
+ }
+}
+
+// river cross-section tool — click a spot to see transverse + lateral depth sections
+let sectioning=false,sectionMarker=null,sectionLayer=L.layerGroup().addTo(map);
+let sectionLastLatLon=null; // remembered so the Section size slider can live-resize/redraw
+const mPerLat=111320;
+function mPerLon(lat){return 111320*Math.cos(lat*Math.PI/180);}
+document.getElementById('btn-section').onclick=function(){
+ sectioning=!sectioning;this.classList.toggle('on',sectioning);
+ if(sectioning){
+  if(drawing){drawing=false;document.getElementById('btn-draw').classList.remove('on');dp.classList.remove('show');dgp.style.display='none';dLayer.clearLayers();dPts=[];dLine=null;}
+ }
+};
+document.getElementById('secsize').oninput=function(){
+ document.getElementById('secsize-lbl').textContent=this.value+'%';
+ // if a section square is already placed, resize + recompute it in place —
+ // no need to click the map again just to see the new size take effect
+ if(sectionLastLatLon)renderSection(sectionLastLatLon.lat,sectionLastLatLon.lon);
+};
+document.getElementById('sb-close-t').onclick=()=>{document.getElementById('section-box-t').style.display='none';};
+document.getElementById('sb-close-l').onclick=()=>{document.getElementById('section-box-l').style.display='none';};
+function nearestChainageIdx(lat,lon){
+ let best=0,bestD=Infinity;
+ for(let i=0;i<KML_PTS.length;i++){
+  const p=KML_PTS[i],dy=(p.lat-lat)*mPerLat,dx=(p.lon-lon)*mPerLon(lat),d=dx*dx+dy*dy;
+  if(d<bestD){bestD=d;best=i;}
+ }
+ return best;
+}
+function sampleAlongDir(centerLat,centerLon,ux,uy,halfLen,step){
+ const out=[];
+ for(let d=-halfLen;d<=halfLen+1e-6;d+=step){
+  const lat=centerLat+d*uy/mPerLat,lon=centerLon+d*ux/mPerLon(centerLat);
+  out.push({d,lat,lon,depth:depthAt(lat,lon)});
+ }
+ return out;
+}
+function plotSection(divId,samples,color,title){
+ const x=samples.map(s=>s.d),y=samples.map(s=>s.depth),
+       lab=samples.map(s=>`${s.lat.toFixed(5)}, ${s.lon.toFixed(5)}`);
+ Plotly.newPlot(divId,[
+  {type:'scatter',mode:'lines',x:[x[0],x[x.length-1]],y:[0,0],hoverinfo:'skip',
+   line:{color:'#93a4c7',width:1.5},showlegend:false,name:'Ground'},
+  {type:'scatter',mode:'lines',x:x,y:y,connectgaps:true,fill:'tozeroy',
+   fillcolor:color+'33',line:{color:color,width:2},customdata:lab,showlegend:false,
+   hovertemplate:'%{customdata}<br>Depth <b>%{y:.2f} m</b><extra></extra>'}
+ ],{
+  paper_bgcolor:'rgba(0,0,0,0)',plot_bgcolor:'rgba(0,0,0,0)',
+  xaxis:{visible:false,zeroline:false},
+  yaxis:{visible:false,zeroline:false,autorange:'reversed'},
+  margin:{l:4,r:4,t:4,b:4},showlegend:false
+ },{responsive:true,displayModeBar:false});
+}
+// draws/updates the section square + flow arrow at (lat,lon) and (re)builds both
+// the transverse and lateral depth charts — shared by map clicks and by the
+// Section size slider so resizing an already-placed section updates it live
+function renderSection(lat,lon){
+ sectionLastLatLon={lat,lon};
+ sectionLayer.clearLayers();
+ const secScale=(+document.getElementById('secsize').value)/100;
+ const boxPx=Math.round(14*secScale);
+ sectionMarker=L.marker([lat,lon],{
+  icon:L.divIcon({html:`<div style="width:${boxPx}px;height:${boxPx}px;border:2px solid #fbbf24;background:rgba(251,191,36,.28);transform:translate(-${boxPx/2}px,-${boxPx/2}px)"></div>`,className:'',iconSize:[boxPx,boxPx]})
+ }).addTo(sectionLayer);
+ // local flow direction from nearest chainage points
+ const idx=nearestChainageIdx(lat,lon);
+ const a=KML_PTS[Math.max(0,idx-1)],b=KML_PTS[Math.min(KML_PTS.length-1,idx+1)];
+ let fx=(b.lon-a.lon)*mPerLon(lat),fy=(b.lat-a.lat)*mPerLat;
+ const flen=Math.hypot(fx,fy)||1;fx/=flen;fy/=flen;
+ const px=-fy,py=fx; // perpendicular (across-river) direction
+ const bearing=(Math.atan2(fx,fy)*180/Math.PI+360)%360;
+ // small flow-direction arrow pinned at the section point, rotated to bearing
+ L.marker([lat,lon],{
+  icon:L.divIcon({
+   html:`<div style="width:0;height:0;transform:rotate(${bearing}deg) translateY(-${boxPx+12}px);border-left:6px solid transparent;border-right:6px solid transparent;border-bottom:14px solid #34d399;filter:drop-shadow(0 0 2px #000)"></div>`,
+   className:'',iconSize:[0,0],iconAnchor:[0,0]
+  })
+ }).addTo(sectionLayer);
+ const transverse=sampleAlongDir(lat,lon,px,py,90*secScale,4);
+ const lateral=sampleAlongDir(lat,lon,fx,fy,300*secScale,15);
+ document.getElementById('section-box-t').style.display='block';
+ document.getElementById('section-box-l').style.display='block';
+ plotSection('sectionTransversePlot',transverse,'#38bdf8');
+ plotSection('sectionLateralPlot',lateral,'#34d399');
+ const tv=transverse.filter(s=>s.depth!=null),lv=lateral.filter(s=>s.depth!=null);
+ document.getElementById('sb-stats-t').innerHTML=tv.length?
+  `Max depth <b>${Math.max(...tv.map(s=>s.depth)).toFixed(2)} m</b> · width sampled ${(180*secScale).toFixed(0)} m`:'No depth data here';
+ document.getElementById('sb-stats-l').innerHTML=lv.length?
+  `Max depth <b>${Math.max(...lv.map(s=>s.depth)).toFixed(2)} m</b> · length sampled ${(600*secScale).toFixed(0)} m · Flow bearing <b>${bearing.toFixed(0)}°</b>`:'No depth data here';
+}
+map.on('click',e=>{
+ if(!sectioning)return;
+ renderSection(e.latlng.lat,e.latlng.lng);
+});
+
+// ---------- KML CHAINAGE DOTS (black, every 100 m) ----------
+const KML_PTS=JSON.parse(document.getElementById('kml-chainage').textContent);
+const kmlLayer=L.layerGroup().addTo(map);
+KML_PTS.forEach(pt=>{
+ const isKm=pt.n.endsWith('+000');
+ const d=depthAt(pt.lat,pt.lon);
+ const depthStr=d!=null?`${d.toFixed(2)} m`:`no data`;
+ const mk=L.circleMarker([pt.lat,pt.lon],{
+  radius:isKm?4.5:2.2,color:isKm?'#111':'#000',
+  fillColor:'#111',fillOpacity:1,weight:isKm?1.5:1
+ }).addTo(kmlLayer);
+ mk.bindTooltip(
+  `<b style="color:#38bdf8">${pt.n}</b><br>Water Depth: <b>${depthStr}</b><br><span style="color:#93a4c7;font-size:10px">${pt.lat.toFixed(5)}, ${pt.lon.toFixed(5)}</span>`,
+  {direction:'top',className:'depth-popup',sticky:true}
+ );
+ if(isKm){
+  L.marker([pt.lat,pt.lon],{
+   icon:L.divIcon({html:`<div class="loc-label-box" style="color:#666;border:1px solid #444;font-size:9px;margin-top:-18px">${pt.n}</div>`,className:'',iconAnchor:[18,0]})
+  }).addTo(kmlLayer);
  }
 });
 
-// ---------- 3D (land + water combined terrain) ----------
-function build3d(){
+// ---------- DEEPEST AREA AUTO-HIGHLIGHT ----------
+/* RIVEREYE_NO_DEEP_PULSE */
+// RiverEye: deepest-zone pulsing rings disabled (static depth raster only).
+const deepThresh=1.88;
+const deepLayer=L.layerGroup();
+
+// ---------- NAMED AREA PINS (2D) with perpendicular offset ----------
+let deepestArea=null,deepestD=0;
+NAMED_LOCS.forEach(l=>{const d=depthAt(l.lat,l.lon);if(d!=null&&d>deepestD){deepestD=d;deepestArea=l.name;}});
+
+const locLayer=L.layerGroup().addTo(map);
+NAMED_LOCS.forEach(loc=>{
+ const d=depthAt(loc.lat,loc.lon);
+ const depthStr=d!=null?`${d.toFixed(2)} m`:`—`;
+ const isDeepest=loc.name===deepestArea;
+ const pin=L.circleMarker([loc.lat,loc.lon],{
+  radius:9,color:'#fff',
+  fillColor:loc.color,fillOpacity:1,weight:2,
+  className:''
+ }).addTo(locLayer);
+ pin.bindPopup(
+  `<b style="color:${loc.color}">${loc.icon} ${loc.name}</b>${isDeepest?` <span style="color:#ef4444;font-size:10px">★ Deepest Zone</span>`:''}<br>`+
+  `Chainage: <b>${loc.ch}</b><br>Water Depth: <b>${depthStr}</b><br>`+
+  `<span style="color:#93a4c7;font-size:10px">${loc.lat.toFixed(5)}, ${loc.lon.toFixed(5)}</span>`,
+  {className:'depth-popup'}
+ );
+ const latOff=loc.lat+0.0042*loc.side;
+ L.polyline([[loc.lat,loc.lon],[latOff,loc.lon]],{color:'#fff',weight:1.5,dashArray:'4 3',opacity:0.6}).addTo(locLayer);
+ L.marker([latOff,loc.lon],{
+  icon:L.divIcon({
+   html:`<div class="loc-label-box" style="color:#fff;border:1px solid #fff;background:rgba(8,14,28,.9)">${loc.name}</div>`,
+   className:'',iconAnchor:[0,8]
+  })
+ }).addTo(locLayer);
+});
+
+// ===================== 3D MAP (Terrain + DEM, ported from Bathymetry_1 style) ======================
+// Single combined terrain surface (land elevation positive / river-bed depth negative,
+// exactly like Bathymetry_1) PLUS a separate animated water-surface layer (Water Sim),
+// but sourced from THIS dashboard's depth data (Z / depthAt — the auto bank→mid model)
+// instead of the raw survey grid. Clicking the terrain pins the depth (water) or
+// elevation (land) at that point, in addition to the existing hover tooltip.
+let _t3d=null,_3dBuilt=false;
+let waveTimer=null,waveOn=false,wavePhase=0;
+
+// Colorscale: 0–0.49 = water blues, 0.5–0.74 = water-surface blues, 0.75–1.0 = land yellows
+const CS3D=[
+ [0.00,'#030d2e'],[0.10,'#061a5c'],[0.20,'#0d3a9e'],[0.30,'#1a6bc4'],[0.48,'#4aaee8'],
+ [0.50,'#60c6f5'],[0.62,'#87d9fb'],[0.74,'#aeeeff'],
+ [0.75,'#c8a020'],[0.84,'#d4b01c'],[0.92,'#e0c218'],[1.00,'#ffe033']
+];
+
+// static (per-cell) terrain data — depends only on Z / land relief, not on wave animation
+function computeStatic3d(){
+ const sx=2,sy=1,xs=[],ys=[];
+ for(let j=0;j<LC.nx;j+=sx)xs.push(LC.lon0+j*LC.dlon);
+ const zT=[],scT=[],textT=[],depthG=[]; // depthG: depth value where water, null on land
+ for(let i=LC.ny-1;i>=0;i-=sy){
+  const lat=lcLatTop-i*LC.dlat;ys.push(lat);
+  const rzT=[],rscT=[],rtextT=[],rdepthG=[];
+  const row=LC.rows[i],rel=LC.relief?.[i];
+  for(let j=0;j<LC.nx;j+=sx){
+   const k=+row[j],lon=LC.lon0+j*LC.dlon,relH=rel?rel[j]/9:0;
+   if(k===0){
+    let d=depthAt(lat,lon);if(d==null)d=(ZMIN+ZMAX)/2;
+    rzT.push(-d);rscT.push(0.10+0.35*(1-norm(d)));
+    rtextT.push(`Water Depth: <b>${d.toFixed(2)} m</b>`);
+    rdepthG.push(d);
+   }else{
+    const h=0.3+relH*2.5;
+    rzT.push(h);rscT.push(0.75+0.25*Math.min(1,relH));
+    rtextT.push(`Land Elevation: <b>${h.toFixed(1)} m</b>`);
+    rdepthG.push(null);
+   }
+  }
+  zT.push(rzT);scT.push(rscT);textT.push(rtextT);depthG.push(rdepthG);
+ }
+ _t3d={xs,ys,zT,scT,textT,depthG};
+}
+
+function build3d(waveOffset){
  const zx=+document.getElementById('zx').value;
  document.getElementById('zx-lbl').textContent=zx+'×';
  const c3=document.getElementById('c3');
  const cd=ZMIN+(c3.value/100)*(ZMAX-ZMIN);
  document.getElementById('c3-lbl').textContent=cd.toFixed(2)+' m';
- // build combined grid on landcover raster (north->south rows)
- const sx=2, sy=1; // subsample x for perf
- const xs=[],ys=[],zs=[],sc=[];
- for(let j=0;j<LC.nx;j+=sx)xs.push(LC.lon0+j*LC.dlon);
- for(let i=LC.ny-1;i>=0;i-=sy){ // south->north for plot
-  const lat=lcLatTop-i*LC.dlat; ys.push(lat);
-  const zr=[],cr=[],row=LC.rows[i],rel=LC.relief[i];
-  for(let j=0;j<LC.nx;j+=sx){
-   const k=+row[j],lon=LC.lon0+j*LC.dlon;
-   if(k===0){ // water: bathymetric depth
-    let d=depthAt(lat,lon); if(d==null)d=(ZMIN+ZMAX)/2;
-    zr.push(-d); cr.push(0.02+0.46*(1-norm(d))); // deep(dark)->0.02, shallow(faint)->0.48
-   }else{
-    const h=rel[j]/9;
-    zr.push(0.2+h*2.2); // land height 0.2–2.4 m
-    // land color bands: veg greens 0.72-1, others fixed slots
-    let v; if(k===1)v=0.80+0.18*h; else if(k===5)v=0.68; else if(k===3)v=0.57; else if(k===2)v=0.55; else v=0.51;
-    cr.push(v);
-   }
+ if(!_t3d)computeStatic3d();
+ const wo=waveOffset||0;
+
+ // animated water-surface layer — only present over water cells, ripples when Water Sim is on
+ const zW=[],scW=[],textW=[];
+ for(let i=0;i<_t3d.depthG.length;i++){
+  const rd=_t3d.depthG[i];const rzW=[],rscW=[],rtextW=[];
+  for(let j=0;j<rd.length;j++){
+   const d=rd[j];
+   if(d==null){rzW.push(null);rscW.push(null);rtextW.push('');continue;}
+   const ripple=waveOn?0.04*Math.sin((j*0.15+i*0.1)+wo):0;
+   rzW.push(-d*0.18+ripple);rscW.push(0.55+0.15*(1-norm(d)));
+   rtextW.push(`Water Depth: <b>${d.toFixed(2)} m</b>`);
   }
-  zs.push(zr); sc.push(cr);
+  zW.push(rzW);scW.push(rscW);textW.push(rtextW);
  }
- const colorscale=[
-  [0.00,'#051448'],[0.15,'#103f96'],[0.30,'#216fcd'],[0.44,'#4aa3e9'],[0.48,'#87cefa'], // water deep(dark)->shallow(faint)
-  [0.50,'#dc2828'], // roads - red
-  [0.53,'#ffd700'], // built-up - yellow
-  [0.60,'#ffd700'], // built-up - yellow
-  [0.66,'#3cb043'], // vegetation
-  [0.74,'#2e9e35'],[0.88,'#228b22'],[1.00,'#145a16'] // forest greens
+
+ const traces=[
+  // Trace 0 — Terrain (land elevation + river-bed depth combined, like Bathymetry_1)
+  {type:'surface',x:_t3d.xs,y:_t3d.ys,z:_t3d.zT,surfacecolor:_t3d.scT,cmin:0,cmax:1,
+   colorscale:CS3D,showscale:false,connectgaps:false,
+   lighting:{ambient:.6,diffuse:.75,specular:.2,roughness:.7},
+   contours:{z:{show:true,color:'#38bdf8',width:1.2,start:-cd,end:-cd,size:1}},
+   text:_t3d.textT,
+   hovertemplate:'%{text}<br>Lon %{x:.5f}<br>Lat %{y:.5f}<extra></extra>'},
+  // Trace 1 — Water surface (animated ripple when Water Sim is on)
+  {type:'surface',x:_t3d.xs,y:_t3d.ys,z:zW,surfacecolor:scW,cmin:0,cmax:1,
+   colorscale:CS3D,showscale:false,connectgaps:false,
+   opacity:waveOn?0.6:0.5,
+   lighting:{ambient:.7,diffuse:.5,specular:.6,roughness:.25,fresnel:0.6},
+   text:textW,
+   hovertemplate:'%{text}<br>Lon %{x:.5f}<br>Lat %{y:.5f}<extra></extra>'}
  ];
- const data=[{type:'surface',x:xs,y:ys,z:zs,surfacecolor:sc,cmin:0,cmax:1,
-   colorscale:colorscale,showscale:false,connectgaps:false,
-   lighting:{ambient:.55,diffuse:.7,specular:.15,roughness:.8},
-   contours:{z:{show:true,color:'#67e8f9',width:1.5,start:-cd,end:-cd,size:1}},
-   hovertemplate:'Lon %{x:.5f}<br>Lat %{y:.5f}<br>Elev %{z:.2f} m<extra></extra>'}];
- Plotly.react('plot3d',data,{
+
+ const layout={
   paper_bgcolor:'#111a2e',
   scene:{xaxis:{title:'Longitude',color:'#93a4c7',gridcolor:'#1f2c47'},
    yaxis:{title:'Latitude',color:'#93a4c7',gridcolor:'#1f2c47'},
-   zaxis:{title:'Elevation / −Depth (m)',color:'#93a4c7',gridcolor:'#1f2c47'},
-   aspectratio:{x:2.8,y:1,z:0.10*zx/12},
-   camera:{eye:{x:1.2,y:-1.7,z:0.85}}},
-  margin:{l:0,r:0,t:10,b:0},font:{family:'Inter'}},{responsive:true});
+   zaxis:{title:'Depth (−) / Elevation (+) m',color:'#93a4c7',gridcolor:'#1f2c47'},
+   aspectratio:{x:2.8,y:1,z:0.12*zx/12},bgcolor:'#0b1220',
+   camera:{eye:{x:1.2,y:-1.8,z:0.9}}},
+  margin:{l:0,r:0,t:10,b:0},font:{family:'Inter'}
+ };
+ Plotly.react('plot3d',traces,layout,{responsive:true});
+ _3dBuilt=true;
+ bind3dClick();
 }
-document.getElementById('zx').oninput=build3d;
-document.getElementById('c3').oninput=build3d;
+
+// click the terrain / water surface to pin its depth (water) or elevation (land)
+let _3dClickBound=false;
+function bind3dClick(){
+ if(_3dClickBound)return;_3dClickBound=true;
+ const el=document.getElementById('plot3d'),tip3d=document.getElementById('tip3d');
+ el.on('plotly_click',function(ev){
+  const p=ev.points&&ev.points[0];
+  if(!p||!p.text){tip3d.style.display='none';return;}
+  tip3d.style.display='block';
+  tip3d.innerHTML=p.text+`<br><span style="color:#93a4c7;font-size:11px">Lon ${p.x.toFixed(5)} · Lat ${p.y.toFixed(5)}</span>`;
+  const bb=p.bbox||{};
+  tip3d.style.left=((bb.x0!=null?bb.x0:el.clientWidth/2)+12)+'px';
+  tip3d.style.top=((bb.y0!=null?bb.y0:el.clientHeight/2)+12)+'px';
+ });
+}
+
+document.getElementById('zx').oninput=()=>{if(_3dBuilt)build3d(waveOn?wavePhase:0);};
+document.getElementById('c3').oninput=()=>{if(_3dBuilt)build3d(waveOn?wavePhase:0);};
+
+document.getElementById('btn-wave').onclick=function(){
+ waveOn=!waveOn;this.classList.toggle('on',waveOn);
+ if(waveOn){
+  wavePhase=0;
+  const animate=()=>{wavePhase+=0.18;build3d(wavePhase);waveTimer=requestAnimationFrame(animate);};
+  waveTimer=requestAnimationFrame(animate);
+ } else {
+  if(waveTimer)cancelAnimationFrame(waveTimer);waveTimer=null;
+  build3d(0);
+ }
+};
 
 // ---------- Analytics ----------
 let builtHist=false;
 function buildHist(){
  if(builtHist)return;builtHist=true;
  const CH=JSON.parse(document.getElementById('chainage-data').textContent);
- const x=CH.pts.map(p=>p.ch/1000), y=CH.pts.map(p=>p.d),
+ // read live from the current depth grid (auto bank→mid model, or survey) so this
+ // chart always matches whatever the 2D/3D views are showing
+ const x=CH.pts.map(p=>p.ch/1000), y=CH.pts.map(p=>{const d=depthAt(p.lat,p.lon);return d!=null?d:p.d;}),
        lab=CH.pts.map(p=>{const km=Math.floor(p.ch/1000),m=p.ch-km*1000;
         return km+'+'+String(m).padStart(3,'0')+'<br>Lat '+p.lat.toFixed(5)+' · Lon '+p.lon.toFixed(5);});
  const valid=y.filter(v=>v!=null);
@@ -391,16 +905,14 @@ function buildHist(){
    line:{color:'#fbbf24',width:1.4,dash:'dash'},hoverinfo:'skip'}
  ],
  {paper_bgcolor:'#111a2e',plot_bgcolor:'#111a2e',
-  title:{text:'Depth profile along river centerline (KML chainage 0+000 → '+
-    Math.floor(CH.total/1000)+'+'+String(Math.round(CH.total%1000)).padStart(3,'0')+
-    ' · '+(CH.total/1000).toFixed(3)+' km)',font:{size:13,color:'#e8eefc'}},
+  title:{text:'Chainage wise depth analysis',font:{size:14,color:'#e8eefc'}},
   xaxis:{title:'Chainage (km from 0+000)',color:'#93a4c7',gridcolor:'#1f2c47',
    dtick:1,tickformat:'.0f',rangeslider:{visible:true,thickness:0.09,bgcolor:'#0e1626'}},
   yaxis:{title:'Depth (m below MSL)',color:'#93a4c7',gridcolor:'#1f2c47',autorange:'reversed'},
   legend:{orientation:'h',y:-0.42,font:{color:'#93a4c7'}},
   margin:{l:62,r:20,t:44,b:70},font:{family:'Inter',color:'#93a4c7'}},{responsive:true});
  document.getElementById('ch-stats').innerHTML=
-  `<b>Shallowest</b> ${mn.toFixed(2)} m · <b>Deepest</b> ${mx.toFixed(2)} m · <b>Mean</b> ${av.toFixed(2)} m · sampled every 25 m along ${(CH.total/1000).toFixed(3)} km centerline (${valid.length} of ${y.length} stations have depth data)`;
+  `<b>Shallowest</b> ${mn.toFixed(2)} m · <b>Deepest</b> ${mx.toFixed(2)} m · <b>Mean</b> ${av.toFixed(2)} m`;
 }
 </script>
 </body>

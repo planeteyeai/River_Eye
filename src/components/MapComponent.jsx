@@ -5,6 +5,14 @@ import { EMPTY_MAP_STYLE, BASEMAP_MAP, DEFAULT_BASEMAP } from '../lib/basemaps'
 import { applyBasemap, applyTerrain3d, ensureBasemapLayers } from '../lib/applyBasemap'
 import { fetchAssetJson } from '../lib/fetchAssetJson'
 import { binFilterForChainage, buildChainageBins } from '../lib/chainageBins'
+import {
+  buildRiverFlowPaths,
+  destinationPoint,
+  metersPerPixel,
+  samplePath,
+  streakCoordinates,
+} from '../lib/riverFlow'
+import { buildTributaryFlowData, tribFlowZoomT } from '../lib/tributaryJunctions'
 import './MapComponent.css'
 import './DrawAreaComponent.css'
 
@@ -52,6 +60,17 @@ const LULC_POLY_LINE = 'lyr-lulc-poly-line'
 const FLOOD_ZONE_SOURCE = 'src-flood-zones'
 const FLOOD_ZONE_FILL = 'lyr-flood-zone-fill'
 const FLOOD_ZONE_LINE = 'lyr-flood-zone-line'
+const WRD_LINE_SOURCE = 'src-wrd-floodlines'
+const WRD_LINE_LAYER = 'lyr-wrd-floodlines'
+const WRD_LINE_GEOJSON_URL = '/asset/mula-mutha-wrd-floodlines.geojson'
+const GARBAGE_SOURCE = 'src-garbage'
+const GARBAGE_LAYER = 'lyr-garbage'
+const GARBAGE_LABELS = 'lyr-garbage-labels'
+const GARBAGE_GEOJSON_URL = '/asset/mula-mutha-garbage-locations.geojson'
+const NDSI_SALINITY_SOURCE = 'src-ndsi-salinity'
+const NDSI_SALINITY_FILL = 'lyr-ndsi-salinity-fill'
+const NDSI_SALINITY_LINE = 'lyr-ndsi-salinity-line'
+const NDSI_SALINITY_GEOJSON_URL = '/asset/mula-mutha-ndsi-salinity.geojson'
 const CLIMATE_WATER_SOURCE = 'src-climate-water'
 const CLIMATE_WATER_HEAT = 'lyr-climate-water-heat'
 const CLIMATE_FLOOD_SOURCE = 'src-climate-flood'
@@ -75,6 +94,126 @@ const TRIB_LINE = 'lyr-tributary-line'
 const TRIB_DASH = 'lyr-tributary-dash'
 const TRIB_LABELS = 'lyr-tributary-labels'
 const TRIB_GEOJSON_URL = '/asset/mula-mutha-tributaries.geojson'
+const TRIB_FLOW_SOURCE = 'src-tributary-flow'
+const TRIB_FLOW_SHEEN = 'lyr-tributary-flow-sheen'
+const TRIB_FLOW_GLOW = 'lyr-tributary-flow-glow'
+const TRIB_FLOW = 'lyr-tributary-flow'
+const TRIB_ANIM_LAYERS = [TRIB_FLOW_SHEEN, TRIB_FLOW_GLOW, TRIB_FLOW]
+
+const raiseTributaryFlowToTop = (map) => {
+  TRIB_ANIM_LAYERS.forEach((layerId) => {
+    if (map.getLayer(layerId)) map.moveLayer(layerId)
+  })
+}
+
+const startTributaryFlowLoop = (map, showTributaryLayerRef, pathsRef) => {
+  if (map.__tributaryFlowLoopStarted) return
+  map.__tributaryFlowLoopStarted = true
+
+  let lastTime = 0
+  let frames = 0
+  let animVisible = null
+  let phases = null
+
+  const setAnimVisibility = (visible) => {
+    if (animVisible === visible) return
+    animVisible = visible
+    const value = visible ? 'visible' : 'none'
+    TRIB_ANIM_LAYERS.forEach((layerId) => {
+      if (map.getLayer(layerId)) map.setLayoutProperty(layerId, 'visibility', value)
+    })
+    if (!visible) {
+      map.getSource(TRIB_FLOW_SOURCE)?.setData(EMPTY_COLLECTION)
+    }
+  }
+
+  const tick = (timestamp) => {
+    map.__tributaryFlowRaf = requestAnimationFrame(tick)
+
+    if (!map.getLayer(TRIB_FLOW)) return
+
+    if (!showTributaryLayerRef.current) {
+      setAnimVisibility(false)
+      lastTime = timestamp
+      return
+    }
+
+    setAnimVisibility(true)
+
+    const paths = pathsRef.current
+    if (!paths?.length) {
+      lastTime = timestamp
+      return
+    }
+
+    const dt = lastTime ? Math.min((timestamp - lastTime) / 1000, 0.05) : 0
+    lastTime = timestamp
+    if (!dt) return
+
+    if (!phases || phases.length !== paths.length) {
+      phases = new Float64Array(paths.length)
+      for (let i = 0; i < paths.length; i += 1) phases[i] = (i * 0.37) % 1
+    }
+
+    const zoom = map.getZoom()
+    const mPerPx = metersPerPixel(map.getCenter().lat, zoom)
+    const zoomT = tribFlowZoomT(zoom)
+    // World-space speed (m/s) so zooming does not make dashes jump.
+    const speedM = 18 + 22 * zoomT
+    const spacingM = 55 - 18 * zoomT
+    const streakLenM = 16 + 10 * zoomT
+
+    const features = []
+    for (let p = 0; p < paths.length; p += 1) {
+      const path = paths[p]
+      if (!path?.len || path.len < 40) continue
+
+      phases[p] = (phases[p] + (speedM * dt) / path.len) % 1
+      const count = Math.max(2, Math.min(14, Math.round(path.len / spacingM)))
+
+      for (let j = 0; j < count; j += 1) {
+        const phase = (phases[p] + j / count) % 1
+        const dist = phase * path.len
+        const coords = streakCoordinates(path, dist, streakLenM, 0)
+        // Soft ends so individual wraps never read as a full-pattern pause.
+        const fade = Math.min(1, phase / 0.05) * Math.min(1, (1 - phase) / 0.04)
+        const opacity = Number((0.55 + 0.4 * fade).toFixed(3))
+        if (opacity < 0.08) continue
+
+        features.push({
+          type: 'Feature',
+          properties: {
+            w: Number((1.4 + 1.2 * zoomT + (j % 3) * 0.15).toFixed(2)),
+            o: opacity,
+          },
+          geometry: { type: 'LineString', coordinates: coords },
+        })
+      }
+    }
+
+    map.getSource(TRIB_FLOW_SOURCE)?.setData({ type: 'FeatureCollection', features })
+
+    frames += 1
+    if (frames % 45 === 0) raiseTributaryFlowToTop(map)
+  }
+
+  map.__tributaryFlowRaf = requestAnimationFrame(tick)
+
+  const onVis = () => {
+    if (!document.hidden) lastTime = 0
+  }
+  document.addEventListener('visibilitychange', onVis)
+  map.__tributaryFlowVisHandler = onVis
+}
+
+const RIVER_PATH_SOURCE = 'src-river-flow-path'
+const RIVER_STREAK_SOURCE = 'src-river-flow-streaks'
+const RIVER_SPARK_SOURCE = 'src-river-flow-sparks'
+const RIVER_BODY = 'lyr-river-flow-body'
+const RIVER_SHEEN = 'lyr-river-flow-sheen'
+const RIVER_STREAK_GLOW = 'lyr-river-flow-streak-glow'
+const RIVER_STREAK = 'lyr-river-flow-streak'
+const RIVER_SPARK = 'lyr-river-flow-spark'
 const EROSION_SOURCE = 'src-erosion'
 const EROSION_RASTER = 'lyr-erosion'
 const EROSION_JSON_URL = '/asset/mula-mutha-erosion-hotspots.json'
@@ -109,6 +248,27 @@ const TRIB_WIDTH = [
 ]
 
 const EMPTY_COLLECTION = { type: 'FeatureCollection', features: [] }
+
+// Chainage is a reference scale, so it has to stay legible on top of whatever
+// thematic fill or raster is open. Listed bottom-to-top within the group.
+const CHAINAGE_STACK = [
+  CHAINAGE_BIN_FILL,
+  CHAINAGE_BIN_ACTIVE,
+  CHAINAGE_BIN_LINE,
+  CHAINAGE_BIN_GLOW,
+  CHAINAGE_BIN_SELECTED,
+  CHAINAGE_TICKS,
+  CHAINAGE_MAJOR,
+  CHAINAGE_FOCUS,
+  CHAINAGE_LABELS_MAJOR,
+  CHAINAGE_LABELS_MINOR,
+]
+
+const raiseChainageToTop = (map) => {
+  CHAINAGE_STACK.forEach((layerId) => {
+    if (map.getLayer(layerId)) map.moveLayer(layerId)
+  })
+}
 
 // Image sources must have a real LatLonBox. Four identical [0,0] corners
 // project to Infinity once terrain is on (MapLibre image source + DEM).
@@ -217,6 +377,95 @@ const ensureOverlayLayers = (map) => {
         'line-color': ['get', 'color'],
         'line-width': 1.6,
         'line-opacity': 0.95,
+      },
+    })
+  }
+
+  if (!map.getSource(WRD_LINE_SOURCE)) {
+    map.addSource(WRD_LINE_SOURCE, { type: 'geojson', data: EMPTY_COLLECTION })
+    map.addLayer({
+      id: WRD_LINE_LAYER,
+      type: 'line',
+      source: WRD_LINE_SOURCE,
+      layout: {
+        visibility: 'none',
+        'line-cap': 'round',
+        'line-join': 'round',
+      },
+      paint: {
+        'line-color': ['get', 'color'],
+        'line-width': [
+          'match',
+          ['get', 'line'],
+          'red',
+          2.4,
+          'blue',
+          2.2,
+          'green',
+          1.8,
+          2,
+        ],
+        'line-opacity': 0.92,
+      },
+    })
+  }
+
+  if (!map.getSource(GARBAGE_SOURCE)) {
+    map.addSource(GARBAGE_SOURCE, { type: 'geojson', data: EMPTY_COLLECTION })
+    map.addLayer({
+      id: GARBAGE_LAYER,
+      type: 'circle',
+      source: GARBAGE_SOURCE,
+      layout: { visibility: 'none' },
+      paint: {
+        'circle-radius': ['interpolate', ['linear'], ['zoom'], 11, 5, 15, 8],
+        'circle-color': '#c45c26',
+        'circle-stroke-width': 1.6,
+        'circle-stroke-color': '#fff8f0',
+        'circle-opacity': 0.95,
+      },
+    })
+    map.addLayer({
+      id: GARBAGE_LABELS,
+      type: 'symbol',
+      source: GARBAGE_SOURCE,
+      layout: {
+        visibility: 'none',
+        'text-field': ['get', 'label'],
+        'text-size': 10,
+        'text-offset': [0, 1.2],
+        'text-anchor': 'top',
+        'text-allow-overlap': false,
+      },
+      paint: {
+        'text-color': '#5a2e14',
+        'text-halo-color': '#fff8f0',
+        'text-halo-width': 1.2,
+      },
+    })
+  }
+
+  if (!map.getSource(NDSI_SALINITY_SOURCE)) {
+    map.addSource(NDSI_SALINITY_SOURCE, { type: 'geojson', data: EMPTY_COLLECTION })
+    map.addLayer({
+      id: NDSI_SALINITY_FILL,
+      type: 'fill',
+      source: NDSI_SALINITY_SOURCE,
+      layout: { visibility: 'none' },
+      paint: {
+        'fill-color': ['coalesce', ['get', 'color'], '#888888'],
+        'fill-opacity': 0.78,
+      },
+    })
+    map.addLayer({
+      id: NDSI_SALINITY_LINE,
+      type: 'line',
+      source: NDSI_SALINITY_SOURCE,
+      layout: { visibility: 'none' },
+      paint: {
+        'line-color': ['coalesce', ['get', 'color'], '#888888'],
+        'line-width': 0.6,
+        'line-opacity': 0.55,
       },
     })
   }
@@ -479,6 +728,119 @@ const ensureOverlayLayers = (map) => {
         'text-halo-width': 1.4,
       },
     })
+    map.addSource(TRIB_FLOW_SOURCE, { type: 'geojson', data: EMPTY_COLLECTION })
+    map.addLayer({
+      id: TRIB_FLOW_SHEEN,
+      type: 'line',
+      source: TRIB_FLOW_SOURCE,
+      interactive: false,
+      layout: { visibility: 'none', 'line-cap': 'round', 'line-join': 'round' },
+      paint: {
+        'line-color': '#7ec8e8',
+        'line-width': ['*', ['get', 'w'], 2.4],
+        'line-opacity': ['*', ['get', 'o'], 0.28],
+        'line-blur': 2.4,
+      },
+    })
+    map.addLayer({
+      id: TRIB_FLOW_GLOW,
+      type: 'line',
+      source: TRIB_FLOW_SOURCE,
+      interactive: false,
+      layout: { visibility: 'none', 'line-cap': 'round', 'line-join': 'round' },
+      paint: {
+        'line-color': '#b8f2ff',
+        'line-width': ['*', ['get', 'w'], 1.7],
+        'line-opacity': ['*', ['get', 'o'], 0.45],
+        'line-blur': 1.2,
+      },
+    })
+    map.addLayer({
+      id: TRIB_FLOW,
+      type: 'line',
+      source: TRIB_FLOW_SOURCE,
+      interactive: false,
+      layout: { visibility: 'none', 'line-cap': 'round', 'line-join': 'round' },
+      paint: {
+        'line-color': '#e8f8ff',
+        'line-width': ['get', 'w'],
+        'line-opacity': ['get', 'o'],
+      },
+    })
+  }
+
+  // Soft channel + foam streaks along the chainage centreline (always on).
+  if (!map.getSource(RIVER_PATH_SOURCE)) {
+    map.addSource(RIVER_PATH_SOURCE, { type: 'geojson', data: EMPTY_COLLECTION })
+    map.addSource(RIVER_STREAK_SOURCE, { type: 'geojson', data: EMPTY_COLLECTION })
+    map.addSource(RIVER_SPARK_SOURCE, { type: 'geojson', data: EMPTY_COLLECTION })
+    map.addLayer({
+      id: RIVER_BODY,
+      type: 'line',
+      source: RIVER_PATH_SOURCE,
+      interactive: false,
+      layout: { 'line-cap': 'round', 'line-join': 'round' },
+      paint: {
+        'line-color': '#1a6fa8',
+        'line-width': ['interpolate', ['linear'], ['zoom'], 11, 10, 14, 22, 16, 34],
+        'line-opacity': 0.22,
+        'line-blur': 2.4,
+      },
+    })
+    map.addLayer({
+      id: RIVER_SHEEN,
+      type: 'line',
+      source: RIVER_PATH_SOURCE,
+      interactive: false,
+      layout: { 'line-cap': 'round', 'line-join': 'round' },
+      paint: {
+        'line-color': '#7ec8e8',
+        'line-width': ['interpolate', ['linear'], ['zoom'], 11, 3.2, 14, 7, 16, 11],
+        'line-opacity': 0.38,
+        'line-blur': 0.6,
+        'line-dasharray': [0.8, 1.6],
+      },
+    })
+    map.addLayer({
+      id: RIVER_STREAK_GLOW,
+      type: 'line',
+      source: RIVER_STREAK_SOURCE,
+      interactive: false,
+      layout: { 'line-cap': 'round', 'line-join': 'round' },
+      paint: {
+        'line-color': '#c8f0ff',
+        'line-width': ['*', ['get', 'w'], 2.6],
+        'line-opacity': ['*', ['get', 'o'], 0.45],
+        'line-blur': 1.8,
+      },
+    })
+    map.addLayer({
+      id: RIVER_STREAK,
+      type: 'line',
+      source: RIVER_STREAK_SOURCE,
+      interactive: false,
+      layout: { 'line-cap': 'round', 'line-join': 'round' },
+      paint: {
+        'line-color': '#e8f8ff',
+        'line-width': ['get', 'w'],
+        'line-opacity': ['get', 'o'],
+      },
+    })
+    map.addLayer({
+      id: RIVER_SPARK,
+      type: 'circle',
+      source: RIVER_SPARK_SOURCE,
+      interactive: false,
+      paint: {
+        'circle-radius': ['*', ['get', 's'], ['interpolate', ['linear'], ['zoom'], 11, 1.4, 15, 2.6]],
+        'circle-color': '#ffffff',
+        'circle-opacity': ['get', 'o'],
+        'circle-blur': 0.35,
+      },
+    })
+    ;[RIVER_BODY, RIVER_SHEEN, RIVER_STREAK_GLOW, RIVER_STREAK, RIVER_SPARK].forEach((id) => {
+      if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', 'visible')
+    })
   }
 
   // Chainage sits last so km marks stay readable over depth.
@@ -667,6 +1029,9 @@ const MapComponent = ({
   showMainStemLayer = false,
   showErosionLayer = false,
   showLithologyLayer = false,
+  showWrdFloodlines = false,
+  showGarbageLayer = false,
+  showNdsiSalinityLayer = false,
   floodZones = null,
   focusChainage = null,
   onSelectChainage,
@@ -685,8 +1050,20 @@ const MapComponent = ({
   const chainageLoadedRef = useRef(false)
   const onSelectChainageRef = useRef(onSelectChainage)
   onSelectChainageRef.current = onSelectChainage
-  const tributaryLoadedRef = useRef(false)
+  const tributaryGeojsonRef = useRef(null)
+  const tributaryFlowPathsRef = useRef([])
   const tributaryPopupRef = useRef(null)
+  const showTributaryLayerRef = useRef(showTributaryLayer)
+  showTributaryLayerRef.current = showTributaryLayer
+  const riverFlowAnimRef = useRef(null)
+  const riverFlowPathsRef = useRef([])
+  const riverFlowReadyRef = useRef(false)
+  const riverSheenStepRef = useRef(0)
+  const wrdLinesLoadedRef = useRef(false)
+  const garbageLoadedRef = useRef(false)
+  const garbagePopupRef = useRef(null)
+  const ndsiSalinityLoadedRef = useRef(false)
+  const ndsiSalinityPopupRef = useRef(null)
   const erosionMetaRef = useRef(null)
   const lithologyMetaRef = useRef(null)
   const drawPointsRef = useRef([])
@@ -790,11 +1167,21 @@ const MapComponent = ({
       applyBasemap(map, initialId)
       applyTerrain3d(map, Boolean(initial?.mode3d), initialId)
       ensureOverlayLayers(map)
+      startTributaryFlowLoop(map, showTributaryLayerRef, tributaryFlowPathsRef)
       setMapReady(true)
     })
 
     return () => {
       resizeObserver.disconnect()
+      if (map.__tributaryFlowRaf) {
+        cancelAnimationFrame(map.__tributaryFlowRaf)
+        map.__tributaryFlowRaf = null
+      }
+      if (map.__tributaryFlowVisHandler) {
+        document.removeEventListener('visibilitychange', map.__tributaryFlowVisHandler)
+        map.__tributaryFlowVisHandler = null
+      }
+      map.__tributaryFlowLoopStarted = false
       mapReadyRef.current = false
       setMapReady(false)
       map.remove()
@@ -1294,6 +1681,7 @@ const MapComponent = ({
           buildChainageBins(geojson, geometryToCoordinates(drawnGeometry, uploadedKML)),
         )
         setVisibility(true)
+        raiseChainageToTop(map)
       } catch (error) {
         console.error('Failed to load chainage layer', error)
         if (!cancelled) setVisibility(false)
@@ -1378,6 +1766,208 @@ const MapComponent = ({
     }
   }, [showChainageLayer, mapReady, drawnGeometry, uploadedKML])
 
+  // Any thematic layer that turns on lands above chainage, so re-raise it.
+  useEffect(() => {
+    const map = mapRef.current
+    if (!map || !mapReady || !showChainageLayer) return
+    raiseChainageToTop(map)
+  }, [
+    mapReady,
+    showChainageLayer,
+    showNdsiSalinityLayer,
+    showTssLayer,
+    showNdciLayer,
+    showNdwiLayer,
+    showWstLayer,
+    showDepthLayer,
+    showUrbanVegLayer,
+    showSiltClassLayer,
+    showSiltVolumeLayer,
+    showLulcLayer,
+    lulcPeriodId,
+    showBiodiversityTypeLayer,
+    showBiodiversityHealthLayer,
+    showClimateFloodHeat,
+    showClimateWaterHeat,
+    showTributaryLayer,
+    showMainStemLayer,
+    showErosionLayer,
+    showLithologyLayer,
+    showWrdFloodlines,
+    showGarbageLayer,
+    floodZones,
+  ])
+
+  useEffect(() => {
+    const map = mapRef.current
+    if (!map || !mapReady) return undefined
+
+    if (!showWrdFloodlines) {
+      if (map.getLayer(WRD_LINE_LAYER)) {
+        map.setLayoutProperty(WRD_LINE_LAYER, 'visibility', 'none')
+      }
+      return undefined
+    }
+
+    let cancelled = false
+    const load = async () => {
+      try {
+        if (!wrdLinesLoadedRef.current) {
+          const geojson = await fetchAssetJson(WRD_LINE_GEOJSON_URL, 'WRD flood lines')
+          if (cancelled) return
+          map.getSource(WRD_LINE_SOURCE)?.setData(geojson)
+          wrdLinesLoadedRef.current = true
+        }
+        if (cancelled || !map.getLayer(WRD_LINE_LAYER)) return
+        map.setFilter(WRD_LINE_LAYER, ['in', ['get', 'line'], ['literal', ['blue', 'red', 'green']]])
+        map.setLayoutProperty(WRD_LINE_LAYER, 'visibility', 'visible')
+      } catch (error) {
+        console.error('Failed to load WRD flood lines', error)
+        if (!cancelled && map.getLayer(WRD_LINE_LAYER)) {
+          map.setLayoutProperty(WRD_LINE_LAYER, 'visibility', 'none')
+        }
+      }
+    }
+    load()
+    return () => {
+      cancelled = true
+    }
+  }, [showWrdFloodlines, mapReady])
+
+  useEffect(() => {
+    const map = mapRef.current
+    if (!map || !mapReady) return undefined
+
+    const setVisibility = (visible) => {
+      const value = visible ? 'visible' : 'none'
+      ;[GARBAGE_LAYER, GARBAGE_LABELS].forEach((id) => {
+        if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', value)
+      })
+    }
+
+    if (!showGarbageLayer) {
+      setVisibility(false)
+      garbagePopupRef.current?.remove()
+      return undefined
+    }
+
+    let cancelled = false
+    const load = async () => {
+      try {
+        if (!garbageLoadedRef.current) {
+          const geojson = await fetchAssetJson(GARBAGE_GEOJSON_URL, 'Garbage locations')
+          if (cancelled) return
+          map.getSource(GARBAGE_SOURCE)?.setData(geojson)
+          garbageLoadedRef.current = true
+        }
+        if (cancelled) return
+        setVisibility(true)
+      } catch (error) {
+        console.error('Failed to load garbage locations', error)
+        if (!cancelled) setVisibility(false)
+      }
+    }
+    load()
+
+    const onClick = (event) => {
+      const feature = event.features?.[0]
+      if (!feature) return
+      garbagePopupRef.current?.remove()
+      const props = feature.properties || {}
+      garbagePopupRef.current = new Popup({ closeButton: true, maxWidth: '220px', offset: 10 })
+        .setLngLat(event.lngLat)
+        .setHTML(
+          `<div style="font:600 13px Inter,system-ui,sans-serif;color:#0d2436">${props.name || 'Garbage site'}</div>` +
+            `<div style="margin-top:4px;font:500 11px Inter,system-ui,sans-serif;color:#3a5c73">Detected solid-waste location · Estimated</div>`,
+        )
+        .addTo(map)
+    }
+    const onEnter = () => {
+      map.getCanvas().style.cursor = 'pointer'
+    }
+    const onLeave = () => {
+      map.getCanvas().style.cursor = ''
+    }
+    map.on('click', GARBAGE_LAYER, onClick)
+    map.on('mouseenter', GARBAGE_LAYER, onEnter)
+    map.on('mouseleave', GARBAGE_LAYER, onLeave)
+
+    return () => {
+      cancelled = true
+      map.off('click', GARBAGE_LAYER, onClick)
+      map.off('mouseenter', GARBAGE_LAYER, onEnter)
+      map.off('mouseleave', GARBAGE_LAYER, onLeave)
+    }
+  }, [showGarbageLayer, mapReady])
+
+  useEffect(() => {
+    const map = mapRef.current
+    if (!map || !mapReady) return undefined
+
+    const setVisibility = (visible) => {
+      const value = visible ? 'visible' : 'none'
+      ;[NDSI_SALINITY_FILL, NDSI_SALINITY_LINE].forEach((id) => {
+        if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', value)
+      })
+    }
+
+    if (!showNdsiSalinityLayer) {
+      setVisibility(false)
+      ndsiSalinityPopupRef.current?.remove()
+      return undefined
+    }
+
+    let cancelled = false
+    const load = async () => {
+      try {
+        if (!ndsiSalinityLoadedRef.current) {
+          const geojson = await fetchAssetJson(NDSI_SALINITY_GEOJSON_URL, 'NDSI salinity')
+          if (cancelled) return
+          map.getSource(NDSI_SALINITY_SOURCE)?.setData(geojson)
+          ndsiSalinityLoadedRef.current = true
+        }
+        if (cancelled) return
+        setVisibility(true)
+        if (showChainageLayer) raiseChainageToTop(map)
+      } catch (error) {
+        console.error('Failed to load NDSI salinity', error)
+        if (!cancelled) setVisibility(false)
+      }
+    }
+    load()
+
+    const onClick = (event) => {
+      const feature = event.features?.[0]
+      if (!feature) return
+      ndsiSalinityPopupRef.current?.remove()
+      const props = feature.properties || {}
+      ndsiSalinityPopupRef.current = new Popup({ closeButton: true, maxWidth: '240px', offset: 10 })
+        .setLngLat(event.lngLat)
+        .setHTML(
+          `<div style="font:600 13px Inter,system-ui,sans-serif;color:#0d2436">NDSI ${props.label || 'Salinity'}</div>` +
+            `<div style="margin-top:4px;font:500 11px Inter,system-ui,sans-serif;color:#3a5c73">Range: ${props.range || '—'}</div>` +
+            `<div style="margin-top:2px;font:500 11px Inter,system-ui,sans-serif;color:#6b8798">Odeh &amp; Onus (2008) · Estimated</div>`,
+        )
+        .addTo(map)
+    }
+    const onEnter = () => {
+      map.getCanvas().style.cursor = 'pointer'
+    }
+    const onLeave = () => {
+      map.getCanvas().style.cursor = ''
+    }
+    map.on('click', NDSI_SALINITY_FILL, onClick)
+    map.on('mouseenter', NDSI_SALINITY_FILL, onEnter)
+    map.on('mouseleave', NDSI_SALINITY_FILL, onLeave)
+
+    return () => {
+      cancelled = true
+      map.off('click', NDSI_SALINITY_FILL, onClick)
+      map.off('mouseenter', NDSI_SALINITY_FILL, onEnter)
+      map.off('mouseleave', NDSI_SALINITY_FILL, onLeave)
+    }
+  }, [showNdsiSalinityLayer, showChainageLayer, mapReady])
+
   useEffect(() => {
     const map = mapRef.current
     if (!map || !mapReady) return undefined
@@ -1456,6 +2046,173 @@ const MapComponent = ({
     }
   }, [showLithologyLayer, mapReady])
 
+  // Main-river foam streaks along the chainage centreline (always on).
+  useEffect(() => {
+    const map = mapRef.current
+    if (!map || !mapReady) return undefined
+
+    let cancelled = false
+
+    const stopAnimation = () => {
+      if (riverFlowAnimRef.current) {
+        cancelAnimationFrame(riverFlowAnimRef.current)
+        riverFlowAnimRef.current = null
+      }
+    }
+
+    const SHEEN_DASHES = [
+      [0.6, 1.8],
+      [0.75, 1.65],
+      [0.9, 1.5],
+      [1.05, 1.35],
+      [1.2, 1.2],
+      [1.35, 1.05],
+      [1.5, 0.9],
+      [1.65, 0.75],
+      [1.8, 0.6],
+      [0.45, 1.95],
+    ]
+
+    const startAnimation = () => {
+      stopAnimation()
+      const paths = riverFlowPathsRef.current.filter((path) => path.kind === 'main')
+      if (!paths.length) return
+
+      const streakSource = map.getSource(RIVER_STREAK_SOURCE)
+      const sparkSource = map.getSource(RIVER_SPARK_SOURCE)
+      if (!streakSource || !sparkSource) return
+
+      const phases = new Float64Array(paths.length)
+      let lastTime = 0
+      let elapsed = 0
+      let lastSheen = 0
+
+      const FRAME_MS = 24
+      const STREAK_SPEED_PX = 38
+      const STREAK_SPACING_PX = 58
+
+      const tick = (timestamp) => {
+        riverFlowAnimRef.current = requestAnimationFrame(tick)
+        if (!map.getLayer(RIVER_STREAK) || cancelled) {
+          stopAnimation()
+          return
+        }
+        if (lastTime && timestamp - lastTime < FRAME_MS) return
+
+        const dt = lastTime ? Math.min((timestamp - lastTime) / 1000, 0.08) : 0
+        lastTime = timestamp
+        elapsed += dt
+
+        if (timestamp - lastSheen > 70) {
+          riverSheenStepRef.current = (riverSheenStepRef.current + 1) % SHEEN_DASHES.length
+          if (map.getLayer(RIVER_SHEEN)) {
+            map.setPaintProperty(RIVER_SHEEN, 'line-dasharray', SHEEN_DASHES[riverSheenStepRef.current])
+          }
+          lastSheen = timestamp
+        }
+
+        const zoom = map.getZoom()
+        const mPerPx = metersPerPixel(map.getCenter().lat, zoom)
+        const zoomScale = Math.min(1.2, Math.max(0.45, (zoom - 10) / 5))
+        const streaks = []
+        const sparks = []
+
+        const LANES = [
+          { offsetPx: -4.2, speed: 0.72, alpha: 0.42, width: 0.85 },
+          { offsetPx: 0, speed: 1, alpha: 0.78, width: 1.35 },
+          { offsetPx: 4.2, speed: 0.78, alpha: 0.48, width: 0.95 },
+        ]
+
+        for (let p = 0; p < paths.length; p += 1) {
+          const path = paths[p]
+          if (path.len < 40) continue
+          const lenPx = path.len / mPerPx
+          if (lenPx < 18) continue
+
+          phases[p] = (phases[p] + (STREAK_SPEED_PX * dt) / lenPx) % 1
+          const count = Math.max(3, Math.min(28, Math.round(lenPx / STREAK_SPACING_PX)))
+
+          for (const lane of LANES) {
+            for (let j = 0; j < count; j += 1) {
+              const phase = (phases[p] * lane.speed + j / count) % 1
+              const dist = phase * path.len
+              const wander = Math.sin(phase * Math.PI * 6 + j * 1.7 + p) * 1.8
+              const offsetM = (lane.offsetPx + wander) * mPerPx
+              const streakLenM = (18 + (j % 4) * 6) * mPerPx * zoomScale
+              const coords = streakCoordinates(path, dist, streakLenM, offsetM)
+              const fade = Math.min(1, phase / 0.06) * Math.min(1, (1 - phase) / 0.05)
+              const shimmer = 0.72 + 0.28 * Math.sin(elapsed * 4.2 + j * 1.3 + p * 0.7)
+              const opacity = Number((fade * shimmer * lane.alpha).toFixed(3))
+              if (opacity < 0.05) continue
+
+              streaks.push({
+                type: 'Feature',
+                properties: {
+                  w: Number((lane.width * zoomScale * (0.75 + 0.35 * ((j + p) % 3) / 2)).toFixed(2)),
+                  o: opacity,
+                },
+                geometry: { type: 'LineString', coordinates: coords },
+              })
+
+              if (lane.offsetPx === 0 && j % 3 === 0) {
+                const tip = samplePath(path, dist)
+                const [slng, slat] = destinationPoint(
+                  tip.lng,
+                  tip.lat,
+                  tip.bearing + 90,
+                  offsetM * 0.4,
+                )
+                sparks.push({
+                  type: 'Feature',
+                  properties: {
+                    s: Number((0.55 + 0.35 * Math.sin(elapsed * 5 + j)).toFixed(3)),
+                    o: Number((opacity * 0.9).toFixed(3)),
+                  },
+                  geometry: { type: 'Point', coordinates: [slng, slat] },
+                })
+              }
+            }
+          }
+        }
+
+        streakSource.setData({ type: 'FeatureCollection', features: streaks })
+        sparkSource.setData({ type: 'FeatureCollection', features: sparks })
+      }
+
+      riverFlowAnimRef.current = requestAnimationFrame(tick)
+    }
+
+    const load = async () => {
+      try {
+        const chainageDoc = await fetchAssetJson(CHAINAGE_GEOJSON_URL, 'River flow centreline')
+        if (cancelled) return
+        const built = buildRiverFlowPaths(chainageDoc)
+        riverFlowPathsRef.current = built.paths
+        map.getSource(RIVER_PATH_SOURCE)?.setData(built.centreline)
+        riverFlowReadyRef.current = true
+        startAnimation()
+      } catch (error) {
+        console.error('Failed to start river flow animation', error)
+      }
+    }
+
+    load()
+
+    const onVis = () => {
+      if (document.hidden) stopAnimation()
+      else if (riverFlowReadyRef.current) startAnimation()
+    }
+    document.addEventListener('visibilitychange', onVis)
+
+    return () => {
+      cancelled = true
+      document.removeEventListener('visibilitychange', onVis)
+      stopAnimation()
+      map.getSource(RIVER_STREAK_SOURCE)?.setData(EMPTY_COLLECTION)
+      map.getSource(RIVER_SPARK_SOURCE)?.setData(EMPTY_COLLECTION)
+    }
+  }, [mapReady])
+
   useEffect(() => {
     const map = mapRef.current
     if (!map || !mapReady) return undefined
@@ -1500,15 +2257,26 @@ const MapComponent = ({
     let cancelled = false
     const load = async () => {
       try {
-        if (!tributaryLoadedRef.current) {
-          const geojson = await fetchAssetJson(TRIB_GEOJSON_URL, 'Joining streams')
+        let geojson = tributaryGeojsonRef.current
+        if (!geojson) {
+          geojson = await fetchAssetJson(TRIB_GEOJSON_URL, 'Joining streams')
           if (cancelled) return
           map.getSource(TRIB_SOURCE)?.setData(geojson)
-          tributaryLoadedRef.current = true
+          tributaryGeojsonRef.current = geojson
         }
         if (cancelled) return
         applyFilters()
         setVisibility(true)
+
+        if (showTributaryLayerRef.current && geojson) {
+          const flowData = buildTributaryFlowData(geojson)
+          tributaryFlowPathsRef.current = flowData.paths || []
+          raiseTributaryFlowToTop(map)
+        } else if (!showTributaryLayerRef.current) {
+          tributaryFlowPathsRef.current = []
+          map.getSource(TRIB_FLOW_SOURCE)?.setData(EMPTY_COLLECTION)
+        }
+
         if (!showTributaryLayer) {
           if (map.getLayer(TRIB_DASH)) map.setLayoutProperty(TRIB_DASH, 'visibility', 'none')
           if (map.getLayer(TRIB_GLOW)) {

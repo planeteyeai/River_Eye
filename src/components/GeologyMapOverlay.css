@@ -6,6 +6,26 @@
   color: var(--rv-ink-2);
 }
 
+.geo-bathy-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 8px 0 4px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--rv-line);
+  background: var(--rv-surface);
+  color: var(--rv-blue-dark);
+  font: 650 12px/1.2 var(--rv-font-body);
+  letter-spacing: 0.02em;
+  cursor: pointer;
+}
+
+.geo-bathy-btn:hover {
+  border-color: var(--rv-blue);
+  color: var(--rv-blue);
+}
+
 .geo-prov {
   letter-spacing: 0.04em;
   text-transform: uppercase;

@@ -6,7 +6,7 @@ import './GeologyMapOverlay.css'
 const EROSION_SERIES_URL = '/asset/mula-mutha-bank-erosion-series.json'
 
 /** Geology detail — rendered inside the Geology group of the Layers panel. */
-const GeologyMapOverlay = () => {
+const GeologyMapOverlay = ({ onOpenBathymetry }) => {
   const [series, setSeries] = useState(null)
 
   useEffect(() => {
@@ -27,8 +27,15 @@ const GeologyMapOverlay = () => {
         <p className="geo-note">
           Bank erosion hotspot = number of year-to-year periods with detected erosion, clipped to
           the Mula–Mutha AOI. Joining streams are OSM waterways. Spectral lithology is a provisional
-          classed surface-material overlay (separate Layers checkbox).
+          classed surface-material overlay. Bathymetry draws the satellite depth raster on the map;
+          open the full dashboard for 2D measure / 3D bed / analytics.
         </p>
+
+        {typeof onOpenBathymetry === 'function' ? (
+          <button type="button" className="geo-bathy-btn" onClick={onOpenBathymetry}>
+            Open Bathymetry Dashboard
+          </button>
+        ) : null}
 
         {series ? (
           <div className="geo-series">
@@ -78,7 +85,7 @@ const GeologyMapOverlay = () => {
           </div>
         ) : null}
 
-        <p className="geo-prov">Estimated · Landsat MNDWI series + erosion KMZ + spectral lithology KMZ + OSM waterways</p>
+        <p className="geo-prov">Estimated · Landsat MNDWI series + erosion KMZ + spectral lithology KMZ + OSM waterways + SDB depth overlay</p>
       </div>
     </LayerPanelPortal>
   )

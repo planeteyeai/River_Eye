@@ -3,13 +3,15 @@
  *  Each theme lists which shipped datasets open with it. Themes with an empty
  *  `datasets` array are scope cards only (map lands with no thematic layer).
  *
- *  Salinity intrusion and Water quality share the same water-quality map view;
- *  WST (thermal) sits with TSS / NDCI / NDWI / BOD–COD there. Soil & land use
- *  opens the urban vegetation classification and the monthly silt rasters. Biodiversity opens the
- *  vegetation-type raster from the KMZ overlay. Climate impact opens the
- *  flood / surface-water heatmap from flood_water_timeseries.xlsx. Geology
- *  opens joining streams and the 2016–2026 bank-erosion hotspot overlay
- *  on the map, plus the satellite-derived bathymetry dashboard.
+ *  Salinity intrusion opens only the NDSI salinity polygons.
+ *  Water quality opens TSS / NDCI / NDWI / WST July overlays plus BOD–COD demo.
+ *  Soil & land use opens the urban vegetation classification and the monthly
+ *  silt rasters. Biodiversity opens the vegetation-type raster from the KMZ
+ *  overlay. Climate impact opens the flood / surface-water heatmap from
+ *  flood_water_timeseries.xlsx plus WRD survey flood lines. Pollution opens
+ *  detected garbage / solid-waste point locations. Geology opens joining
+ *  streams and the 2016–2026 bank-erosion hotspot overlay on the map, plus
+ *  the satellite-derived bathymetry dashboard.
  */
 
 export const MONITORING_THEMES = [
@@ -39,9 +41,9 @@ export const MONITORING_THEMES = [
   },
   {
     name: 'Salinity intrusion',
-    desc: 'Salt-wedge tracking up to Ganjem via thermal & radar proxies',
-    to: '/dashboard?view=waterquality',
-    datasets: ['wst', 'tss', 'ndci', 'ndwi', 'bodcod'],
+    desc: 'Salt-wedge tracking up to Ganjem via NDSI river-surface classes',
+    to: '/dashboard?view=salinity',
+    datasets: ['ndsi-salinity'],
   },
   {
     name: 'Water quality',
@@ -51,15 +53,15 @@ export const MONITORING_THEMES = [
   },
   {
     name: 'Pollution',
-    desc: 'Mining runoff, sewage plumes, oil spills, solid-waste dumping',
-    to: '/dashboard',
-    datasets: [],
+    desc: 'Detected garbage / solid-waste dumping sites along the reach',
+    to: '/dashboard?view=pollution',
+    datasets: ['garbage'],
   },
   {
     name: 'Climate impact',
-    desc: 'Flood and surface-water heatmap across seven 2026 image pairs',
+    desc: 'Flood and surface-water heatmap, plus WRD blue/red/green survey lines',
     to: '/dashboard?view=climate',
-    datasets: ['floodwater'],
+    datasets: ['floodwater', 'wrd-floodlines'],
   },
   {
     name: 'Socio-economic',

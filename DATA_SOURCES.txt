@@ -512,6 +512,55 @@ TO CONFIRM: sensor, algorithm and pixel size behind the classed points
            JRC Global Surface Water gap in section 7.
 
 --------------------------------------------------------------------------------
+3.2fc  public/asset/mula-mutha-wrd-floodlines.geojson (+ .json)
+--------------------------------------------------------------------------------
+Content  : WRD blue / red / green survey lines re-digitized from Khadakwasla
+           Irrigation Division plane-table sheets (1:4000), georeferenced
+           with measured bridge GCPs and filtered to within ~450 m of the
+           twin centreline. 114 LineString features (22 blue, 34 red,
+           58 green).
+Source   : Mula Mutha River Sangam bridge Mudhava KTW.pdf. Converted by
+           scripts/convert-wrd-floodlines.py.
+Used in  : Climate impact map view (MapComponent.jsx src-wrd-floodlines).
+           Layers panel → Climate impact → WRD flood lines.
+UI label : Estimated
+Status   : colour-traced from PDF, not official WRD GIS. Median distance
+           to twin centreline ≈ 100 m in the converter QA.
+
+--------------------------------------------------------------------------------
+3.2fd  public/asset/mula-mutha-garbage-locations.geojson (+ .json, .kml)
+--------------------------------------------------------------------------------
+Content  : 67 detected garbage / solid-waste point locations along the
+           Mula-Mutha corridor (numbered placemarks).
+Source   : e0783f3944c448bfa4f3c28753d391dc.kml (Detected Garbage Locations).
+           Converted by scripts/convert-garbage-kml.py.
+Used in  : Pollution map view (MapComponent.jsx src-garbage). Layers panel
+           → Pollution → Garbage locations. Theme card: Pollution.
+UI label : Estimated
+TO CONFIRM: who detected the sites, when, and by what method
+           (visual / satellite / field).
+
+--------------------------------------------------------------------------------
+3.2fe  public/asset/mula-mutha-ndsi-salinity.geojson (+ .json, .kml)
+--------------------------------------------------------------------------------
+Content  : NDSI Salinity — Odeh & Onus (2008) classified river-surface
+           polygons along the Mula–Mutha reach. 2,751 polygons in five
+           classes (KML legend):
+             1 = Very Low   -1.00 to -0.60   #0000FF   (166)
+             2 = Low        -0.60 to -0.20   #00BFFF   (678)
+             3 = Moderate   -0.20 to  0.20   #00FF00   (671)
+             4 = High        0.20 to  0.60   #FFFF00   (964)
+             5 = Very High   0.60 to  1.00   #FF0000   (272)
+Source   : MulaMutha_NDSI_Salinity_River.kml (111efbd6d8d0406d9f50a2506cd30388).
+           Converted by scripts/convert-ndsi-salinity-kml.py.
+Used in  : Salinity map view (MapComponent.jsx src-ndsi-salinity). Layers
+           panel → Salinity → NDSI Salinity. Salinity intrusion card opens
+           ?view=salinity with NDSI only (no WST or other thematic layers).
+UI label : Estimated
+TO CONFIRM: capture date, sensor, and whether NDSI classes are validated
+           against in-situ salinity.
+
+--------------------------------------------------------------------------------
 3.3  Standalone HTML panels
 --------------------------------------------------------------------------------
 Files    : public/asset/mula-mutha-flood.html
@@ -520,11 +569,15 @@ Files    : public/asset/mula-mutha-flood.html
            public/asset/mula-mutha-bathymetry.html
 Used in  : src/components/Dashboard.jsx, loaded in an iframe
 Status   : self-contained pages with their own inline fetches.
-           mula-mutha-twin.html is the Digital Twin header view: the live
-           Railway dashboard with the Sangam-Manjari Leaflet/Google reach
-           map removed. Fetches the same /api as 2.1 on
-           riverdigitaltwin-production.up.railway.app. Charts still use
-           Chart.js from jsDelivr.
+           mula-mutha-twin.html is the Digital Twin header view: synced from
+           the live Railway dashboard (scripts/sync-twin-html.py) including
+           the Sangam–Manjari Leaflet reach map (Esri World Imagery + OSM
+           street toggle; Google Maps path kept but unused without an API key),
+           live refresh bar, optional auto-advance simulation clock, river
+           selector (/api/rivers when available), and chainage-number toggle.
+           API calls are prefixed to riverdigitaltwin-production.up.railway.app
+           so the bundled iframe works off localhost. Charts use Chart.js from
+           jsDelivr; Leaflet from unpkg.
            mula-mutha-flood.html is the SVG-chart twin-only copy (no Chart.js):
            discharge KPI = /state q_now, Model label. Open-Meteo GloFAS /
            ECMWF fetches and charts were removed 2026-08-14. Not currently
@@ -551,18 +604,25 @@ Content  : Standalone Mula-Mutha bathymetry dashboard (2D Leaflet depth raster,
              non-null cells in the grid: 11,580)
            Land-cover overlay (forest/vegetation, built-up, roads) is bundled
            in the same file. Reach described as ~14.5 km urban channel.
-Source   : vendor HTML a808cca9ca05492284b458df1a486fd1.html (S3 messaging
-           drop, 2026-08-18). The signed URL is not stored. Depths modelled
-           from Sentinel-2 L2A bands B02/B03/B04/B08 captured 14 Jul 2026,
-           trained on filled depth points and clipped to the river AOI;
-           gaps interpolated from adjacent pixels. Vertical datum: MSL.
+Source   : vendor HTML d514d4e6c6f5413bb48702cda1be7765.html (S3 messaging
+           drop, 2026-08-22). Stable fetch path:
+           ems-storage-123.s3.amazonaws.com/files/messaging/d514d4e6…html
+           (scripts/sync-bathymetry-html.py). Replaces the 2026-08-18 build
+           (a808cca9…). Embedded grid from depth_pixels_jul2026_clean.csv;
+           satellite-derived depths, vertical datum MSL. Vendor prose in the
+           page does not restate the Sentinel-2 capture date; treat as the
+           same Jul 2026 SDB product unless a new CSV is supplied.
 Used in  : Dashboard.jsx header “Bathymetry” mode button (after Digital Twin),
            which opens the iframe. Same Mula-Mutha-only gate as BOD-COD and
-           Digital Twin.
+           Digital Twin. Geology Layers checkbox “Bathymetry” draws the
+           related depth raster (3.1c PNG) on the main map. Layout patch
+           scripts/patch-bathymetry-fullscreen.py makes the 2D Leaflet map
+           fill the iframe (re-applied by sync-bathymetry-html.py).
 UI label : Estimated
 Status   : satellite-derived bathymetry for visualization. Not an in-situ
            sounding survey and not used for flood-corridor or inundation
            calculations (those still have no DEM - see section 7).
+           Self-contained: Leaflet + Plotly from CDN; no /api calls.
 TO CONFIRM: training soundings, SDB algorithm, and whether 15,593 histogram
            pixels vs 11,580 grid cells is interpolation vs a different clip.
 
@@ -1214,3 +1274,42 @@ CHANGE LOG
             bodies, 1 Settlements, 2 Forest/dense Vegetation, 3 Cropland,
             4 Barren land. Display colours remapped to blue/red/green/
             yellow/brown; polygon shares unchanged. Section 3.2fb.
+2026-08-22  Salinity theme: NDSI Salinity (Odeh & Onus 2008) river-surface
+            polygons from MulaMutha_NDSI_Salinity_River.kml (2,751 features,
+            five classes). Layers → Salinity → NDSI Salinity; Salinity
+            intrusion card opens ?view=salinity with NDSI only.
+            Estimated. Section 3.2fe. convert-ndsi-salinity-kml.py.
+2026-08-22  Pollution theme: 67 detected garbage / solid-waste point
+            locations from Detected Garbage Locations.kml. Layers → Pollution.
+            Estimated. Section 3.2fd. convert-garbage-kml.py.
+2026-08-22  Climate impact: WRD blue/red/green survey lines re-digitized from
+            plane-table PDF with bridge GCPs (~450 m twin filter). Estimated.
+            Section 3.2fc. convert-wrd-floodlines.py.
+2026-08-22  Chainage scrubber gutter system + raiseChainageToTop so km marks
+            stay legible over all thematic layers including salinity.
+2026-08-22  Digital Twin iframe resynced from riverdigitaltwin-production
+            (refresh bar, auto-advance, chainage-no toggle, river selector).
+            scripts/sync-twin-html.py prefixes Railway /api for iframe use.
+            Section 3.3.
+2026-08-22  Bathymetry dashboard (3.3b) resynced from vendor S3 messaging
+            drop d514d4e6c6f5413bb48702cda1be7765.html (~2.1 MB self-contained
+            Leaflet/Plotly page). Grid unchanged (1148×222, 1.53–2.0 m MSL,
+            16.5 km chainage). scripts/sync-bathymetry-html.py.
+2026-08-22  Bathymetry dashboard iframe uses a fullscreen 2D map layout
+            (scripts/patch-bathymetry-fullscreen.py). Geology Layers adds a
+            Bathymetry checkbox that draws the depth raster (3.1c) on the
+            main map; Geology panel can open the full dashboard.
+2026-08-22  Bathymetry dashboard: disabled vendor “deepest zone” pulsing red
+            rings (deep-ring / KML deepLayer) so the 2D map stays static.
+2026-08-22  Bathymetry dashboard layout reworked into docked chrome: row 1 is
+            the title plus Min/Max/Mean chips, row 2 is the view tabs with the
+            2D/3D toolbar flush right; the Leaflet/Plotly stage fills all
+            remaining height. Chrome is position:fixed because the vendor
+            markup nests .stats/.tabs in .wrap and .viewhead in the panel, so
+            absolute offsets pushed them onto the map. Title is inset past the
+            host "Back to Map" button; the legend clears "Full screen".
+2026-08-22  UI only. Downstream water-flow animation on the chainage
+            centreline (soft channel body, sheen dash, foam streaks, sparkles).
+            Joining streams: continuous short streak segments along oriented
+            tributary paths toward the main stem (GeoJSON setData each frame;
+            not line-dasharray). tributaryJunctions.js + riverFlow helpers.

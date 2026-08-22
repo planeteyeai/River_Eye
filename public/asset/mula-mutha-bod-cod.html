@@ -132,7 +132,7 @@ input[type=range]{flex:1;accent-color:var(--marigold);height:22px}
       <div class="time-step">
         <button type="button" class="scrub-step scrub-step-prev" id="scrubPrevTop"
                 aria-label="Step back one hour">−</button>
-        <span class="ribbon-date" id="scrubDate"></span>
+      <span class="ribbon-date" id="scrubDate"></span>
         <button type="button" class="scrub-step scrub-step-next" id="scrubNextTop"
                 aria-label="Step forward one hour">+</button>
       </div>
@@ -427,8 +427,8 @@ input[type=range]{flex:1;accent-color:var(--marigold);height:22px}
 
   // legend + class descriptions (rebuilt on each data refresh)
   function buildLegend(){
-    const lg=document.getElementById('legend');
-    lg.innerHTML = CLS.map(c=>`<span><span class="sw" style="background:${COLORS[c]}"></span>
+  const lg=document.getElementById('legend');
+  lg.innerHTML = CLS.map(c=>`<span><span class="sw" style="background:${COLORS[c]}"></span>
       Class ${c} (BOD — Biochemical Oxygen Demand ≤ ${c==='E'?'>'+EDGES[EDGES.length-1]:EDGES[CLS.indexOf(c)]} mg/L)</span>`).join('') +
     `<span><span class="sw" style="background:${COLORS.NA}"></span>NA (abstained)</span>
      <span><span class="sw" style="background:${CLASS_COLORS.A};opacity:.75;outline:1px dashed #0d2436">
@@ -436,10 +436,10 @@ input[type=range]{flex:1;accent-color:var(--marigold);height:22px}
      <span><span class="sw tex"></span>hatched = no observation (prior only)</span>` +
     (D.kml_reach_id ? `<span><span class="sw" style="outline:2px solid ${KML_BLUE};background:transparent"></span>
      blue outline = your KML patch (${D.kml_reach_id})</span>` : '');
-    document.getElementById('classGuide').innerHTML =
-      '<div style="margin-bottom:6px;color:var(--ink);font-size:12px">Water quality classes (CPCB-style BOD bands)</div>' +
-      CLS.map(c=>`<div><b>Class ${c}</b> — ${CLASS_DESC[c]||''}</div>`).join('') +
-      `<div><b>NA</b> — insufficient evidence to assign a class (abstained)</div>`;
+  document.getElementById('classGuide').innerHTML =
+    '<div style="margin-bottom:6px;color:var(--ink);font-size:12px">Water quality classes (CPCB-style BOD bands)</div>' +
+    CLS.map(c=>`<div><b>Class ${c}</b> — ${CLASS_DESC[c]||''}</div>`).join('') +
+    `<div><b>NA</b> — insufficient evidence to assign a class (abstained)</div>`;
   }
 
   // scrubber (listener attached once)

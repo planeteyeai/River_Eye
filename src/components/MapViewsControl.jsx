@@ -63,6 +63,23 @@ const IconGeology = () => (
   </svg>
 )
 
+const IconSalinity = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <path d="M12 3c-2 4-6 6-6 10a6 6 0 0 0 12 0c0-4-4-6-6-10z" />
+    <path d="M8 14h8" />
+    <path d="M9 17h6" />
+  </svg>
+)
+
+const IconPollution = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <path d="M12 3v4" />
+    <path d="M9 7h6" />
+    <path d="M8 11c0 4 1.5 7 4 9 2.5-2 4-5 4-9H8z" />
+    <path d="M10 14h4" />
+  </svg>
+)
+
 const IconChevron = ({ left = false }) => (
   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4">
     {left ? (
@@ -95,6 +112,20 @@ export const VIEW_GROUPS = [
     accent: 'water',
     title: 'TSS, NDCI, NDWI, WST and BOD–COD',
     Icon: IconWater,
+  },
+  {
+    id: 'salinity',
+    label: 'Salinity',
+    accent: 'water',
+    title: 'NDSI salinity index (Odeh & Onus 2008)',
+    Icon: IconSalinity,
+  },
+  {
+    id: 'pollution',
+    label: 'Pollution',
+    accent: 'climate',
+    title: 'Detected garbage and solid-waste sites',
+    Icon: IconPollution,
   },
   {
     id: 'landuse',

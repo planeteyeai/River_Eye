@@ -1,0 +1,15 @@
+{
+  "name": "Detected garbage locations",
+  "kind": "Estimated",
+  "source_kml": "e0783f3944c448bfa4f3c28753d391dc.kml / Detected Garbage Locations.kml",
+  "geojson": "/asset/mula-mutha-garbage-locations.geojson",
+  "kml": "/asset/mula-mutha-garbage-locations.kml",
+  "count": 67,
+  "bounds": {
+    "west": 73.85486143519311,
+    "east": 73.99043850058565,
+    "south": 18.52396961923471,
+    "north": 18.54755815115537
+  },
+  "note": "Point markers of detected solid-waste / garbage sites along the Mula-Mutha corridor. Source KML has numbered placemarks only (no dates, volumes or detection method)."
+}

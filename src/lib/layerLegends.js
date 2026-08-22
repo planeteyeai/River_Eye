@@ -88,6 +88,28 @@ export const LAYER_LEGENDS = {
       { color: '#8E0000', label: 'Very high', value: '≥36°C' },
     ],
   },
+  'ndsi-salinity': {
+    provenance: 'Estimated',
+    colors: [
+      { color: '#0000FF', label: 'Very low', value: '-1.00 to -0.60' },
+      { color: '#00BFFF', label: 'Low', value: '-0.60 to -0.20' },
+      { color: '#00FF00', label: 'Moderate', value: '-0.20 to 0.20' },
+      { color: '#FFFF00', label: 'High', value: '0.20 to 0.60' },
+      { color: '#FF0000', label: 'Very high', value: '0.60 to 1.00' },
+    ],
+  },
+  'wrd-floodlines': {
+    provenance: 'Estimated',
+    colors: [
+      { color: '#1565c0', label: 'Blue flood line', value: 'survey' },
+      { color: '#c62828', label: 'Red flood line', value: 'survey' },
+      { color: '#2e7d32', label: 'Green bank line', value: 'survey' },
+    ],
+  },
+  garbage: {
+    provenance: 'Estimated',
+    colors: [{ color: '#c45c26', label: 'Detected garbage site', value: '67' }],
+  },
   'silt-class': {
     provenance: 'Estimated',
     colors: [
@@ -214,6 +236,16 @@ export const LAYER_LEGENDS = {
   },
   depth: {
     provenance: 'Demo/Synthetic',
+    colors: [
+      { color: '#0000ff', label: 'Shallow 1.5–1.6 m', value: '0.9%' },
+      { color: '#00ff00', label: 'Low 1.6–1.7 m', value: '16%' },
+      { color: '#ffff00', label: 'Moderate 1.7–1.8 m', value: '57.8%' },
+      { color: '#ff8000', label: 'High 1.8–1.9 m', value: '20.4%' },
+      { color: '#ff0000', label: 'Very high 1.9–2.0 m', value: '4.9%' },
+    ],
+  },
+  bathymetry: {
+    provenance: 'Estimated',
     colors: [
       { color: '#0000ff', label: 'Shallow 1.5–1.6 m', value: '0.9%' },
       { color: '#00ff00', label: 'Low 1.6–1.7 m', value: '16%' },

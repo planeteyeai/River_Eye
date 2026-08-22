@@ -1,0 +1,55 @@
+{
+  "name": "NDSI Salinity \u2014 Odeh & Onus (2008)",
+  "kind": "Estimated",
+  "method": "NDSI (Normalised Difference Salinity Index)",
+  "source_kml": "111efbd6d8d0406d9f50a2506cd30388.kml / MulaMutha_NDSI_Salinity_River.kml",
+  "geojson": "/asset/mula-mutha-ndsi-salinity.geojson",
+  "kml": "/asset/mula-mutha-ndsi-salinity.kml",
+  "count": 2751,
+  "class_counts": {
+    "Very Low": 166,
+    "Low": 678,
+    "Moderate": 671,
+    "High": 964,
+    "Very High": 272
+  },
+  "classes": [
+    {
+      "class": 1,
+      "label": "Very Low",
+      "range": "-1.00 to -0.60",
+      "color": "#0000FF"
+    },
+    {
+      "class": 2,
+      "label": "Low",
+      "range": "-0.60 to -0.20",
+      "color": "#00BFFF"
+    },
+    {
+      "class": 3,
+      "label": "Moderate",
+      "range": "-0.20 to 0.20",
+      "color": "#00FF00"
+    },
+    {
+      "class": 4,
+      "label": "High",
+      "range": "0.20 to 0.60",
+      "color": "#FFFF00"
+    },
+    {
+      "class": 5,
+      "label": "Very High",
+      "range": "0.60 to 1.00",
+      "color": "#FF0000"
+    }
+  ],
+  "bounds": {
+    "west": 73.85350886366767,
+    "east": 73.99328672187666,
+    "south": 18.510033465985874,
+    "north": 18.561462016001716
+  },
+  "note": "Classified river-surface NDSI salinity polygons along the Mula-Mutha reach. Five classes per Odeh & Onus (2008) legend. Source KML has no capture date or sensor metadata."
+}

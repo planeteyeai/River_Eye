@@ -49,6 +49,7 @@ const Dashboard = () => {
   const [showNdciLayer, setShowNdciLayer] = useState(false)
   const [showNdwiLayer, setShowNdwiLayer] = useState(false)
   const [showWstLayer, setShowWstLayer] = useState(false)
+  const [showNdsiSalinityLayer, setShowNdsiSalinityLayer] = useState(false)
   const [showAqiOverlay, setShowAqiOverlay] = useState(false) 
   const [showFlood, setShowFlood] = useState(false)
   const [showFloodOverlay, setShowFloodOverlay] = useState(false)
@@ -56,6 +57,9 @@ const Dashboard = () => {
   const [showChainageLayer, setShowChainageLayer] = useState(false)
   const [focusChainage, setFocusChainage] = useState(null)
   const [showFloodDepthLayer, setShowFloodDepthLayer] = useState(false)
+  const [showBathyMapLayer, setShowBathyMapLayer] = useState(false)
+  const [showWrdFloodlines, setShowWrdFloodlines] = useState(false)
+  const [showGarbageLayer, setShowGarbageLayer] = useState(false)
   const [showLandUseOverlay, setShowLandUseOverlay] = useState(false)
   const [showUrbanVegLayer, setShowUrbanVegLayer] = useState(false)
   const [showSiltClassLayer, setShowSiltClassLayer] = useState(false)
@@ -974,18 +978,67 @@ const Dashboard = () => {
       || requestedView === 'biodiversity'
       || requestedView === 'climate'
       || requestedView === 'geology'
+      || requestedView === 'pollution'
       || requestedView === 'corridors'
     ) {
       clearParam()
       if (requestedView === 'flood') setShowFlood(true)
+      else if (requestedView === 'pollution') {
+        setShowGarbageLayer(true)
+        setShowBodCod(false)
+        setShowBodCodOverlay(false)
+        setShowNdsiSalinityLayer(false)
+        setShowFlood(false)
+        setShowFloodOverlay(false)
+        setShowLandUseOverlay(false)
+        setShowBiodiversityOverlay(false)
+        setShowClimateOverlay(false)
+        setShowGeologyOverlay(false)
+        setShowBathy(false)
+        setShowAnalysis(false)
+        setShowAqiOverlay(false)
+      }
+      else if (requestedView === 'salinity') {
+        setShowBodCod(false)
+        setShowBodCodOverlay(false)
+        setShowNdsiSalinityLayer(true)
+        setShowWstLayer(false)
+        setShowTssLayer(false)
+        setShowNdciLayer(false)
+        setShowNdwiLayer(false)
+        setShowGarbageLayer(false)
+        setShowWrdFloodlines(false)
+        setShowFloodDepthLayer(false)
+        setShowFlood(false)
+        setShowFloodOverlay(false)
+        setShowLandUseOverlay(false)
+        setShowLulcLayer(false)
+        setShowUrbanVegLayer(false)
+        setShowSiltClassLayer(false)
+        setShowSiltVolumeLayer(false)
+        setShowBiodiversityOverlay(false)
+        setShowBiodiversityTypeLayer(false)
+        setShowBiodiversityHealthLayer(false)
+        setShowClimateOverlay(false)
+        setShowClimateFloodHeat(false)
+        setShowClimateWaterHeat(false)
+        setShowGeologyOverlay(false)
+        setShowTributaryLayer(false)
+        setShowMainStemLayer(false)
+        setShowErosionLayer(false)
+        setShowLithologyLayer(false)
+        setShowBathy(false)
+        setShowAnalysis(false)
+        setShowAqiOverlay(false)
+      }
       else if (
         requestedView === 'bodcod'
         || requestedView === 'waterquality'
-        || requestedView === 'salinity'
       ) {
-        // Water quality (+ salinity card): TSS, NDCI, NDWI, WST, BOD–COD.
+        // Water quality: TSS, NDCI, NDWI, WST, BOD–COD.
         setShowBodCod(false)
         setShowBodCodOverlay(true)
+        setShowNdsiSalinityLayer(false)
         setShowTssLayer(true)
         setShowNdciLayer(false)
         setShowNdwiLayer(false)
@@ -1607,14 +1660,18 @@ const Dashboard = () => {
     uploadedKML?.name?.toLowerCase().includes('mula-mutha')
 
   const geologyLayersOn =
-    showErosionLayer || showLithologyLayer || showTributaryLayer || showMainStemLayer
+    showErosionLayer ||
+    showLithologyLayer ||
+    showTributaryLayer ||
+    showMainStemLayer ||
+    showBathyMapLayer
   const waterQualityLayersOn =
     showTssLayer || showNdciLayer || showNdwiLayer || showWstLayer
   const landUseLayersOn =
     showSiltClassLayer || showSiltVolumeLayer || showUrbanVegLayer || showLulcLayer
   const biodiversityLayersOn =
     showBiodiversityTypeLayer || showBiodiversityHealthLayer
-  const climateLayersOn = showClimateFloodHeat || showClimateWaterHeat
+  const climateLayersOn = showClimateFloodHeat || showClimateWaterHeat || showWrdFloodlines
 
   const chainageLayer = {
     id: 'chainage',
@@ -1666,6 +1723,33 @@ const Dashboard = () => {
         hint: 'Mula / Mutha OSM ways',
         checked: showMainStemLayer,
         onToggle: setShowMainStemLayer,
+      },
+      {
+        id: 'bathymetry',
+        label: 'Bathymetry',
+        hint: 'Satellite-derived depth 1.5–2.0 m MSL',
+        checked: showBathyMapLayer,
+        onToggle: setShowBathyMapLayer,
+      },
+      chainageLayer,
+    ],
+    salinity: [
+      {
+        id: 'ndsi-salinity',
+        label: 'NDSI Salinity',
+        hint: 'Odeh & Onus (2008) · river surface',
+        checked: showNdsiSalinityLayer,
+        onToggle: setShowNdsiSalinityLayer,
+      },
+      chainageLayer,
+    ],
+    pollution: [
+      {
+        id: 'garbage',
+        label: 'Garbage locations',
+        hint: '67 detected solid-waste sites',
+        checked: showGarbageLayer,
+        onToggle: setShowGarbageLayer,
       },
       chainageLayer,
     ],
@@ -1764,6 +1848,13 @@ const Dashboard = () => {
         checked: showClimateWaterHeat,
         onToggle: setShowClimateWaterHeat,
       },
+      {
+        id: 'wrd-floodlines',
+        label: 'WRD flood lines',
+        hint: 'Blue · red · green survey lines',
+        checked: showWrdFloodlines,
+        onToggle: setShowWrdFloodlines,
+      },
       chainageLayer,
     ],
     flood: [
@@ -1785,10 +1876,12 @@ const Dashboard = () => {
     showLithologyLayer,
     showTributaryLayer,
     showMainStemLayer,
+    showBathyMapLayer,
     showTssLayer,
     showNdciLayer,
     showNdwiLayer,
     showWstLayer,
+    showNdsiSalinityLayer,
     showSiltClassLayer,
     showSiltVolumeLayer,
     showLulcLayer,
@@ -1800,6 +1893,8 @@ const Dashboard = () => {
     showBiodiversityHealthLayer,
     showClimateFloodHeat,
     showClimateWaterHeat,
+    showWrdFloodlines,
+    showGarbageLayer,
     showFloodDepthLayer,
   ])
 
@@ -2048,7 +2143,20 @@ const Dashboard = () => {
                   onPeriodChange={setClimatePeriodId}
                 />
               )}
-              {geologyLayersOn && <GeologyMapOverlay />}
+              {geologyLayersOn && (
+                <GeologyMapOverlay
+                  onOpenBathymetry={() => {
+                    setShowBathy(true)
+                    setShowFlood(false)
+                    setShowBodCod(false)
+                    setShowAnalysis(false)
+                    setShowBodCodOverlay(false)
+                    setShowAqiOverlay(false)
+                    setShowFloodOverlay(false)
+                    setShowGeologyOverlay(false)
+                  }}
+                />
+              )}
               {showAqiOverlay && (
                 <AqiMapOverlay
                   aqiData={aqiData}
@@ -2070,7 +2178,7 @@ const Dashboard = () => {
                 showNdciLayer={showNdciLayer}
                 showNdwiLayer={showNdwiLayer}
                 showWstLayer={showWstLayer}
-                showDepthLayer={showFloodDepthLayer}
+                showDepthLayer={showFloodDepthLayer || showBathyMapLayer}
                 showUrbanVegLayer={showUrbanVegLayer}
                 showSiltClassLayer={showSiltClassLayer}
                 showSiltVolumeLayer={showSiltVolumeLayer}
@@ -2086,6 +2194,9 @@ const Dashboard = () => {
                 showMainStemLayer={showMainStemLayer}
                 showErosionLayer={showErosionLayer}
                 showLithologyLayer={showLithologyLayer}
+                showWrdFloodlines={showWrdFloodlines}
+                showGarbageLayer={showGarbageLayer}
+                showNdsiSalinityLayer={showNdsiSalinityLayer}
                 showChainageLayer={
                   (uploadedKML?.displayName === 'Mula-Mutha River' ||
                     uploadedKML?.name?.toLowerCase().includes('mula-mutha')) &&
@@ -2100,7 +2211,7 @@ const Dashboard = () => {
                 showChainageLayer && (
                   <ChainageScrubber
                     variant={
-                      showFloodDepthLayer || waterQualityLayersOn || showAqiOverlay
+                      showFloodDepthLayer || (waterQualityLayersOn && showBodCodOverlay) || showAqiOverlay
                         ? 'above-ribbon'
                         : 'map-edge'
                     }
