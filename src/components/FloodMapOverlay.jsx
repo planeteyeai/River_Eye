@@ -276,6 +276,8 @@ const TwinLayerPicker = ({
 const FloodMapOverlay = ({
   onZonesChange,
   onAssetsChange,
+  selectedAssetId = null,
+  onSelectedAssetChange,
   showChainageLayer = true,
   showDepthLayer = true,
   focusChainage = null,
@@ -337,8 +339,9 @@ const FloodMapOverlay = ({
     return () => {
       cancelled = true
       onAssetsChange?.(null)
+      onSelectedAssetChange?.(null)
     }
-  }, [loadLive, onAssetsChange])
+  }, [loadLive, onAssetsChange, onSelectedAssetChange])
 
   // The return periods come from a fixed published gauge record, so the fit is a
   // constant; only the reach geometry and the visible selection change.
@@ -403,6 +406,22 @@ const FloodMapOverlay = ({
     if (!chainageSelection?.nearest) return
     setSelected(chainageSelection.nearest.id)
   }, [chainageSelection])
+
+  useEffect(() => {
+    if (!selectedAssetId || selectedAssetId === selected) return
+    if (!margins.some((row) => row.id === selectedAssetId)) return
+    setSelected(selectedAssetId)
+  }, [selectedAssetId, selected, margins])
+
+  useEffect(() => {
+    if (selected) onSelectedAssetChange?.(selected)
+  }, [selected, onSelectedAssetChange])
+
+  const selectAsset = (id) => {
+    if (!id) return
+    setSelected(id)
+    onSelectedAssetChange?.(id)
+  }
 
   useEffect(() => {
     if (!meta || !asset) return undefined
@@ -688,7 +707,7 @@ const FloodMapOverlay = ({
                     key={row.id}
                     type="button"
                     className={`flood-chainage-asset${row.id === asset?.id ? ' is-on' : ''}`}
-                    onClick={() => setSelected(row.id)}
+                    onClick={() => selectAsset(row.id)}
                   >
                     <span className="sw" style={{ background: STATUS_COLORS[row.status] }} />
                     <strong>{shortName(row.name || row.id)}</strong>
@@ -803,15 +822,19 @@ const FloodMapOverlay = ({
             <text x={6} y={cy + 4} fill="#0a6f7a" fontSize="12" fontWeight="700">
               flow →
             </text>
-            {margins.map((row) => {
+            {([...margins].sort((a, b) => {
+              if (a.id === asset?.id) return 1
+              if (b.id === asset?.id) return -1
+              return a.chainage_m - b.chainage_m
+            })).map((row) => {
               const color = STATUS_COLORS[row.status] || INK_MUTED
               const isSelected = row.id === asset?.id
               const x = xOf(row.chainage_m)
               return (
                 <g
                   key={row.id}
-                  className="flood-asset-mark"
-                  onClick={() => setSelected(row.id)}
+                  className={`flood-asset-mark${isSelected ? ' is-selected' : ''}`}
+                  onClick={() => selectAsset(row.id)}
                   filter={isSelected ? 'url(#flood-glow)' : undefined}
                 >
                   <line x1={x} x2={x} y1={cy - 16} y2={cy + 16} stroke={color} strokeOpacity="0.4" />

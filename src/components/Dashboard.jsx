@@ -59,6 +59,7 @@ const Dashboard = () => {
   const [focusChainage, setFocusChainage] = useState(null)
   const [showFloodDepthLayer, setShowFloodDepthLayer] = useState(false)
   const [twinAssets, setTwinAssets] = useState(null)
+  const [selectedTwinAssetId, setSelectedTwinAssetId] = useState(null)
   const [showBathyMapLayer, setShowBathyMapLayer] = useState(false)
   const [showWrdFloodlines, setShowWrdFloodlines] = useState(false)
   const [showGarbageLayer, setShowGarbageLayer] = useState(false)
@@ -2108,6 +2109,8 @@ const Dashboard = () => {
                 <FloodMapOverlay
                   onZonesChange={setFloodZones}
                   onAssetsChange={setTwinAssets}
+                  selectedAssetId={selectedTwinAssetId}
+                  onSelectedAssetChange={setSelectedTwinAssetId}
                   showChainageLayer={showChainageLayer}
                   showDepthLayer={showFloodDepthLayer}
                   focusChainage={focusChainage}
@@ -2198,6 +2201,8 @@ const Dashboard = () => {
                 }
                 floodZones={showFloodDepthLayer ? floodZones : null}
                 twinAssets={showFloodDepthLayer ? twinAssets : null}
+                selectedTwinAssetId={showFloodDepthLayer ? selectedTwinAssetId : null}
+                onSelectTwinAsset={setSelectedTwinAssetId}
                 focusChainage={focusChainage}
                 onSelectChainage={(station) => setFocusChainage({ ...station, at: Date.now() })}
               />

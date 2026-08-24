@@ -113,7 +113,10 @@ const TRIB_ANIM_LAYERS = [TRIB_FLOW_SHEEN, TRIB_FLOW_GLOW, TRIB_FLOW]
 
 const raiseTributaryFlowToTop = (map) => {
   TRIB_ANIM_LAYERS.forEach((layerId) => {
-    if (map.getLayer(layerId)) map.moveLayer(layerId)
+    if (!map.getLayer(layerId)) return
+    // Stay under twin-asset pins so the animation never covers EMB/HAB markers.
+    if (map.getLayer(TWIN_ASSET_LAYER)) map.moveLayer(layerId, TWIN_ASSET_LAYER)
+    else map.moveLayer(layerId)
   })
 }
 
@@ -275,10 +278,17 @@ const CHAINAGE_STACK = [
   CHAINAGE_LABELS_MINOR,
 ]
 
+const raiseTwinAssetsToTop = (map) => {
+  ;[TWIN_ASSET_LAYER, TWIN_ASSET_LABELS].forEach((layerId) => {
+    if (map.getLayer(layerId)) map.moveLayer(layerId)
+  })
+}
+
 const raiseChainageToTop = (map) => {
   CHAINAGE_STACK.forEach((layerId) => {
     if (map.getLayer(layerId)) map.moveLayer(layerId)
   })
+  raiseTwinAssetsToTop(map)
 }
 
 // Image sources must have a real LatLonBox. Four identical [0,0] corners
@@ -420,11 +430,11 @@ const ensureOverlayLayers = (map) => {
       source: TWIN_ASSET_SOURCE,
       layout: { visibility: 'none' },
       paint: {
-        'circle-radius': ['interpolate', ['linear'], ['zoom'], 11, 6, 15, 9],
+        'circle-radius': ['interpolate', ['linear'], ['zoom'], 11, 7, 15, 11],
         'circle-color': ['coalesce', ['get', 'color'], '#c2372a'],
-        'circle-stroke-width': 2,
+        'circle-stroke-width': 2.4,
         'circle-stroke-color': '#ffffff',
-        'circle-opacity': 0.96,
+        'circle-opacity': 1,
       },
     })
     map.addLayer({
@@ -434,15 +444,17 @@ const ensureOverlayLayers = (map) => {
       layout: {
         visibility: 'none',
         'text-field': ['get', 'id'],
+        'text-font': ['Open Sans Regular'],
         'text-size': 11,
         'text-offset': [0, 1.15],
         'text-anchor': 'top',
         'text-allow-overlap': true,
+        'text-ignore-placement': true,
       },
       paint: {
-        'text-color': '#0d2436',
-        'text-halo-color': '#ffffff',
-        'text-halo-width': 1.4,
+        'text-color': '#ffffff',
+        'text-halo-color': 'rgba(12, 18, 22, 0.92)',
+        'text-halo-width': 1.8,
       },
     })
   }
@@ -1065,6 +1077,8 @@ const ensureOverlayLayers = (map) => {
       },
     })
   }
+
+  raiseTwinAssetsToTop(map)
 }
 
 const MapComponent = ({
@@ -1100,6 +1114,8 @@ const MapComponent = ({
   showNdsiSalinityLayer = false,
   floodZones = null,
   twinAssets = null,
+  selectedTwinAssetId = null,
+  onSelectTwinAsset,
   focusChainage = null,
   onSelectChainage,
 }) => {
@@ -1117,6 +1133,8 @@ const MapComponent = ({
   const chainageLoadedRef = useRef(false)
   const onSelectChainageRef = useRef(onSelectChainage)
   onSelectChainageRef.current = onSelectChainage
+  const onSelectTwinAssetRef = useRef(onSelectTwinAsset)
+  onSelectTwinAssetRef.current = onSelectTwinAsset
   const tributaryGeojsonRef = useRef(null)
   const tributaryFlowPathsRef = useRef([])
   const tributaryPopupRef = useRef(null)
@@ -1414,7 +1432,10 @@ const MapComponent = ({
             depthLoadedRef.current = true
           }
         }
-        if (!cancelled) setVisibility(true)
+        if (!cancelled) {
+          setVisibility(true)
+          raiseTwinAssetsToTop(map)
+        }
       } catch (error) {
         console.error('Failed to load water depth layer', error)
         if (!cancelled) setVisibility(false)
@@ -1840,11 +1861,12 @@ const MapComponent = ({
     }
   }, [showChainageLayer, mapReady, drawnGeometry, uploadedKML])
 
-  // Any thematic layer that turns on lands above chainage, so re-raise it.
+  // Keep chainage and twin asset pins above rasters / river animation.
   useEffect(() => {
     const map = mapRef.current
-    if (!map || !mapReady || !showChainageLayer) return
-    raiseChainageToTop(map)
+    if (!map || !mapReady) return
+    if (showChainageLayer) raiseChainageToTop(map)
+    raiseTwinAssetsToTop(map)
   }, [
     mapReady,
     showChainageLayer,
@@ -1870,6 +1892,7 @@ const MapComponent = ({
     showWrdFloodlines,
     showGarbageLayer,
     floodZones,
+    twinAssets,
   ])
 
   useEffect(() => {
@@ -2585,6 +2608,7 @@ const MapComponent = ({
         map.setLayoutProperty(id, 'visibility', hasAssets ? 'visible' : 'none')
       }
     })
+    if (hasAssets) raiseTwinAssetsToTop(map)
 
     if (!hasAssets) {
       twinAssetPopupRef.current?.remove()
@@ -2614,8 +2638,10 @@ const MapComponent = ({
     const onClick = (event) => {
       const feature = event.features?.[0]
       if (!feature) return
-      twinAssetPopupRef.current?.remove()
       const props = feature.properties || {}
+      if (props.id) onSelectTwinAssetRef.current?.(props.id)
+
+      twinAssetPopupRef.current?.remove()
       const margin = Number(props.margin_now_m)
       const marginText = Number.isFinite(margin)
         ? `${margin > 0 ? '+' : ''}${margin} m margin`
@@ -2645,6 +2671,39 @@ const MapComponent = ({
       map.off('mouseleave', TWIN_ASSET_LAYER, onLeave)
     }
   }, [twinAssets, mapReady])
+
+  useEffect(() => {
+    const map = mapRef.current
+    if (!map || !mapReady || !map.getLayer(TWIN_ASSET_LAYER)) return
+    const selectedId = selectedTwinAssetId || ''
+    map.setPaintProperty(TWIN_ASSET_LAYER, 'circle-radius', [
+      'case',
+      ['==', ['get', 'id'], selectedId],
+      ['interpolate', ['linear'], ['zoom'], 11, 10, 15, 14],
+      ['interpolate', ['linear'], ['zoom'], 11, 7, 15, 11],
+    ])
+    map.setPaintProperty(TWIN_ASSET_LAYER, 'circle-stroke-width', [
+      'case',
+      ['==', ['get', 'id'], selectedId],
+      3.2,
+      2.4,
+    ])
+    map.setPaintProperty(TWIN_ASSET_LAYER, 'circle-stroke-color', [
+      'case',
+      ['==', ['get', 'id'], selectedId],
+      '#5b8cff',
+      '#ffffff',
+    ])
+    if (map.getLayer(TWIN_ASSET_LABELS)) {
+      map.setPaintProperty(TWIN_ASSET_LABELS, 'text-halo-width', [
+        'case',
+        ['==', ['get', 'id'], selectedId],
+        2.2,
+        1.8,
+      ])
+    }
+    raiseTwinAssetsToTop(map)
+  }, [selectedTwinAssetId, twinAssets, mapReady])
 
   useEffect(() => {
     const map = mapRef.current
