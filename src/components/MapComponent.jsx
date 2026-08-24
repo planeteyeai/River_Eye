@@ -4,7 +4,8 @@ import 'maplibre-gl/dist/maplibre-gl.css'
 import { EMPTY_MAP_STYLE, BASEMAP_MAP, DEFAULT_BASEMAP } from '../lib/basemaps'
 import { applyBasemap, applyTerrain3d, ensureBasemapLayers } from '../lib/applyBasemap'
 import { fetchAssetJson } from '../lib/fetchAssetJson'
-import { binFilterForChainage, buildChainageBins } from '../lib/chainageBins'
+import { binFilterForChainage, buildChainageBins, formatChainage } from '../lib/chainageBins'
+import { STATUS_COLORS as TWIN_STATUS_COLORS, shortName as twinShortName } from '../lib/floodApi'
 import {
   buildRiverFlowPaths,
   destinationPoint,
@@ -13,6 +14,13 @@ import {
   streakCoordinates,
 } from '../lib/riverFlow'
 import { buildTributaryFlowData, tribFlowZoomT } from '../lib/tributaryJunctions'
+import {
+  classNoteValue,
+  loadClassRaster,
+  publishClassHover,
+  sampleClassRaster,
+} from '../lib/classRasterHover'
+import { legendForLayer, lulcLegendId } from '../lib/layerLegends'
 import './MapComponent.css'
 import './DrawAreaComponent.css'
 
@@ -60,6 +68,9 @@ const LULC_POLY_LINE = 'lyr-lulc-poly-line'
 const FLOOD_ZONE_SOURCE = 'src-flood-zones'
 const FLOOD_ZONE_FILL = 'lyr-flood-zone-fill'
 const FLOOD_ZONE_LINE = 'lyr-flood-zone-line'
+const TWIN_ASSET_SOURCE = 'src-twin-assets'
+const TWIN_ASSET_LAYER = 'lyr-twin-assets'
+const TWIN_ASSET_LABELS = 'lyr-twin-asset-labels'
 const WRD_LINE_SOURCE = 'src-wrd-floodlines'
 const WRD_LINE_LAYER = 'lyr-wrd-floodlines'
 const WRD_LINE_GEOJSON_URL = '/asset/mula-mutha-wrd-floodlines.geojson'
@@ -299,6 +310,26 @@ const pointsToCollection = (pairs) => ({
   })),
 })
 
+const twinAssetsToCollection = (assets) => ({
+  type: 'FeatureCollection',
+  features: (assets || [])
+    .filter((row) => Number.isFinite(row.lat) && Number.isFinite(row.lon))
+    .map((row) => ({
+      type: 'Feature',
+      properties: {
+        id: row.id,
+        name: twinShortName(row.name || row.id),
+        type: row.type || '',
+        status: row.status || 'SAFE',
+        color: TWIN_STATUS_COLORS[row.status] || '#6b8798',
+        margin_now_m: row.margin_now_m,
+        chainage_m: row.chainage_m,
+        chainage: Number.isFinite(row.chainage_m) ? formatChainage(row.chainage_m) : '',
+      },
+      geometry: { type: 'Point', coordinates: [row.lon, row.lat] },
+    })),
+})
+
 const parseKMLCoordinates = (kmlContent) => {
   try {
     const parser = new DOMParser()
@@ -377,6 +408,41 @@ const ensureOverlayLayers = (map) => {
         'line-color': ['get', 'color'],
         'line-width': 1.6,
         'line-opacity': 0.95,
+      },
+    })
+  }
+
+  if (!map.getSource(TWIN_ASSET_SOURCE)) {
+    map.addSource(TWIN_ASSET_SOURCE, { type: 'geojson', data: EMPTY_COLLECTION })
+    map.addLayer({
+      id: TWIN_ASSET_LAYER,
+      type: 'circle',
+      source: TWIN_ASSET_SOURCE,
+      layout: { visibility: 'none' },
+      paint: {
+        'circle-radius': ['interpolate', ['linear'], ['zoom'], 11, 6, 15, 9],
+        'circle-color': ['coalesce', ['get', 'color'], '#c2372a'],
+        'circle-stroke-width': 2,
+        'circle-stroke-color': '#ffffff',
+        'circle-opacity': 0.96,
+      },
+    })
+    map.addLayer({
+      id: TWIN_ASSET_LABELS,
+      type: 'symbol',
+      source: TWIN_ASSET_SOURCE,
+      layout: {
+        visibility: 'none',
+        'text-field': ['get', 'id'],
+        'text-size': 11,
+        'text-offset': [0, 1.15],
+        'text-anchor': 'top',
+        'text-allow-overlap': true,
+      },
+      paint: {
+        'text-color': '#0d2436',
+        'text-halo-color': '#ffffff',
+        'text-halo-width': 1.4,
       },
     })
   }
@@ -624,7 +690,7 @@ const ensureOverlayLayers = (map) => {
   }
   ensureImageRaster(EROSION_SOURCE, EROSION_RASTER, '/asset/mula-mutha-erosion-hotspots.png', {
     'raster-opacity': 0.88,
-    'raster-resampling': 'nearest',
+    'raster-resampling': 'linear',
   })
   ensureImageRaster(LITHOLOGY_SOURCE, LITHOLOGY_RASTER, '/asset/mula-mutha-spectral-lithology.png', {
     'raster-opacity': 0.88,
@@ -1033,6 +1099,7 @@ const MapComponent = ({
   showGarbageLayer = false,
   showNdsiSalinityLayer = false,
   floodZones = null,
+  twinAssets = null,
   focusChainage = null,
   onSelectChainage,
 }) => {
@@ -1064,13 +1131,18 @@ const MapComponent = ({
   const garbagePopupRef = useRef(null)
   const ndsiSalinityLoadedRef = useRef(false)
   const ndsiSalinityPopupRef = useRef(null)
+  const twinAssetPopupRef = useRef(null)
+  const twinAssetsFitRef = useRef(false)
   const erosionMetaRef = useRef(null)
   const lithologyMetaRef = useRef(null)
+  const lulcPeriodRef = useRef(null)
+  const classNoteKeyRef = useRef('')
   const drawPointsRef = useRef([])
   const drawHandlersRef = useRef({ click: null, dblclick: null })
   const [drawPointCount, setDrawPointCount] = React.useState(0)
   const [isDrawingActive, setIsDrawingActive] = React.useState(false)
   const [mapReady, setMapReady] = React.useState(false)
+  const [classNote, setClassNote] = React.useState(null)
 
   mapLayerRef.current = mapLayer
 
@@ -1478,6 +1550,7 @@ const MapComponent = ({
       setVisibility(LULC_RASTER, false)
       setVisibility(LULC_POLY_FILL, false)
       setVisibility(LULC_POLY_LINE, false)
+      lulcPeriodRef.current = null
       return undefined
     }
 
@@ -1493,6 +1566,7 @@ const MapComponent = ({
         const period = lulcMetaRef.current.periods?.find((row) => row.id === periodId)
           || lulcMetaRef.current.periods?.[0]
         if (!period) throw new Error('LULC has no periods')
+        lulcPeriodRef.current = period
 
         if (period.kind === 'polygons' && period.geojson) {
           const collection = await fetchAssetJson(period.geojson, 'LULC 2026 polygons')
@@ -2046,6 +2120,121 @@ const MapComponent = ({
     }
   }, [showLithologyLayer, mapReady])
 
+  useEffect(() => {
+    const map = mapRef.current
+    if (!map || !mapReady) return undefined
+
+    const enabled = showLulcLayer || showLithologyLayer
+    const publish = (note) => {
+      const key = note ? `${note.layerId}:${note.label}` : ''
+      if (key === classNoteKeyRef.current) return
+      classNoteKeyRef.current = key
+      setClassNote(note)
+      publishClassHover(note)
+    }
+
+    if (!enabled) {
+      publish(null)
+      return undefined
+    }
+
+    let cancelled = false
+
+    const onMove = async (event) => {
+      if (cancelled) return
+      const { lng, lat } = event.lngLat || {}
+
+      if (showLithologyLayer) {
+        try {
+          if (!lithologyMetaRef.current) {
+            lithologyMetaRef.current = await fetchAssetJson(LITHOLOGY_JSON_URL, 'Spectral lithology')
+          }
+        } catch {
+          /* keep going */
+        }
+        const doc = lithologyMetaRef.current
+        const raster = await loadClassRaster(doc?.raster || '/asset/mula-mutha-spectral-lithology.png').catch(() => null)
+        if (cancelled) return
+        const hit = sampleClassRaster(
+          raster,
+          lng,
+          lat,
+          doc?.imageCoordinates,
+          doc?.classes || legendForLayer('lithology')?.colors,
+        )
+        if (hit) {
+          publish({
+            layerId: 'lithology',
+            layer: 'Spectral lithology',
+            label: hit.label,
+            value: classNoteValue(hit),
+            color: hit.color,
+          })
+          return
+        }
+      }
+
+      if (showLulcLayer) {
+        const polyVisible =
+          map.getLayer(LULC_POLY_FILL) &&
+          map.getLayoutProperty(LULC_POLY_FILL, 'visibility') === 'visible'
+        if (polyVisible) {
+          const hits = map.queryRenderedFeatures(event.point, { layers: [LULC_POLY_FILL] })
+          const props = hits[0]?.properties
+          if (props?.label) {
+            const year = lulcPeriodRef.current?.year
+            const legend = legendForLayer(lulcLegendId(year))
+            const share = legend?.colors?.find((row) => row.label === props.label)?.value
+            publish({
+              layerId: lulcLegendId(year),
+              layer: `LULC ${year || ''}`.trim(),
+              label: props.label,
+              value: share || '',
+              color: props.color,
+            })
+            return
+          }
+        } else {
+          const period = lulcPeriodRef.current
+          if (period?.raster && period.imageCoordinates) {
+            try {
+              const raster = await loadClassRaster(period.raster)
+              if (cancelled) return
+              const classes = period.classes?.length
+                ? period.classes
+                : legendForLayer(lulcLegendId(period.year))?.colors
+              const hit = sampleClassRaster(raster, lng, lat, period.imageCoordinates, classes)
+              if (hit) {
+                publish({
+                  layerId: lulcLegendId(period.year),
+                  layer: `LULC ${period.year || ''}`.trim(),
+                  label: hit.label,
+                  value: classNoteValue(hit),
+                  color: hit.color,
+                })
+                return
+              }
+            } catch {
+              /* ignore missing raster */
+            }
+          }
+        }
+      }
+
+      publish(null)
+    }
+
+    const onLeave = () => publish(null)
+    map.on('mousemove', onMove)
+    map.getCanvas().addEventListener('mouseleave', onLeave)
+    return () => {
+      cancelled = true
+      map.off('mousemove', onMove)
+      map.getCanvas().removeEventListener('mouseleave', onLeave)
+      publish(null)
+    }
+  }, [mapReady, showLulcLayer, showLithologyLayer, lulcPeriodId])
+
   // Main-river foam streaks along the chainage centreline (always on).
   useEffect(() => {
     const map = mapRef.current
@@ -2386,6 +2575,79 @@ const MapComponent = ({
 
   useEffect(() => {
     const map = mapRef.current
+    if (!map || !mapReady) return undefined
+
+    const collection = twinAssetsToCollection(twinAssets)
+    const hasAssets = collection.features.length > 0
+    map.getSource(TWIN_ASSET_SOURCE)?.setData(collection)
+    ;[TWIN_ASSET_LAYER, TWIN_ASSET_LABELS].forEach((id) => {
+      if (map.getLayer(id)) {
+        map.setLayoutProperty(id, 'visibility', hasAssets ? 'visible' : 'none')
+      }
+    })
+
+    if (!hasAssets) {
+      twinAssetPopupRef.current?.remove()
+      twinAssetsFitRef.current = false
+      return undefined
+    }
+
+    if (!twinAssetsFitRef.current) {
+      twinAssetsFitRef.current = true
+      const bounds = collection.features.reduce((box, feature) => {
+        const [lng, lat] = feature.geometry.coordinates
+        if (!box) return [[lng, lat], [lng, lat]]
+        return [
+          [Math.min(box[0][0], lng), Math.min(box[0][1], lat)],
+          [Math.max(box[1][0], lng), Math.max(box[1][1], lat)],
+        ]
+      }, null)
+      if (bounds) {
+        map.fitBounds(bounds, {
+          padding: { top: 72, bottom: 140, left: 48, right: 280 },
+          maxZoom: 13.4,
+          duration: 900,
+        })
+      }
+    }
+
+    const onClick = (event) => {
+      const feature = event.features?.[0]
+      if (!feature) return
+      twinAssetPopupRef.current?.remove()
+      const props = feature.properties || {}
+      const margin = Number(props.margin_now_m)
+      const marginText = Number.isFinite(margin)
+        ? `${margin > 0 ? '+' : ''}${margin} m margin`
+        : '—'
+      twinAssetPopupRef.current = new Popup({ closeButton: true, maxWidth: '240px', offset: 12 })
+        .setLngLat(event.lngLat)
+        .setHTML(
+          `<div style="font:650 13px Inter,system-ui,sans-serif;color:#0d2436">${props.id || ''} · ${props.name || ''}</div>` +
+            `<div style="margin-top:4px;font:650 12px ui-monospace,Menlo,monospace;color:${props.color || '#0d2436'}">${props.status || ''} · ${marginText}</div>` +
+            `<div style="margin-top:4px;font:500 11px Inter,system-ui,sans-serif;color:#3a5c73">Chainage ${props.chainage || '—'} · Model</div>`,
+        )
+        .addTo(map)
+    }
+    const onEnter = () => {
+      map.getCanvas().style.cursor = 'pointer'
+    }
+    const onLeave = () => {
+      map.getCanvas().style.cursor = ''
+    }
+    map.on('click', TWIN_ASSET_LAYER, onClick)
+    map.on('mouseenter', TWIN_ASSET_LAYER, onEnter)
+    map.on('mouseleave', TWIN_ASSET_LAYER, onLeave)
+
+    return () => {
+      map.off('click', TWIN_ASSET_LAYER, onClick)
+      map.off('mouseenter', TWIN_ASSET_LAYER, onEnter)
+      map.off('mouseleave', TWIN_ASSET_LAYER, onLeave)
+    }
+  }, [twinAssets, mapReady])
+
+  useEffect(() => {
+    const map = mapRef.current
     if (!map || !mapReadyRef.current) return undefined
 
     if (isDrawing) {
@@ -2430,6 +2692,17 @@ const MapComponent = ({
   return (
     <div className="map-container">
       <div ref={containerRef} className="maplibre-map" />
+
+      {classNote && (
+        <div className="map-class-note" aria-live="polite">
+          <i style={{ background: classNote.color }} />
+          <span>
+            <small>{classNote.layer}</small>
+            <strong>{classNote.label}</strong>
+          </span>
+          {classNote.value ? <em>{classNote.value}</em> : null}
+        </div>
+      )}
 
       {isDrawingActive && (
         <div className="draw-controls-overlay">

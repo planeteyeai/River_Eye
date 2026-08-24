@@ -275,6 +275,7 @@ const TwinLayerPicker = ({
 
 const FloodMapOverlay = ({
   onZonesChange,
+  onAssetsChange,
   showChainageLayer = true,
   showDepthLayer = true,
   focusChainage = null,
@@ -310,9 +311,10 @@ const FloodMapOverlay = ({
     const [stateData, marginData] = await Promise.all([fetchState(), fetchMargins()])
     setState(stateData)
     setMargins(marginData)
+    onAssetsChange?.(marginData)
     if (metaData) setMeta(metaData)
     return marginData
-  }, [])
+  }, [onAssetsChange])
 
   useEffect(() => {
     let cancelled = false
@@ -334,8 +336,9 @@ const FloodMapOverlay = ({
     load()
     return () => {
       cancelled = true
+      onAssetsChange?.(null)
     }
-  }, [loadLive])
+  }, [loadLive, onAssetsChange])
 
   // The return periods come from a fixed published gauge record, so the fit is a
   // constant; only the reach geometry and the visible selection change.

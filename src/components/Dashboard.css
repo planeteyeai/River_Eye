@@ -29,6 +29,12 @@
   display: flex;
   align-items: center;
   justify-self: start;
+  min-width: 0;
+  max-width: min(108px, 22vw);
+}
+
+.header-left .app-logo {
+  max-width: 100%;
 }
 
 .logo-container {

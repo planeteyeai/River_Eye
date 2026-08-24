@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { format } from 'date-fns'
 import { useAuth } from '../context/AuthContext'
 import { MONITORING_THEMES } from '../data/monitoringThemes'
+import AppLogo from './AppLogo'
 import './AppHome.css'
 
 const greetingFor = (hour) => {
@@ -26,16 +27,7 @@ const AppHome = () => {
     <div className="hub">
       <header className="hub-bar">
         <div className="hub-brand">
-          <span className="hub-mark" aria-hidden="true">
-            <span className="hub-mark-eye">
-              <span className="hub-mark-pupil" />
-            </span>
-            <span className="hub-mark-ring" />
-          </span>
-          <span className="hub-brand-text">
-            River Eye
-            <small>Environmental monitoring</small>
-          </span>
+          <AppLogo size="md" className="app-logo--on-dark" />
         </div>
 
         <button type="button" className="hub-signout" onClick={handleLogout}>

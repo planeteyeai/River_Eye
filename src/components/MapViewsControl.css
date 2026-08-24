@@ -568,11 +568,13 @@
   box-shadow: inset 0 0 0 1px rgba(13, 36, 54, 0.18);
 }
 
-.map-views-swatch strong {
-  font-family: var(--rv-font-mono);
-  font-size: 11px;
-  font-weight: 650;
+.map-views-swatch.is-hot {
   color: var(--rv-ink);
+  font-weight: 650;
+}
+
+.map-views-swatch.is-hot i {
+  box-shadow: 0 0 0 2px var(--rv-blue);
 }
 
 /* Host for the theme detail card that each overlay portals in. */

@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import AppLogo from './AppLogo'
 import './Login.css'
 
 const Login = () => {
@@ -43,16 +44,7 @@ const Login = () => {
       <div className="login-content">
         <div className="login-form-wrapper">
           <div className="login-header">
-            <div className="logo-container">
-              <div className="logo-icon">
-                <div className="logo-eye">
-                  <div className="eye-pupil"></div>
-                  <div className="eye-shine"></div>
-                </div>
-                <div className="logo-ring"></div>
-              </div>
-              <h1 className="logo-text">River Eye</h1>
-            </div>
+            <AppLogo size="lg" />
             <p className="login-subtitle">Environmental Monitoring System</p>
           </div>
 

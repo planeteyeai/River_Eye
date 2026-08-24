@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { MONITORING_THEMES } from '../data/monitoringThemes'
+import AppLogo from './AppLogo'
 import './Home.css'
 
 /* ---------------------------------------------------------------- icons */
@@ -112,19 +113,7 @@ const stagger = (index) => {
 
 /* ------------------------------------------------------------------ parts */
 
-const BrandMark = () => (
-  <span className="lp-brand">
-    <span className="lp-mark" aria-hidden="true">
-      <span className="lp-mark-eye">
-        <span className="lp-mark-pupil" />
-      </span>
-      <span className="lp-mark-ring" />
-    </span>
-    <span className="lp-brand-text">
-      River<span className="lp-brand-accent">Eye</span>
-    </span>
-  </span>
-)
+const BrandMark = () => <AppLogo size="md" className="app-logo--on-dark" />
 
 const Navbar = ({ enterTo, isAuthenticated }) => {
   const [scrolled, setScrolled] = useState(false)
@@ -155,7 +144,7 @@ const Navbar = ({ enterTo, isAuthenticated }) => {
   return (
     <header className={`lp-header ${scrolled ? 'is-scrolled' : ''}`}>
       <div className="lp-header-inner">
-        <Link to="/" aria-label="River Eye home">
+        <Link to="/" aria-label="PlanetEye Farm-AI home">
           <BrandMark />
         </Link>
 

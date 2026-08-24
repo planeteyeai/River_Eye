@@ -32,13 +32,14 @@
 /* Views with a bottom ribbon (water quality, depth, AQI) sit above it and
    have their own cards down the right-hand side. */
 .chainage-scrubber.is-above-ribbon {
-  --chainage-gutter-right: min(336px, calc(100% - 220px));
-  --chainage-gutter-bottom: 176px;
+  --chainage-gutter-right: min(260px, calc(100% - 220px));
+  /* Ribbon is 168px; leave a small gap so ticks don't clip the chart. */
+  --chainage-gutter-bottom: 184px;
 }
 
 .dashboard.is-fullscreen .chainage-scrubber.is-above-ribbon,
 :fullscreen .chainage-scrubber.is-above-ribbon {
-  --chainage-gutter-bottom: 196px;
+  --chainage-gutter-bottom: 208px;
 }
 
 .chainage-scrubber-kicker,

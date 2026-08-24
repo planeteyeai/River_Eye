@@ -5,7 +5,7 @@
   pointer-events: none;
   display: grid;
   grid-template-rows: minmax(0, 1fr) auto;
-  grid-template-columns: minmax(0, 1fr) minmax(268px, 320px);
+  grid-template-columns: minmax(0, 1fr) minmax(220px, 248px);
 }
 
 .flood-map-layers {
@@ -398,7 +398,7 @@
 
 .dashboard.is-fullscreen .flood-map-overlays,
 :fullscreen .flood-map-overlays {
-  grid-template-columns: minmax(0, 1fr) minmax(300px, 360px);
+  grid-template-columns: minmax(0, 1fr) minmax(232px, 260px);
 }
 
 .flood-map-panel,
@@ -420,12 +420,12 @@
   min-width: 0;
   overflow-x: hidden;
   overflow-y: auto;
-  padding: 12px 14px 10px;
+  padding: 10px 11px 8px;
   border-radius: 14px 0 0 0;
   border-right: 0;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 7px;
 }
 
 .flood-panel-divider {
@@ -498,15 +498,15 @@
 }
 
 .flood-stat-chips span {
-  flex: 1 1 72px;
+  flex: 1 1 64px;
   min-width: 0;
-  padding: 5px 8px;
+  padding: 4px 6px;
   border-radius: 8px;
   background: var(--rv-surface-2);
   border: 1px solid var(--rv-line);
   color: var(--rv-ink);
   font-family: var(--rv-font-mono);
-  font-size: 12.5px;
+  font-size: 11.5px;
   font-weight: 650;
   line-height: 1.25;
   white-space: normal;

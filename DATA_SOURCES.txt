@@ -738,6 +738,16 @@ TO CONFIRM: classifier recipe, training labels, and whether class 1 was
 Status   : present in the repo but NOT referenced anywhere in src/.
            Either wire it up or delete it.
 
+--------------------------------------------------------------------------------
+3.5  public/asset/planeteye-farm-ai-logo.png
+--------------------------------------------------------------------------------
+Content  : PlanetEye Farm-AI brand mark (globe-in-eye graphic + wordmark).
+Source   : PlanetEye Farm-AI brand asset (screenshot 2026-08-24).
+Used in  : AppLogo.jsx — landing navbar/footer, login, hub bar, dashboard
+           header (replaces the previous CSS “River Eye” eye mark).
+UI label : n/a (chrome)
+Status   : brand asset only; no scientific data.
+
 
 ================================================================================
 4. MAP BASEMAPS, LABELS AND TERRAIN
@@ -1313,3 +1323,15 @@ CHANGE LOG
             Joining streams: continuous short streak segments along oriented
             tributary paths toward the main stem (GeoJSON setData each frame;
             not line-dasharray). tributaryJunctions.js + riverFlow helpers.
+2026-08-24  Brand chrome: PlanetEye Farm-AI logo
+            (public/asset/planeteye-farm-ai-logo.png) via AppLogo.jsx on
+            landing, login, hub and dashboard header. Section 3.5.
+2026-08-24  Bank erosion hotspot raster (3.3d) display resampling changed
+            from nearest to linear in MapComponent.jsx so the classed PNG
+            reads smoother on the map; underlying classes unchanged.
+2026-08-24  UI only. Hovering LULC or spectral lithology samples the classed
+            overlay and shows a small map annotation (class name + share);
+            no cursor popup. Legend swatch for that colour highlights.
+2026-08-24  Digital Twin: protected-asset points from /margins (lat/lon +
+            chainage_m) are drawn on the map when Water depth / Digital Twin
+            is on. Coloured by status; click shows id, margin, chainage.

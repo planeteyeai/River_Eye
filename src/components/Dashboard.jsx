@@ -17,6 +17,7 @@ import SoilLandUseMapOverlay from './SoilLandUseMapOverlay'
 import BiodiversityMapOverlay from './BiodiversityMapOverlay'
 import ClimateImpactMapOverlay from './ClimateImpactMapOverlay'
 import GeologyMapOverlay from './GeologyMapOverlay'
+import AppLogo from './AppLogo'
 import WeatherSection from './WeatherSection'
 import AQISection from './AQISection'
 import LiveDashboardCards from './LiveDashboardCards'
@@ -57,6 +58,7 @@ const Dashboard = () => {
   const [showChainageLayer, setShowChainageLayer] = useState(false)
   const [focusChainage, setFocusChainage] = useState(null)
   const [showFloodDepthLayer, setShowFloodDepthLayer] = useState(false)
+  const [twinAssets, setTwinAssets] = useState(null)
   const [showBathyMapLayer, setShowBathyMapLayer] = useState(false)
   const [showWrdFloodlines, setShowWrdFloodlines] = useState(false)
   const [showGarbageLayer, setShowGarbageLayer] = useState(false)
@@ -1902,16 +1904,7 @@ const Dashboard = () => {
     <div className={`dashboard ${isFullscreen ? 'is-fullscreen' : ''}`}>
       <header className="dashboard-header">
         <div className="header-left">
-          <div className="logo-container">
-            <div className="logo-icon">
-              <div className="logo-eye">
-                <div className="eye-pupil"></div>
-                <div className="eye-shine"></div>
-              </div>
-              <div className="logo-ring"></div>
-            </div>
-            <h1 className="logo-text">River Eye</h1>
-          </div>
+          <AppLogo size="md" className="app-logo--on-dark" />
         </div>
 
         <div className="header-center">
@@ -2114,6 +2107,7 @@ const Dashboard = () => {
               {showFloodDepthLayer && (
                 <FloodMapOverlay
                   onZonesChange={setFloodZones}
+                  onAssetsChange={setTwinAssets}
                   showChainageLayer={showChainageLayer}
                   showDepthLayer={showFloodDepthLayer}
                   focusChainage={focusChainage}
@@ -2203,6 +2197,7 @@ const Dashboard = () => {
                   showChainageLayer
                 }
                 floodZones={showFloodDepthLayer ? floodZones : null}
+                twinAssets={showFloodDepthLayer ? twinAssets : null}
                 focusChainage={focusChainage}
                 onSelectChainage={(station) => setFocusChainage({ ...station, at: Date.now() })}
               />
@@ -2211,7 +2206,7 @@ const Dashboard = () => {
                 showChainageLayer && (
                   <ChainageScrubber
                     variant={
-                      showFloodDepthLayer || (waterQualityLayersOn && showBodCodOverlay) || showAqiOverlay
+                      showFloodDepthLayer || waterQualityLayersOn || showAqiOverlay
                         ? 'above-ribbon'
                         : 'map-edge'
                     }

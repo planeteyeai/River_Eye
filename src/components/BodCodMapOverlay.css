@@ -5,7 +5,7 @@
   pointer-events: none;
   display: grid;
   grid-template-rows: 72px minmax(0, 1fr) auto;
-  grid-template-columns: minmax(0, 1fr) minmax(248px, 300px);
+  grid-template-columns: minmax(0, 1fr) minmax(220px, 248px);
 }
 
 .tss-map-legend {
@@ -234,7 +234,7 @@
 
 .dashboard.is-fullscreen .bod-cod-map-overlays,
 :fullscreen .bod-cod-map-overlays {
-  grid-template-columns: minmax(0, 1fr) minmax(280px, 340px);
+  grid-template-columns: minmax(0, 1fr) minmax(232px, 260px);
 }
 
 .bod-cod-map-ribbon,
@@ -280,12 +280,12 @@
   min-height: 0;
   min-width: 0;
   overflow: hidden;
-  padding: 12px 14px 10px;
+  padding: 10px 11px 8px;
   border-radius: 14px 0 0 0;
   border-right: 0;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 7px;
 }
 
 .dashboard.is-fullscreen .bod-cod-map-ribbon,

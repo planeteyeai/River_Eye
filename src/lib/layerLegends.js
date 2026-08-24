@@ -257,3 +257,5 @@ export const LAYER_LEGENDS = {
 }
 
 export const legendForLayer = (layerId) => LAYER_LEGENDS[layerId] || null
+
+export const lulcLegendId = (year) => (year ? `lulc-${year}` : 'lulc')

@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { legendForLayer } from '../lib/layerLegends'
+import { CLASS_HOVER_EVENT } from '../lib/classRasterHover'
 import { LayerPanelSlot } from './LayerPanelSlots'
 import './MapViewsControl.css'
 
@@ -92,14 +93,6 @@ const IconChevron = ({ left = false }) => (
 
 export const VIEW_GROUPS = [
   {
-    id: 'aqi',
-    label: 'AQI',
-    accent: 'aqi',
-    always: true,
-    title: 'Air quality on the selected area',
-    Icon: IconAqi,
-  },
-  {
     id: 'geology',
     label: 'Geology',
     accent: 'geology',
@@ -155,6 +148,14 @@ export const VIEW_GROUPS = [
     title: 'Flood zones, water depth and chainage',
     Icon: IconTwin,
   },
+  {
+    id: 'aqi',
+    label: 'AQI',
+    accent: 'aqi',
+    always: true,
+    title: 'Air quality on the selected area',
+    Icon: IconAqi,
+  },
 ]
 
 const MapViewsControl = ({
@@ -165,6 +166,7 @@ const MapViewsControl = ({
   const [isOpen, setIsOpen] = useState(false)
   const [docked, setDocked] = useState(false)
   const [expanded, setExpanded] = useState({})
+  const [hoverNote, setHoverNote] = useState(null)
   const containerRef = useRef(null)
   const visibleViews = VIEW_GROUPS.filter((view) => view.always || isMulaMutha)
   const activeLayerCount = visibleViews.reduce((total, view) => {
@@ -185,6 +187,12 @@ const MapViewsControl = ({
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [docked])
+
+  useEffect(() => {
+    const onHover = (event) => setHoverNote(event.detail || null)
+    window.addEventListener(CLASS_HOVER_EVENT, onHover)
+    return () => window.removeEventListener(CLASS_HOVER_EVENT, onHover)
+  }, [])
 
   const toggleGroup = (view) => {
     if (view.id === 'aqi' && loading) return
@@ -375,7 +383,13 @@ const MapViewsControl = ({
                                 {colors.map((row) => (
                                   <div
                                     key={`${layer.id}-${row.label}`}
-                                    className="map-views-swatch"
+                                    className={`map-views-swatch${
+                                      hoverNote?.label === row.label &&
+                                      (hoverNote?.layerId === layer.id ||
+                                        (layer.id === 'lulc' && String(hoverNote?.layerId || '').startsWith('lulc')))
+                                        ? ' is-hot'
+                                        : ''
+                                    }`}
                                   >
                                     <i style={{ background: row.color }} />
                                     <span>{row.label}</span>
