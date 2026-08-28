@@ -2,9 +2,10 @@
   width: 100%;
   height: 100%;
   position: relative;
-  border-radius: 8px;
+  border-radius: 0;
   overflow: hidden;
   background: var(--rv-surface-2);
+  box-sizing: border-box;
 }
 
 .maplibre-map {
@@ -43,8 +44,6 @@
 
 .map-class-note {
   position: absolute;
-  left: 12px;
-  bottom: 72px;
   z-index: 8;
   pointer-events: none;
   display: flex;
@@ -58,6 +57,26 @@
   box-shadow: var(--rv-shadow);
   color: var(--rv-ink);
   font-family: var(--rv-font-body);
+}
+
+.map-class-note.is-cursor {
+  left: 0;
+  top: 0;
+  bottom: auto;
+  will-change: left, top, transform;
+  transform: translate(14px, 16px);
+}
+
+.map-class-note.is-cursor.is-flip-x {
+  transform: translate(calc(-100% - 14px), 16px);
+}
+
+.map-class-note.is-cursor.is-flip-y {
+  transform: translate(14px, calc(-100% - 12px));
+}
+
+.map-class-note.is-cursor.is-flip-x.is-flip-y {
+  transform: translate(calc(-100% - 14px), calc(-100% - 12px));
 }
 
 .map-class-note i {
@@ -95,9 +114,6 @@
   font-size: 11px;
   font-weight: 650;
   color: var(--rv-ink-2);
-}
-
-  color: var(--rv-blue) !important;
 }
 
 @media (max-width: 768px) {

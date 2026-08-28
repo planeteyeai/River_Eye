@@ -1,7 +1,9 @@
 import React, { useEffect, useMemo, useState } from 'react'
+import { createPortal } from 'react-dom'
 import './BodCodMapOverlay.css'
 import ChainageLayerCard from './ChainageLayerCard'
 import { LayerPanelPortal } from './LayerPanelSlots'
+import { useMapStageFooter, useMapStageRight } from './MapStage'
 import { fetchAssetJson } from '../lib/fetchAssetJson'
 import {
   chainageFromRibbonKm,
@@ -12,6 +14,28 @@ import {
 } from '../lib/chainageBins'
 
 const CLS = ['A', 'B', 'C', 'D', 'E']
+
+const IconAccuracy = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+    <path d="M4 19V5" />
+    <path d="M4 19h16" />
+    <path d="M8 15l3-5 3 3 4-7" />
+  </svg>
+)
+
+const IconRibbon = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+    <path d="M3 12c2.5-4 5.5-6 9-6s6.5 2 9 6c-2.5 4-5.5 6-9 6s-6.5-2-9-6z" />
+    <circle cx="12" cy="12" r="2.2" />
+  </svg>
+)
+
+const IconClose = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" aria-hidden="true">
+    <path d="M18 6 6 18" />
+    <path d="m6 6 12 12" />
+  </svg>
+)
 
 const OBSERVED = '#0e8f9c'
 const FORECAST = '#b3761a'
@@ -301,6 +325,10 @@ const BodCodMapOverlay = ({
   const [scrubIndex, setScrubIndex] = useState(0)
   const [selected, setSelected] = useState(null)
   const [openInfoId, setOpenInfoId] = useState('tss')
+  const [showAccuracy, setShowAccuracy] = useState(false)
+  const [showRibbon, setShowRibbon] = useState(false)
+  const footerNode = useMapStageFooter()
+  const rightNode = useMapStageRight()
 
   const layerOn = {
     tss: showTssLayer,
@@ -524,16 +552,54 @@ const BodCodMapOverlay = ({
       </div>
     </LayerPanelPortal>
     <div className="bod-cod-map-overlays">
-      <aside className="bod-cod-map-accuracy" aria-label="Accuracy measure">
+      <button
+        type="button"
+        className={`bod-dock-btn bod-dock-accuracy${showAccuracy ? ' is-active' : ''}`}
+        onClick={() => setShowAccuracy((open) => !open)}
+        aria-pressed={showAccuracy}
+        aria-label={showAccuracy ? 'Hide accuracy panel' : 'Show accuracy panel'}
+        title={showAccuracy ? 'Hide accuracy' : 'Show accuracy'}
+      >
+        <IconAccuracy />
+      </button>
+
+      <button
+        type="button"
+        className={`bod-dock-btn bod-dock-ribbon${showRibbon ? ' is-active' : ''}`}
+        onClick={() => setShowRibbon((open) => !open)}
+        aria-pressed={showRibbon}
+        aria-label={showRibbon ? 'Hide river ribbon' : 'Show river ribbon'}
+        title={showRibbon ? 'Hide river ribbon' : 'Show river ribbon'}
+      >
+        <IconRibbon />
+      </button>
+    </div>
+
+    {rightNode && showAccuracy && createPortal(
+      <aside
+        className="bod-cod-map-accuracy is-open is-stage-sidebar"
+        aria-label="Accuracy measure"
+      >
         <div className="bod-acc-head">
           <h3>
             Accuracy
             <small>Blind holdout · bad months included</small>
           </h3>
-          <span className="bod-live-pill">
-            <span className="bod-live-dot" />
-            BLIND
-          </span>
+          <div className="bod-acc-head-actions">
+            <span className="bod-live-pill">
+              <span className="bod-live-dot" />
+              BLIND
+            </span>
+            <button
+              type="button"
+              className="bod-panel-icon-btn"
+              onClick={() => setShowAccuracy(false)}
+              aria-label="Hide accuracy panel"
+              title="Hide"
+            >
+              <IconClose />
+            </button>
+          </div>
         </div>
 
         <div className="bod-stat-chips">
@@ -608,9 +674,15 @@ const BodCodMapOverlay = ({
             })}
           </svg>
         </div>
-      </aside>
+      </aside>,
+      rightNode,
+    )}
 
-      <section className="bod-cod-map-ribbon" aria-label="River end to end">
+    {footerNode && showRibbon && createPortal(
+      <section
+        className="bod-cod-map-ribbon is-open is-stage-footer"
+        aria-label="River end to end"
+      >
         <div className="bod-cod-ribbon-main">
           <div className="bod-cod-ribbon-head">
             <h2>The river, end to end</h2>
@@ -619,6 +691,15 @@ const BodCodMapOverlay = ({
               {current.mode === 'today' && <span className="bod-live-dot" />}
               {modeLabel}
             </span>
+            <button
+              type="button"
+              className="bod-panel-icon-btn"
+              onClick={() => setShowRibbon(false)}
+              aria-label="Hide river ribbon"
+              title="Hide"
+            >
+              <IconClose />
+            </button>
           </div>
 
           <svg
@@ -835,8 +916,9 @@ const BodCodMapOverlay = ({
             </div>
           </div>
         </aside>
-      </section>
-    </div>
+      </section>,
+      footerNode,
+    )}
     </>
   )
 }

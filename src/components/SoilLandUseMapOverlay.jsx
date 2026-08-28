@@ -309,7 +309,7 @@ const SoilLandUseMapOverlay = ({
                 </div>
               )
             })}
-            <p className="lulc-prov">Estimated · classed LULC + silt product, not a field survey</p>
+            <p className="lulc-prov">Estimated · classed LULC + silt product</p>
           </div>
         </LayerPanelPortal>
       ) : null}

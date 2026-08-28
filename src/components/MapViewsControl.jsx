@@ -1,7 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
+import { CLASS_HOVER_EVENT, colorsMatch } from '../lib/classRasterHover'
 import { legendForLayer } from '../lib/layerLegends'
-import { CLASS_HOVER_EVENT } from '../lib/classRasterHover'
 import { LayerPanelSlot } from './LayerPanelSlots'
+import { useMapStageLeft } from './MapStage'
 import './MapViewsControl.css'
 
 const IconAqi = () => (
@@ -158,16 +160,34 @@ export const VIEW_GROUPS = [
   },
 ]
 
+/** Layer rows that host a LayerPanelPortal target — omit slots for others to avoid empty UI chrome. */
+const LAYER_PANEL_SLOTS = {
+  landuse: ['lulc'],
+}
+
+/** Section panels that render a theme detail embed in the detail foot. */
+const VIEW_EMBED_IDS = new Set([
+  'geology',
+  'waterquality',
+  'landuse',
+  'biodiversity',
+  'climate',
+  'flood',
+])
+
 const MapViewsControl = ({
   loading = false,
   isMulaMutha = false,
   layersByView = {},
+  expandedViewId = null,
+  onExpandedViewIdChange,
+  onViewExpand,
 }) => {
   const [isOpen, setIsOpen] = useState(false)
-  const [docked, setDocked] = useState(false)
-  const [expanded, setExpanded] = useState({})
+  const [docked, setDocked] = useState(true)
   const [hoverNote, setHoverNote] = useState(null)
   const containerRef = useRef(null)
+  const leftNode = useMapStageLeft()
   const visibleViews = VIEW_GROUPS.filter((view) => view.always || isMulaMutha)
   const activeLayerCount = visibleViews.reduce((total, view) => {
     const layers = layersByView[view.id] || []
@@ -177,16 +197,40 @@ const MapViewsControl = ({
     (layersByView[view.id] || []).some((layer) => layer.checked),
   )
 
+  const closeMenu = () => {
+    setIsOpen(false)
+    onExpandedViewIdChange?.(null)
+  }
+
+  const dockPanel = () => {
+    setDocked(true)
+    closeMenu()
+  }
+
+  const openSidebar = () => {
+    setDocked(false)
+    setIsOpen(true)
+  }
+
+  const undockPanel = () => {
+    openSidebar()
+  }
+
   useEffect(() => {
-    if (docked) return undefined
+    if (docked || !isOpen) return undefined
     const handleClickOutside = (event) => {
-      if (containerRef.current && !containerRef.current.contains(event.target)) {
-        setIsOpen(false)
+      const inControl = containerRef.current?.contains(event.target)
+      const inSidebar = leftNode?.contains(event.target)
+      if (!inControl && !inSidebar) {
+        dockPanel()
       }
     }
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [docked])
+  }, [docked, isOpen, leftNode])
+
+  const expandedView = visibleViews.find((view) => view.id === expandedViewId)
+  const expandedLayers = expandedView ? layersByView[expandedView.id] || [] : []
 
   useEffect(() => {
     const onHover = (event) => setHoverNote(event.detail || null)
@@ -194,28 +238,190 @@ const MapViewsControl = ({
     return () => window.removeEventListener(CLASS_HOVER_EVENT, onHover)
   }, [])
 
+  useEffect(() => {
+    window.dispatchEvent(new Event('map-stage-layout-change'))
+    const t = window.setTimeout(() => {
+      window.dispatchEvent(new Event('map-stage-layout-change'))
+    }, 320)
+    return () => window.clearTimeout(t)
+  }, [isOpen, docked, expandedViewId])
+
   const toggleGroup = (view) => {
     if (view.id === 'aqi' && loading) return
-    const nextOpen = !expanded[view.id]
-    setExpanded((current) => ({ ...current, [view.id]: nextOpen }))
+    if (expandedViewId === view.id) {
+      onExpandedViewIdChange?.(null)
+      return
+    }
+    onExpandedViewIdChange?.(view.id)
+    onViewExpand?.(view.id)
   }
 
-  const toggleLayer = (layer, checked) => {
-    layer.onToggle?.(checked)
+  const isHoverLayer = (layerId) => {
+    if (!hoverNote?.layerId) return false
+    if (hoverNote.layerId === layerId) return true
+    if (layerId === 'lulc' && String(hoverNote.layerId).startsWith('lulc')) return true
+    if (
+      (layerId === 'bathymetry' || layerId === 'depth') &&
+      (hoverNote.layerId === 'depth' || hoverNote.layerId === 'bathymetry')
+    ) {
+      return true
+    }
+    return false
   }
 
-  const dockPanel = () => {
-    setDocked(true)
+  const isHoverSwatch = (layerId, row) => {
+    if (!hoverNote || !isHoverLayer(layerId)) return false
+    if (hoverNote.label && row.label && hoverNote.label === row.label) return true
+    if (colorsMatch(hoverNote.color, row.color)) return true
+    return false
   }
 
-  const undockPanel = () => {
-    setDocked(false)
-    setIsOpen(true)
+  const legendColorsForLayer = (layer) => {
+    const legend = legendForLayer(layer.id)
+    return layer.colors || legend?.colors || []
   }
+
+  const layersMenu = (
+    <div
+      className={`map-views-sidebar${expandedView ? ' has-detail' : ''}`}
+      aria-label="Map views and layers"
+    >
+      <nav className="map-views-rail" aria-label="Layer categories">
+        <button
+          type="button"
+          className="map-views-rail-btn is-collapse"
+          onClick={dockPanel}
+          title="Hide layers"
+          aria-label="Hide layers panel"
+        >
+          <IconChevron left />
+        </button>
+        {visibleViews.map((view) => {
+          const disabled = view.id === 'aqi' && loading
+          const layers = layersByView[view.id] || []
+          const onCount = layers.filter((layer) => layer.checked).length
+          const isSelected = expandedView?.id === view.id
+          const isActive = onCount > 0
+          return (
+            <button
+              key={view.id}
+              type="button"
+              disabled={disabled}
+              title={disabled ? 'Loading…' : view.label}
+              aria-label={disabled ? 'Loading…' : view.label}
+              aria-pressed={isSelected}
+              className={`map-views-rail-btn accent-${view.accent}${isSelected ? ' is-selected' : ''}${isActive ? ' is-active' : ''}`}
+              onClick={() => toggleGroup(view)}
+            >
+              <span className="map-views-rail-icon" aria-hidden="true">
+                <view.Icon />
+              </span>
+              {onCount > 0 && (
+                <span className="map-views-rail-badge" aria-label={`${onCount} layers on`}>
+                  {onCount}
+                </span>
+              )}
+            </button>
+          )
+        })}
+      </nav>
+
+      {expandedView && (
+        <div className={`map-views-detail${VIEW_EMBED_IDS.has(expandedView.id) ? ' has-view-embed' : ''}`}>
+          <div className="map-views-detail-head">
+            <div className="map-views-detail-head-copy">
+              <h2 className={`map-views-detail-title accent-${expandedView.accent}`}>
+                {expandedView.label}
+              </h2>
+              {expandedView.title ? (
+                <p className="map-views-detail-hint">{expandedView.title}</p>
+              ) : null}
+            </div>
+            <button
+              type="button"
+              className="map-views-detail-close"
+              onClick={() => onExpandedViewIdChange?.(null)}
+              aria-label="Close section"
+              title="Close"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" aria-hidden="true">
+                <path d="M18 6 6 18" />
+                <path d="m6 6 12 12" />
+              </svg>
+            </button>
+          </div>
+
+          <div className="map-views-detail-body">
+            <div className="map-views-layers" role="group" aria-label={`${expandedView.label} map layers`}>
+              {expandedLayers.map((layer) => {
+                const colors = legendColorsForLayer(layer)
+                const inputId = `sidebar-layer-${expandedView.id}-${layer.id}`
+                const layerDisabled = expandedView.id === 'aqi' && loading
+                return (
+                  <div
+                    key={layer.id}
+                    className={`map-views-layer-block accent-${expandedView.accent}${layer.checked ? ' is-on' : ''}`}
+                  >
+                    <label className="map-views-layer" htmlFor={inputId}>
+                      <input
+                        type="checkbox"
+                        id={inputId}
+                        checked={Boolean(layer.checked)}
+                        disabled={layerDisabled}
+                        onChange={(event) => layer.onToggle?.(event.target.checked)}
+                      />
+                      <span className="map-views-layer-copy">
+                        <strong>{layer.label}</strong>
+                        {layer.hint ? <em>{layer.hint}</em> : null}
+                      </span>
+                    </label>
+
+                    {layer.checked && colors.length > 0 && (
+                      <div className="map-views-layer-colors" aria-label={`${layer.label} legend`}>
+                        {colors.map((row) => (
+                          <span
+                            key={`${layer.id}-${row.label}`}
+                            className={`map-views-swatch${isHoverSwatch(layer.id, row) ? ' is-hot' : ''}`}
+                          >
+                            <i style={{ background: row.color }} aria-hidden="true" />
+                            <span>{row.label}</span>
+                            {row.value ? <span className="map-views-swatch-value">{row.value}</span> : null}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+
+                    {LAYER_PANEL_SLOTS[expandedView.id]?.includes(layer.id) ? (
+                      <LayerPanelSlot
+                        viewId={expandedView.id}
+                        layerId={layer.id}
+                        className="map-views-layer-extra"
+                      />
+                    ) : null}
+                  </div>
+                )
+              })}
+            </div>
+
+            {expandedView.id === 'geology' ? (
+              <LayerPanelSlot viewId="geology" className="map-views-extra map-views-embed-tail" />
+            ) : null}
+          </div>
+
+          {VIEW_EMBED_IDS.has(expandedView.id) && expandedView.id !== 'geology' ? (
+            <div className="map-views-detail-foot">
+              <LayerPanelSlot viewId={expandedView.id} className="map-views-extra" />
+            </div>
+          ) : null}
+        </div>
+      )}
+    </div>
+  )
 
   return (
+    <>
     <div
-      className={`map-views-control${docked ? ' is-docked' : ''}`}
+      className={`map-views-control${docked ? ' is-docked' : ''}${isOpen ? ' is-menu-open' : ''}`}
       ref={containerRef}
     >
       <button
@@ -239,7 +445,7 @@ const MapViewsControl = ({
           <button
             type="button"
             className={`map-views-toggle ${isOpen ? 'open' : ''} ${primaryActiveView ? `is-${primaryActiveView.accent}` : ''}`}
-            onClick={() => setIsOpen((prev) => !prev)}
+            onClick={() => (isOpen ? dockPanel() : openSidebar())}
             title="Choose map view and layers"
             aria-expanded={isOpen}
             aria-haspopup="true"
@@ -285,132 +491,10 @@ const MapViewsControl = ({
             <IconChevron left />
           </button>
         </div>
-
-        {isOpen && (
-          <div className="map-views-menu" aria-label="Map views and layers">
-            <div className="map-views-menu-bar">
-              <span>Map layers</span>
-              <button
-                type="button"
-                className="map-views-slide is-menu"
-                onClick={dockPanel}
-                title="Hide panel to left corner"
-                aria-label="Hide layers panel to left corner"
-                tabIndex={docked ? -1 : 0}
-              >
-                <IconChevron left />
-              </button>
-            </div>
-            {visibleViews.map((view) => {
-              const isExpanded = Boolean(expanded[view.id])
-              const disabled = view.id === 'aqi' && loading
-              const layers = layersByView[view.id] || []
-              const onCount = layers.filter((layer) => layer.checked).length
-              const isActive = onCount > 0
-              return (
-                <div
-                  key={view.id}
-                  className={`map-views-group accent-${view.accent}${isActive ? ' is-active' : ''}${isExpanded ? ' is-open' : ''}`}
-                >
-                  <button
-                    type="button"
-                    disabled={disabled}
-                    title={view.title}
-                    className="map-views-group-head"
-                    aria-expanded={isExpanded}
-                    onClick={() => toggleGroup(view)}
-                    tabIndex={docked ? -1 : 0}
-                  >
-                    <span className="map-views-item-icon">
-                      <view.Icon />
-                    </span>
-                    <span className="map-views-item-label">
-                      {disabled ? 'Loading…' : view.label}
-                    </span>
-                    {onCount > 0 && (
-                      <span className="map-views-count">{onCount}</span>
-                    )}
-                    <svg
-                      className={`map-views-group-chevron${isExpanded ? ' rotated' : ''}`}
-                      width="14"
-                      height="14"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                    >
-                      <polyline points="6 9 12 15 18 9" />
-                    </svg>
-                  </button>
-                  {isExpanded && layers.length > 0 && (
-                    <div className="map-views-layers">
-                      {layers.map((layer) => {
-                        const legend = legendForLayer(layer.id)
-                        const colors = layer.colors || legend?.colors || []
-                        return (
-                          <div
-                            key={layer.id}
-                            className={`map-views-layer-block${layer.checked ? ' is-on' : ''}`}
-                          >
-                            <label
-                              className={`map-views-layer${layer.checked ? ' is-on' : ''}`}
-                              htmlFor={`view-layer-${view.id}-${layer.id}`}
-                            >
-                              <input
-                                id={`view-layer-${view.id}-${layer.id}`}
-                                type="checkbox"
-                                checked={Boolean(layer.checked)}
-                                disabled={disabled || docked}
-                                onChange={(event) => toggleLayer(layer, event.target.checked)}
-                              />
-                              <span className="map-views-layer-copy">
-                                <strong>{layer.label}</strong>
-                                {layer.hint ? <em>{layer.hint}</em> : null}
-                              </span>
-                            </label>
-                            {layer.checked && (
-                              <LayerPanelSlot
-                                viewId={view.id}
-                                layerId={layer.id}
-                                className="map-views-layer-extra"
-                              />
-                            )}
-                            {layer.checked && colors.length > 0 && (
-                              <div
-                                className="map-views-layer-colors"
-                                aria-label={`${layer.label} colors`}
-                              >
-                                {colors.map((row) => (
-                                  <div
-                                    key={`${layer.id}-${row.label}`}
-                                    className={`map-views-swatch${
-                                      hoverNote?.label === row.label &&
-                                      (hoverNote?.layerId === layer.id ||
-                                        (layer.id === 'lulc' && String(hoverNote?.layerId || '').startsWith('lulc')))
-                                        ? ' is-hot'
-                                        : ''
-                                    }`}
-                                  >
-                                    <i style={{ background: row.color }} />
-                                    <span>{row.label}</span>
-                                    {row.value != null ? <strong>{row.value}</strong> : null}
-                                  </div>
-                                ))}
-                              </div>
-                            )}
-                          </div>
-                        )
-                      })}
-                    </div>
-                  )}
-                  {isExpanded && <LayerPanelSlot viewId={view.id} />}
-                </div>
-              )
-            })}
-          </div>
-        )}
       </div>
     </div>
+    {leftNode && isOpen && !docked && createPortal(layersMenu, leftNode)}
+    </>
   )
 }
 

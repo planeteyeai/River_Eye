@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>RIVER EYE — Mula-Mutha Reach Dashboard</title>
+<title>RIVER EYE — Mula-Mutha Reach Demo Dashboard</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -253,7 +253,6 @@
 </div>
 
 <script>
-const API="https://riverdigitaltwin-production.up.railway.app";
 const GOOGLE_MAPS_API_KEY = "";
 
 let META=null, profileChart=null, hydroChart=null, ACTIVE_RIVER=null, _leafletMap=null;
@@ -263,7 +262,7 @@ let _chainageMarkers=[], _chainageNoVisible=true;
 
 // ── helpers ──────────────────────────────────────────────────────────────
 const $=id=>document.getElementById(id);
-async function j(u,opt){const url=u.startsWith("http")?u:API+u;const r=await fetch(url,opt);return r.json();}
+async function j(u,opt){const r=await fetch(u,opt);return r.json();}
 function decimate(arr,step){const o=[];for(let i=0;i<arr.length;i+=step)o.push(arr[i]);return o;}
 const STEP=4;
 
@@ -504,7 +503,7 @@ async function refreshAll(){
   const rp=ACTIVE_RIVER?"?river="+encodeURIComponent(ACTIVE_RIVER):"";
   const rp2=ACTIVE_RIVER?"&river="+encodeURIComponent(ACTIVE_RIVER):"";
   const st=await j("/api/state"+rp);
-  $("qnow").textContent=st.q_now+" m³/s";
+  $("qnow").textContent=st.q_now+" m³/s (synthetic)";
   window._wseNow=st.wse;
   await drawProfile();
   await drawHydro();

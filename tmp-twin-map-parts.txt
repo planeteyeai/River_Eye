@@ -1,0 +1,316 @@
+=== CSS ===
+  #map{height:380px;border-radius:8px}
+
+  .maplegend{font-size:12px;color:var(--muted);margin-top:6px}
+
+  .maplegend span{display:inline-block;margin-right:14px}
+
+  .map-asset-wrap{width:26px;height:26px;display:flex;align-items:center;justify-content:center}
+
+  .map-asset-dot{
+
+  .map-asset-dot.DANGER{width:20px;height:20px;background:#c62828;border:3px solid #fff;animation:dangerRing 1.4s ease-out infinite}
+
+  .map-asset-dot.WARNING{background:#ef6c00}
+
+  .map-asset-dot.WATCH  {background:#f9a825}
+
+  .map-asset-dot.SAFE   {background:#2e7d32}
+
+  @keyframes dangerRing{
+
+  .leaflet-div-icon{background:transparent!important;border:none!important}
+
+#map{height:380px;border-radius:8px}
+
+.maplegend{font-size:12px;color:var(--muted);margin-top:6px}
+
+.maplegend span{display:inline-block;margin-right:14px}
+
+/* map asset markers */
+  .map-asset-wrap{width:26px;height:26px;display:flex;align-items:center;justify-content:center}
+  .map-asset-dot{
+    width:14px;height:14px;border-radius:50%;
+    border:2.5px solid #fff;background:#ff1744;
+    box-shadow:0 1px 5px rgba(0,0,0,.45);
+    transition:background .4s,width .3s,height .3s;
+  }
+  .map-asset-dot.DANGER{width:20px;height:20px;background:#c62828;border:3px solid #fff;animation:dangerRing 1.4s ease-out infinite}
+  .map-asset-dot.WARNING{background:#ef6c00}
+  .map-asset-dot.WATCH  {background:#f9a825}
+  .map-asset-dot.SAFE   {background:#2e7d32}
+  @keyframes dangerRing{
+    0%  {box-shadow:0 0 0 0    rgba(198,40,40,.85)}
+    70% {box-shadow:0 0 0 14px rgba(198,40,40,0)}
+    100%{box-shadow:0 0 0 0    rgba(198,40,40,0)}
+  }
+  .leaflet-div-icon{background:transparent!important;border:none!important}
+
+@keyframes dangerRing{
+    0%  {box-shadow:0 0 0 0    rgba(198,40,40,.85)}
+
+=== HTML SEARCH ===
+<div class="card full">
+    <h2>Reach location — Sangam → Manjari (traced from KML, real polygon + extracted centerline)</h2>
+    <div id="map"></div>
+    <div class="maplegend">
+      <span><span class="swatch" style="background:#2dc0fb"></span>Traced river polygon</span>
+      <span><span class="swatch" style="background:#ffee58"></span>Centerline / chainage</span>
+      <span style="display:inline-flex;align-items:center;gap:4px;margin-right:14px">
+        <svg width="10" height="10"><circle cx="5" cy="5" r="4" fill="#ffee58" stroke="#ffd600" stroke-width="1"/></svg>Minor chainage (~200 m)
+      </span>
+      <span style="display:inline-flex;align-items:center;gap:4px;margin-right:14px">
+        <svg width="14" height="14"><circle cx="7" cy="7" r="6" fill="#ffe000" stroke="#ffd600" stroke-width="1.5"/></svg>Major chainage (~1 km)
+      </span>
+      <span><span class="swatch" style="background:#2962ff"></span>Named localities</span>
+      <span style="display:inline-flex;align-items:center;gap:6px;margin-right:14px">
+        <svg width="14" height="14"><circle cx="7" cy="7" r="6" fill="#c62828" stroke="#fff" stroke-width="2"/></svg>DANGER
+      </span>
+      <span style="display:inline-flex;align-items:center;gap:6px;margin-right:14px">
+        <svg width="12" height="12"><circle cx="6" cy="6" r="5" fill="#ef6c00" stroke="#fff" stroke-width="1.5"/></svg>WARNING
+      </span>
+      <span style="display:inline-flex;align-items:center;gap:6px;margin-right:14px">
+        <svg width="10" height="10"><circle cx="5" cy="5" r="4" fill="#f9a825" stroke="#fff" stroke-width="1.5"/></svg>WATCH
+      </span>
+      <span style="display:inline-flex;align-items:center;gap:6px;margin-right:14px">
+        <svg width="10" height="10"><circle cx="5" cy="5" r="4" fill="#2e7d32" stroke="#fff" stroke-width="1.5"/></svg>SAFE
+      </span>
+      <span id="mapEngineLabel">Basemap: Satellite / Street toggle top-right</span>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+  
+
+=== AROUND id=map ===
+:#ef6c00}
+  .map-asset-dot.WATCH  {background:#f9a825}
+  .map-asset-dot.SAFE   {background:#2e7d32}
+  @keyframes dangerRing{
+    0%  {box-shadow:0 0 0 0    rgba(198,40,40,.85)}
+    70% {box-shadow:0 0 0 14px rgba(198,40,40,0)}
+    100%{box-shadow:0 0 0 0    rgba(198,40,40,0)}
+  }
+  .leaflet-div-icon{background:transparent!important;border:none!important}
+</style>
+</head>
+<body>
+<div id="loadOverlay">
+  <div class="spinner"></div>
+  <div id="loadMsg">Loading NadiTwin…</div>
+</div>
+<header>
+  <h1>RIVER EYE</h1>
+  <div class="sub" id="headsub">Mula-Mutha River Intelligence · Sangam → Manjari Reach</div>
+</header>
+
+<div class="wrap" style="padding-bottom:0">
+  <div class="card full">
+    <h2>Reach location — Sangam → Manjari (traced from KML, real polygon + extracted centerline)</h2>
+    <div id="map"></div>
+    <div class="maplegend">
+      <span><span class="swatch" style="background:#2dc0fb"></span>Traced river polygon</span>
+      <span><span class="swatch" style="background:#ffee58"></span>Centerline / chainage</span>
+      <span style="display:inline-flex;align-items:center;gap:4px;margin-right:14px">
+        <svg width="10" height="10"><circle cx="5" cy="5" r="4" fill="#ffee58" stroke="#ffd600" stroke-width="1"/></svg>Minor chainage (~200 m)
+      </span>
+      <span style="display:inline-flex;align-items:center;gap:4px;margin-right:14px">
+        <svg width="14" height="14"><circle cx="7" cy="7" r="6" fill="#ffe000" stroke="#ffd600" stroke-width="1.5"/></svg>Major chainage (~1 km)
+      </span>
+      <span><span class="swatch" style="background:#2962ff"></span>Named localities</span>
+      <span style="display:inline-flex;align-items:center;gap:6px;margin-right:14px">
+        <svg width="14" height="14"><circle cx="7" cy="7" r="6" fill="#c62828" stroke="#fff" stroke-width="2"/></svg>DANGER
+      </span>
+      <span style="display:inline-flex;align-items:center;gap:6px;margin-right:14px">
+        <svg width="12" height="12"><circle cx="6" cy="6" r="5" fill="#ef6c
+
+=== MAP JS ===
+VAR: const map=_leafletMap;
+  const sat=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+    {maxZoom:19,attribution:'Tiles &copy; Esri'});
+  const st=L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+    {maxZoom:19,attribution:'&copy; OpenStreetMap contributors'});
+  sat.addTo(map);
+  L.control.layers({"Satellite":sat,"Street map":st},null,{position:'topright'}).addTo(map);
+  const poly=META.reach_polygon_lonlat.map(([lo,la
+
+VAR: const map=new google.maps.Map($("map"),{center:{lat:cy,lng:cx},zoom:13,mapTypeId:"satellite",
+    mapTypeControl:true,streetViewControl:false,
+    mapTypeControlOptions:{position:google.maps.ControlPosition.TOP_RIGHT}});
+  new google.maps.Polygon({paths:META.reach_polygon_lonlat.map(([lo,la])=>({lat:la,lng:lo})),
+    strokeColor:"#2dc0fb",strokeWeight:2,fillColor:"#2dc0fb",fillOpacity:.12}).setMap(map);
+  new google.maps.Polyline({path:META.lat.map((la,i)=>({lat:la,lng:META.lon[i]})),
+    stroke
+
+VAR: let _assetMarkers={};
+
+// ── helpers ──────────────────────────────────────────────────────────────
+
+VAR: const GOOGLE_MAPS_API_KEY = "";
+
+
+--- loadMap (462 chars) ---
+function loadMap(){
+  if(GOOGLE_MAPS_API_KEY&&GOOGLE_MAPS_API_KEY.trim()!==""){
+    window.initGoogleMap=drawGoogleMap;
+    const s=document.createElement("script");
+    s.src="https://maps.googleapis.com/maps/api/js?key="+encodeURIComponent(GOOGLE_MAPS_API_KEY)+"&callback=initGoogleMap";
+    s.onerror=()=>{$("mapEngineLabel").textContent="Google Maps failed — using Leaflet";drawLeafletMap();};
+    document.head.appendChild(s);
+  }else{drawLeafletMap();}
+}
+
+
+
+--- drawGoogleMap (2322 chars) ---
+function drawGoogleMap(){
+  const cx=META.lon[Math.floor(META.lon.length/2)];
+  const cy=META.lat[Math.floor(META.lat.length/2)];
+  const map=new google.maps.Map($("map"),{center:{lat:cy,lng:cx},zoom:13,mapTypeId:"satellite",
+    mapTypeControl:true,streetViewControl:false,
+    mapTypeControlOptions:{position:google.maps.ControlPosition.TOP_RIGHT}});
+  new google.maps.Polygon({paths:META.reach_polygon_lonlat.map(([lo,la])=>({lat:la,lng:lo})),
+    strokeColor:"#2dc0fb",strokeWeight:2,fillColor:"#2dc0fb",fillOpacity:.12}).setMap(map);
+  new google.maps.Polyline({path:META.lat.map((la,i)=>({lat:la,lng:META.lon[i]})),
+    strokeColor:"#ffee58",strokeWeight:3}).setMap(map);
+  const MS=Math.max(1,Math.round(200/META.cell_size_m));
+  const MJ=Math.max(1,Math.round(1000/META.cell_size_m));
+  META.lat.forEach((la,i)=>{
+    if(i%MS!==0)return;
+    const maj=(i%MJ===0);
+    new google.maps.Marker({position:{lat:la,lng:META.lon[i]},map,
+      icon:{path:google.maps.SymbolPath.CIRCLE,scale:maj?6:3,
+        fillColor:"#ffee58",fillOpacity:maj?1:.7,strokeColor:"#ffd600",strokeWeight:maj?1.5:.8},
+      title:"Chainage "+META.chainage_km[i].toFixed(2)+" km"});
+  });
+  (META.landmarks||[]).forEach(lm=>{
+    const m=new google.maps.Marker({position:{lat:lm.lat,lng:lm.lon},map,
+      label:{text:lm.name,color:"#0b3556",fontSize:"11px",fontWeight:"600"},
+      icon:{path:google.maps.SymbolPath.CIRCLE,scale:6,fillColor:"#2962ff",fillOpacity:1,strokeColor:"#fff",strokeWeight:2}});
+    m.addListener("click",()=>new google.maps.InfoWindow({
+      content:`<b>${lm.name}</b><br>chainage ${lm.chainage_km.toFixed(2)} km`}).open(map,m));
+  });
+  _assetMarkers={};
+  META.assets.forEach(a=>{
+    const m=new google.maps.Marker({position:{lat:a.lat,lng:a.lon},map,
+      icon:{path:google.maps.SymbolPath.CIRCLE,scale:7,fillColor:"#ff1744",fillOpacity:.95,strokeColor:"#fff",strokeWeight:2}});
+    m.addListener("click",()=>new google.maps.InfoWindow({
+      content:`<b>${a.id}</b> — ${a.name}<br>chainage ${(a.chainage_m/1000).toFixed(2)} km`}).open(map,m));
+    _assetMarkers[a.id]={gm:m,type:"google"};
+  });
+  const bounds=new google.maps.LatLngBounds();
+  META.reach_polygon_lonlat.forEach(([lo,la])=>bounds.extend({lat:la,lng:lo}));
+  map.fitBounds(bounds);
+  $("mapEngineLabel").textContent="Basemap: Google Maps";
+}
+
+
+
+--- _assetDivIcon (226 chars) ---
+function _assetDivIcon(status){
+  return L.divIcon({className:"",
+    html:`<div class="map-asset-wrap"><div class="map-asset-dot ${status||""}"></div></div>`,
+    iconSize:[26,26],iconAnchor:[13,13],popupAnchor:[0,-13]});
+}
+
+
+
+--- drawLeafletMap (2274 chars) ---
+function drawLeafletMap(){
+  if(typeof L==="undefined")return;
+  if(_leafletMap){_leafletMap.remove();_leafletMap=null;}
+  _assetMarkers={};
+  const cx=META.lon[Math.floor(META.lon.length/2)];
+  const cy=META.lat[Math.floor(META.lat.length/2)];
+  _leafletMap=L.map('map').setView([cy,cx],14);
+  const map=_leafletMap;
+  const sat=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+    {maxZoom:19,attribution:'Tiles &copy; Esri'});
+  const st=L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+    {maxZoom:19,attribution:'&copy; OpenStreetMap contributors'});
+  sat.addTo(map);
+  L.control.layers({"Satellite":sat,"Street map":st},null,{position:'topright'}).addTo(map);
+  const poly=META.reach_polygon_lonlat.map(([lo,la])=>[la,lo]);
+  L.polygon(poly,{color:'#2dc0fb',weight:2,fillOpacity:.12}).addTo(map);
+  L.polyline(META.lat.map((la,i)=>[la,META.lon[i]]),{color:'#ffee58',weight:3}).addTo(map);
+  // chainage dots
+  const MS=Math.max(1,Math.round(200/META.cell_size_m));
+  const MJ=Math.max(1,Math.round(1000/META.cell_size_m));
+  META.lat.forEach((la,i)=>{
+    if(i%MS!==0)return;
+    const maj=(i%MJ===0), ch=META.chainage_km[i];
+    L.circleMarker([la,META.lon[i]],{radius:maj?7:3,color:'#ffd600',fillColor:'#ffee58',
+      fillOpacity:maj?1:.70,weight:maj?2:1})
+      .bindPopup(maj?`<b>Chainage ${ch.toFixed(2)} km</b>`:`Chainage ${ch.toFixed(2)} km`)
+      .addTo(map);
+  });
+  (META.landmarks||[]).forEach(lm=>{
+    L.circleMarker([lm.lat,lm.lon],{radius:6,color:'#2962ff',fillColor:'#2962ff',fillOpacity:.95,weight:2})
+      .bindPopup(`<b>${lm.name}</b><br>chainage ${lm.chainage_km.toFixed(2)} km`).addTo(map);
+  });
+  META.assets.forEach(a=>{
+    const mk=L.marker([a.lat,a.lon],{icon:_assetDivIcon("")})
+      .bindPopup(`<b>${a.id}</b> — ${a.name}<br>Chainage ${(a.chainage_m/1000).toFixed(2)} km<br><span style="color:#888;font-size:11px">Status updates on refresh</span>`)
+      .addTo(map);
+    _assetMarkers[a.id]={lf:mk,type:"leaflet"};
+  });
+  map.fitBounds(L.latLngBounds(poly),{padding:[20,20]});
+  $("mapEngineLabel").textContent="Basemap: Leaflet — Satellite / Street toggle top-right";
+}
+
+const _SCOL={DANGER:'#c62828',WARNING:'#ef6c00',WATCH:'#856404',SAFE:'#2e7d32'};
+
+
+
+--- updateMapDanger (1148 chars) ---
+function updateMapDanger(margins){
+  if(!margins||!margins.length)return;
+  margins.forEach(m=>{
+    const entry=_assetMarkers[m.id];
+    if(!entry)return;
+    const html=`<b>${m.id}</b> — ${m.name}<br>`+
+      `Status: <b style="color:${_SCOL[m.status]||'#333'}">${m.status}</b><br>`+
+      `Margin: ${m.margin_now_m>0?"+":""}${m.margin_now_m} m<br>`+
+      `P(exceed 72 h): ${(m.p_exceed_72h*100).toFixed(0)}%`+
+      (m.time_to_threshold_h?`<br>~${m.time_to_threshold_h} h to threshold`:"");
+    if(entry.type==="leaflet"){
+      const el=entry.lf.getElement();
+      if(el){const d=el.querySelector('.map-asset-dot');if(d)d.className='map-asset-dot '+m.status;}
+      entry.lf.setPopupContent(html);
+    }else if(entry.type==="google"){
+      const sc={DANGER:10,WARNING:8,WATCH:7,SAFE:6};
+      const co={DANGER:'#c62828',WARNING:'#ef6c00',WATCH:'#f9a825',SAFE:'#2e7d32'};
+      entry.gm.setIcon({path:google.maps.SymbolPath.CIRCLE,scale:sc[m.status]||7,
+        fillColor:co[m.status]||'#ff1744',fillOpacity:.95,strokeColor:'#fff',strokeWeight:2});
+    }
+  });
+}
+
+// ── data refresh ──────────────────────────────────────────────────────────
+
+
+=== init ===
+async function init(){
+  if(typeof Chart==="undefined"){$("nochart").style.display="block";}
+  await loadRiverList();
+  await loadRiverData();
+  loadMap();
+  await refreshAll();
+  _updateLastUpdated();
+  setRefreshInterval($("refreshInterval").value);
+}
+
+=== refreshAll ===
+async function refreshAll(){
+  const rp=ACTIVE_RIVER?"?river="+encodeURIComponent(ACTIVE_RIVER):"";
+  const rp2=ACTIVE_RIVER?"&river="+encodeURIComponent(ACTIVE_RIVER):"";
+  const st=await j("/api/state"+rp);
+  $("qnow").textContent=st.q_now+" m³/s (synthetic)";
+  window._wseNow=st.wse;
+  await drawProfile();
+  await drawHydro();
+  await drawBoard();
+  await drawAlerts();
+  await drawScore();
+}

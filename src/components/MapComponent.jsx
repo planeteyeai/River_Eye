@@ -15,12 +15,15 @@ import {
 } from '../lib/riverFlow'
 import { buildTributaryFlowData, tribFlowZoomT } from '../lib/tributaryJunctions'
 import {
-  classNoteValue,
+  colorsMatch,
+  enrichClassHit,
   loadClassRaster,
   publishClassHover,
   sampleClassRaster,
 } from '../lib/classRasterHover'
-import { legendForLayer, lulcLegendId } from '../lib/layerLegends'
+import {
+  getMapStagePadding,
+} from '../lib/mapSidebarCamera'
 import './MapComponent.css'
 import './DrawAreaComponent.css'
 
@@ -235,20 +238,29 @@ const LITHOLOGY_SOURCE = 'src-lithology'
 const LITHOLOGY_RASTER = 'lyr-lithology'
 const LITHOLOGY_JSON_URL = '/asset/mula-mutha-spectral-lithology.json'
 
+const TRIB_CLASS_COLOR = {
+  mainstem: '#1d4e89',
+  stream: '#12b5a8',
+  drain: '#f4a261',
+  canal: '#3d8bfd',
+  ditch: '#8d99ae',
+  feeder: '#5ad2f4',
+}
+
 const TRIB_COLOR = [
   'match',
   ['get', 'class'],
   'mainstem',
-  '#1d4e89',
+  TRIB_CLASS_COLOR.mainstem,
   'stream',
-  '#12b5a8',
+  TRIB_CLASS_COLOR.stream,
   'drain',
-  '#f4a261',
+  TRIB_CLASS_COLOR.drain,
   'canal',
-  '#3d8bfd',
+  TRIB_CLASS_COLOR.canal,
   'ditch',
-  '#8d99ae',
-  '#5ad2f4',
+  TRIB_CLASS_COLOR.ditch,
+  TRIB_CLASS_COLOR.feeder,
 ]
 
 const TRIB_WIDTH = [
@@ -1118,12 +1130,14 @@ const MapComponent = ({
   onSelectTwinAsset,
   focusChainage = null,
   onSelectChainage,
+  studyBounds = null,
 }) => {
   const containerRef = useRef(null)
   const mapRef = useRef(null)
   const mapReadyRef = useRef(false)
   const mapLayerRef = useRef(mapLayer)
   const wqMetaRef = useRef(null)
+  const depthMetaRef = useRef(null)
   const depthLoadedRef = useRef(false)
   const urbanVegLoadedRef = useRef(false)
   const siltMetaRef = useRef(null)
@@ -1155,12 +1169,17 @@ const MapComponent = ({
   const lithologyMetaRef = useRef(null)
   const lulcPeriodRef = useRef(null)
   const classNoteKeyRef = useRef('')
+  const studyBoundsRef = useRef(studyBounds)
+  studyBoundsRef.current = studyBounds
+  const sidebarLeftWidthRef = useRef(0)
+  const sidebarFitTimerRef = useRef(null)
   const drawPointsRef = useRef([])
   const drawHandlersRef = useRef({ click: null, dblclick: null })
   const [drawPointCount, setDrawPointCount] = React.useState(0)
   const [isDrawingActive, setIsDrawingActive] = React.useState(false)
   const [mapReady, setMapReady] = React.useState(false)
   const [classNote, setClassNote] = React.useState(null)
+  const [classNotePos, setClassNotePos] = React.useState({ x: 0, y: 0, flipX: false, flipY: false })
 
   mapLayerRef.current = mapLayer
 
@@ -1234,7 +1253,14 @@ const MapComponent = ({
     const resizeObserver = new ResizeObserver(() => {
       map.resize()
     })
-    resizeObserver.observe(containerRef.current)
+    const resizeTargets = [
+      containerRef.current,
+      containerRef.current?.closest('.map-wrapper'),
+      containerRef.current?.closest('.map-stage-map'),
+      containerRef.current?.closest('.map-stage-body'),
+      containerRef.current?.closest('.map-stage'),
+    ].filter(Boolean)
+    resizeTargets.forEach((node) => resizeObserver.observe(node))
 
     map.on('load', () => {
       mapRef.current = map
@@ -1276,6 +1302,92 @@ const MapComponent = ({
       setMapReady(false)
       map.remove()
       mapRef.current = null
+    }
+  }, [])
+
+  useEffect(() => {
+    const easing = (t) => 1 - Math.pow(1 - t, 3)
+
+    const clearSidebarFitTimer = () => {
+      if (sidebarFitTimerRef.current) {
+        window.clearTimeout(sidebarFitTimerRef.current)
+        sidebarFitTimerRef.current = null
+      }
+    }
+
+    const readLeftSidebarWidth = () => {
+      const el = document.querySelector('.map-stage-left')
+      return el?.offsetWidth || 0
+    }
+
+    const fitVisibleViewport = (map, { zoomOut = true, duration = 520 } = {}) => {
+      clearSidebarFitTimer()
+      map.resize()
+
+      const runFit = () => {
+        map.resize()
+        const padding = getMapStagePadding()
+        const bounds = studyBoundsRef.current
+        if (bounds) {
+          map.fitBounds(bounds, {
+            padding,
+            maxZoom: 14.4,
+            duration,
+            essential: true,
+            easing,
+          })
+          return
+        }
+        map.easeTo({
+          center: map.getCenter(),
+          zoom: map.getZoom(),
+          padding,
+          duration,
+          essential: true,
+          easing,
+        })
+      }
+
+      if (!zoomOut) {
+        sidebarFitTimerRef.current = window.setTimeout(runFit, 80)
+        return
+      }
+
+      const leftW = readLeftSidebarWidth()
+      map.easeTo({
+        zoom: Math.max(map.getZoom() - (leftW > 200 ? 1.05 : 0.65), 9.2),
+        duration: 240,
+        essential: true,
+        easing,
+      })
+      sidebarFitTimerRef.current = window.setTimeout(runFit, 260)
+    }
+
+    const onLayoutChange = () => {
+      const map = mapRef.current
+      if (!map || !mapReadyRef.current) return
+
+      map.resize()
+      const leftW = readLeftSidebarWidth()
+      const prev = sidebarLeftWidthRef.current
+      sidebarLeftWidthRef.current = leftW
+
+      if (leftW === prev) return
+
+      map.stop()
+      if (leftW > prev) {
+        fitVisibleViewport(map)
+      } else if (leftW === 0) {
+        fitVisibleViewport(map, { zoomOut: false, duration: 420 })
+      } else {
+        fitVisibleViewport(map, { zoomOut: true, duration: 460 })
+      }
+    }
+
+    window.addEventListener('map-stage-layout-change', onLayoutChange)
+    return () => {
+      clearSidebarFitTimer()
+      window.removeEventListener('map-stage-layout-change', onLayoutChange)
     }
   }, [])
 
@@ -1426,6 +1538,7 @@ const MapComponent = ({
         if (!depthLoadedRef.current) {
           const meta = await fetchAssetJson(DEPTH_META_URL, 'Depth layer')
           if (cancelled) return
+          depthMetaRef.current = meta
           const source = map.getSource(DEPTH_SOURCE)
           if (source?.updateImage && meta?.raster && isValidImageCoordinates(meta.imageCoordinates)) {
             source.updateImage({ url: meta.raster, coordinates: meta.imageCoordinates })
@@ -2147,13 +2260,100 @@ const MapComponent = ({
     const map = mapRef.current
     if (!map || !mapReady) return undefined
 
-    const enabled = showLulcLayer || showLithologyLayer
+    const enabled =
+      showLulcLayer ||
+      showLithologyLayer ||
+      showErosionLayer ||
+      showSiltClassLayer ||
+      showSiltVolumeLayer ||
+      showBiodiversityTypeLayer ||
+      showBiodiversityHealthLayer ||
+      showNdsiSalinityLayer ||
+      showTssLayer ||
+      showNdciLayer ||
+      showNdwiLayer ||
+      showWstLayer ||
+      showDepthLayer ||
+      showUrbanVegLayer ||
+      showGarbageLayer ||
+      showTributaryLayer ||
+      showMainStemLayer ||
+      showWrdFloodlines ||
+      showClimateFloodHeat ||
+      showClimateWaterHeat
+
     const publish = (note) => {
-      const key = note ? `${note.layerId}:${note.label}` : ''
-      if (key === classNoteKeyRef.current) return
-      classNoteKeyRef.current = key
+      const key = note ? `${note.layerId}:${note.label}:${note.value || ''}` : ''
+      if (key !== classNoteKeyRef.current) {
+        classNoteKeyRef.current = key
+        publishClassHover(note)
+      }
       setClassNote(note)
-      publishClassHover(note)
+    }
+
+    const updatePos = (event) => {
+      const container = containerRef.current
+      const x = event.point?.x ?? 0
+      const y = event.point?.y ?? 0
+      const width = container?.clientWidth || 0
+      const height = container?.clientHeight || 0
+      setClassNotePos({
+        x,
+        y,
+        flipX: width > 0 && x > width - 220,
+        flipY: height > 0 && y > height - 72,
+      })
+    }
+
+    const noteFromHit = (layerId, layerTitle, hit) => {
+      const enriched = enrichClassHit(layerId, hit)
+      if (!enriched) return null
+      return {
+        ...enriched,
+        layer: layerTitle,
+      }
+    }
+
+    const sampleOverlay = async (
+      lng,
+      lat,
+      {
+        layerId,
+        layerTitle,
+        metaRef,
+        jsonUrl,
+        jsonLabel,
+        rasterUrl,
+        imageCoordinates,
+        classes,
+        maxDelta,
+      },
+    ) => {
+      if (jsonUrl && metaRef) {
+        try {
+          if (!metaRef.current) {
+            metaRef.current = await fetchAssetJson(jsonUrl, jsonLabel || layerTitle)
+          }
+        } catch {
+          /* keep going */
+        }
+      }
+      const doc = metaRef?.current
+      const coords = imageCoordinates || doc?.imageCoordinates
+      const classList = classes || doc?.classes || legendForLayer(layerId)?.colors
+      const url = rasterUrl || doc?.raster
+      if (!url || !coords) return null
+      const raster = await loadClassRaster(url).catch(() => null)
+      const hit = sampleClassRaster(raster, lng, lat, coords, classList, maxDelta)
+      return noteFromHit(layerId, layerTitle, hit)
+    }
+
+    const queryFirst = (point, layerIds) => {
+      const existing = layerIds.filter(
+        (id) => map.getLayer(id) && map.getLayoutProperty(id, 'visibility') !== 'none',
+      )
+      if (!existing.length) return null
+      return map.queryRenderedFeatures(point, { layers: existing })[0] || null
     }
 
     if (!enabled) {
@@ -2162,37 +2362,371 @@ const MapComponent = ({
     }
 
     let cancelled = false
+    let moveSeq = 0
 
     const onMove = async (event) => {
       if (cancelled) return
+      const seq = ++moveSeq
+      updatePos(event)
       const { lng, lat } = event.lngLat || {}
 
+      // Point / line layers first (precise hits), then classed rasters top → bottom.
+      if (showGarbageLayer) {
+        const feat = queryFirst(event.point, [GARBAGE_LAYER])
+        const props = feat?.properties
+        if (props) {
+          const legend = legendForLayer('garbage')?.colors?.[0]
+          if (cancelled || seq !== moveSeq) return
+          publish({
+            layerId: 'garbage',
+            layer: 'Garbage',
+            label: props.name || legend?.label || 'Detected garbage site',
+            value: props.label || legend?.value || '',
+            color: legend?.color || '#c45c26',
+          })
+          return
+        }
+      }
+
+      if (showWrdFloodlines) {
+        const feat = queryFirst(event.point, [WRD_LINE_LAYER])
+        const props = feat?.properties
+        if (props?.line) {
+          const lineKey = String(props.line).toLowerCase()
+          const legend = legendForLayer('wrd-floodlines')?.colors || []
+          const row =
+            legend.find((item) => item.label.toLowerCase().includes(lineKey)) ||
+            legend.find((item) => colorsMatch(item.color, props.color))
+          if (cancelled || seq !== moveSeq) return
+          publish({
+            layerId: 'wrd-floodlines',
+            layer: 'WRD flood lines',
+            label: row?.label || `${props.line} line`,
+            value: row?.value || props.sheet_title || 'survey',
+            color: props.color || row?.color,
+          })
+          return
+        }
+      }
+
+      if (showTributaryLayer || showMainStemLayer) {
+        const feat = queryFirst(event.point, [TRIB_LINE, TRIB_DASH, TRIB_GLOW, TRIB_LABELS])
+        const props = feat?.properties
+        if (props?.class) {
+          const cls = String(props.class)
+          const isMain = cls === 'mainstem'
+          if ((isMain && showMainStemLayer) || (!isMain && showTributaryLayer)) {
+            const layerId = isMain ? 'mainstem' : 'tributaries'
+            const stroke = TRIB_CLASS_COLOR[cls] || TRIB_CLASS_COLOR.feeder
+            const legend = legendForLayer(layerId)?.colors || []
+            const row =
+              legend.find((item) => colorsMatch(item.color, stroke)) ||
+              legend.find((item) => {
+                const label = item.label.toLowerCase()
+                if (cls === 'stream') return label.includes('named')
+                if (cls === 'feeder') return label.includes('feeder')
+                if (cls === 'drain') return label.includes('drain')
+                if (cls === 'canal') return label.includes('canal')
+                if (cls === 'ditch') return label.includes('ditch')
+                if (cls === 'mainstem') return label.includes('main')
+                return false
+              }) ||
+              legend[0]
+            if (cancelled || seq !== moveSeq) return
+            publish({
+              layerId,
+              layer: isMain ? 'Main stem' : 'Joining streams',
+              label: props.name || row?.label || cls,
+              value: row?.value || cls,
+              color: row?.color || stroke,
+            })
+            return
+          }
+        }
+      }
+
+      if (showNdsiSalinityLayer) {
+        const feat = queryFirst(event.point, [NDSI_SALINITY_FILL])
+        const props = feat?.properties
+        if (props?.label || props?.range) {
+          const enriched = enrichClassHit('ndsi-salinity', {
+            label: props.label || `NDSI ${props.range || ''}`.trim(),
+            color: props.color,
+            value: props.range || props.value,
+          })
+          if (enriched) {
+            if (cancelled || seq !== moveSeq) return
+            publish({ ...enriched, layer: 'NDSI salinity' })
+            return
+          }
+        }
+      }
+
+      if (showUrbanVegLayer) {
+        const feat = queryFirst(event.point, [URBAN_VEG_FILL])
+        if (feat) {
+          const legend = legendForLayer('urban-veg')?.colors || []
+          if (cancelled || seq !== moveSeq) return
+          publish({
+            layerId: 'urban-veg',
+            layer: 'Vegetation extent',
+            label: '1 km urban vegetation box',
+            value: 'extent',
+            color: legend[1]?.color || legend[0]?.color || '#78c679',
+          })
+          return
+        }
+      }
+
+      if (showClimateFloodHeat || showClimateWaterHeat) {
+        const floodFeat =
+          showClimateFloodHeat && queryFirst(event.point, [CLIMATE_FLOOD_HEAT])
+        if (floodFeat) {
+          const row = legendForLayer('flood-heat')?.colors?.[0]
+          if (cancelled || seq !== moveSeq) return
+          publish({
+            layerId: 'flood-heat',
+            layer: 'Flood heatmap',
+            label: row?.label || 'Flood water',
+            value: row?.value || 'heat',
+            color: row?.color || '#c2372a',
+          })
+          return
+        }
+        const waterFeat =
+          showClimateWaterHeat && queryFirst(event.point, [CLIMATE_WATER_HEAT])
+        if (waterFeat) {
+          const row = legendForLayer('water-heat')?.colors?.[0]
+          if (cancelled || seq !== moveSeq) return
+          publish({
+            layerId: 'water-heat',
+            layer: 'Surface-water heatmap',
+            label: row?.label || 'Surface water',
+            value: row?.value || 'heat',
+            color: row?.color || '#2f9bd6',
+          })
+          return
+        }
+      }
+
       if (showLithologyLayer) {
+        const note = await sampleOverlay(lng, lat, {
+          layerId: 'lithology',
+          layerTitle: 'Spectral lithology',
+          metaRef: lithologyMetaRef,
+          jsonUrl: LITHOLOGY_JSON_URL,
+          jsonLabel: 'Spectral lithology',
+          rasterUrl: '/asset/mula-mutha-spectral-lithology.png',
+        })
+        if (cancelled || seq !== moveSeq) return
+        if (note) {
+          publish(note)
+          return
+        }
+      }
+
+      if (showErosionLayer) {
+        const note = await sampleOverlay(lng, lat, {
+          layerId: 'erosion',
+          layerTitle: 'Bank erosion',
+          metaRef: erosionMetaRef,
+          jsonUrl: EROSION_JSON_URL,
+          jsonLabel: 'Erosion hotspots',
+          rasterUrl: '/asset/mula-mutha-erosion-hotspots.png',
+        })
+        if (cancelled || seq !== moveSeq) return
+        if (note) {
+          publish(note)
+          return
+        }
+      }
+
+      if (showBiodiversityHealthLayer) {
         try {
-          if (!lithologyMetaRef.current) {
-            lithologyMetaRef.current = await fetchAssetJson(LITHOLOGY_JSON_URL, 'Spectral lithology')
+          if (!biodiversityMetaRef.current) {
+            biodiversityMetaRef.current = await fetchAssetJson(BIODIV_JSON_URL, 'Biodiversity')
           }
         } catch {
-          /* keep going */
+          /* ignore */
         }
-        const doc = lithologyMetaRef.current
-        const raster = await loadClassRaster(doc?.raster || '/asset/mula-mutha-spectral-lithology.png').catch(() => null)
-        if (cancelled) return
-        const hit = sampleClassRaster(
-          raster,
-          lng,
-          lat,
-          doc?.imageCoordinates,
-          doc?.classes || legendForLayer('lithology')?.colors,
+        if (cancelled || seq !== moveSeq) return
+        const doc = biodiversityMetaRef.current
+        const health = doc?.layers?.find((row) => row.id === 'health')
+        const note = await sampleOverlay(lng, lat, {
+          layerId: 'health',
+          layerTitle: 'Vegetation health',
+          metaRef: biodiversityMetaRef,
+          rasterUrl: doc?.rasters?.health || doc?.raster,
+          imageCoordinates: doc?.imageCoordinates,
+          classes: health?.classes,
+        })
+        if (cancelled || seq !== moveSeq) return
+        if (note) {
+          publish(note)
+          return
+        }
+      }
+
+      if (showBiodiversityTypeLayer) {
+        try {
+          if (!biodiversityMetaRef.current) {
+            biodiversityMetaRef.current = await fetchAssetJson(BIODIV_JSON_URL, 'Biodiversity')
+          }
+        } catch {
+          /* ignore */
+        }
+        if (cancelled || seq !== moveSeq) return
+        const doc = biodiversityMetaRef.current
+        const type = doc?.layers?.find((row) => row.id === 'type')
+        const note = await sampleOverlay(lng, lat, {
+          layerId: 'type',
+          layerTitle: 'Vegetation type',
+          metaRef: biodiversityMetaRef,
+          rasterUrl: doc?.rasters?.type || doc?.raster,
+          imageCoordinates: doc?.imageCoordinates,
+          classes: type?.classes,
+        })
+        if (cancelled || seq !== moveSeq) return
+        if (note) {
+          publish(note)
+          return
+        }
+      }
+
+      // Water quality (TSS / NDCI / NDWI / WST) — same AOI; first enabled with a hit wins.
+      const wqFlags = [
+        { on: showTssLayer, id: 'tss', title: 'Turbidity / TSS' },
+        { on: showNdciLayer, id: 'ndci', title: 'NDCI — Chlorophyll' },
+        { on: showNdwiLayer, id: 'ndwi', title: 'NDWI — Water' },
+        { on: showWstLayer, id: 'wst', title: 'WST — Temperature' },
+      ]
+      if (wqFlags.some((row) => row.on)) {
+        try {
+          if (!wqMetaRef.current) {
+            wqMetaRef.current = await fetchAssetJson(WQ_JSON_URL, 'Water-quality overlays')
+          }
+        } catch {
+          /* ignore */
+        }
+        if (cancelled || seq !== moveSeq) return
+        const byId = Object.fromEntries(
+          (wqMetaRef.current?.layers || []).map((layer) => [layer.id, layer]),
         )
-        if (hit) {
-          publish({
-            layerId: 'lithology',
-            layer: 'Spectral lithology',
-            label: hit.label,
-            value: classNoteValue(hit),
-            color: hit.color,
+        for (const row of wqFlags) {
+          if (!row.on) continue
+          const layer = byId[row.id]
+          if (!layer) continue
+          const classes = (layer.classes || []).map((item) => ({
+            ...item,
+            value: item.range,
+          }))
+          const note = await sampleOverlay(lng, lat, {
+            layerId: row.id,
+            layerTitle: row.title,
+            metaRef: wqMetaRef,
+            rasterUrl: layer.raster,
+            imageCoordinates: layer.imageCoordinates,
+            classes: classes.length ? classes : legendForLayer(row.id)?.colors,
           })
+          if (cancelled || seq !== moveSeq) return
+          if (note) {
+            publish(note)
+            return
+          }
+        }
+      }
+
+      if (showDepthLayer) {
+        try {
+          if (!depthMetaRef.current) {
+            depthMetaRef.current = await fetchAssetJson(DEPTH_META_URL, 'Depth layer')
+          }
+        } catch {
+          /* ignore */
+        }
+        if (cancelled || seq !== moveSeq) return
+        const doc = depthMetaRef.current
+        const classes = (doc?.classes || []).map((row) => ({
+          ...row,
+          share_pct: row.pct,
+          value: undefined,
+        }))
+        const note = await sampleOverlay(lng, lat, {
+          layerId: 'depth',
+          layerTitle: 'Water depth',
+          metaRef: depthMetaRef,
+          rasterUrl: doc?.raster || '/asset/mula-mutha-depth-overlay.png',
+          imageCoordinates: doc?.imageCoordinates,
+          classes: classes.length ? classes : legendForLayer('depth')?.colors,
+        })
+        if (cancelled || seq !== moveSeq) return
+        if (note) {
+          // Same raster powers Geology bathymetry + Digital Twin depth — highlight both legends by color.
+          publish({ ...note, layerId: 'depth' })
+          return
+        }
+      }
+
+      if (showSiltClassLayer) {
+        try {
+          if (!siltMetaRef.current) {
+            siltMetaRef.current = await fetchAssetJson(SILT_JSON_URL, 'Silt classification')
+          }
+        } catch {
+          /* ignore */
+        }
+        if (cancelled || seq !== moveSeq) return
+        const doc = siltMetaRef.current
+        const period =
+          doc?.periods?.find((row) => row.id === siltPeriodId) || doc?.periods?.[0]
+        const periodClasses = period?.classification?.classes || doc?.classes || []
+        const shares = doc?.csv?.classes || []
+        const classes = periodClasses.map((row) => {
+          const share = shares.find(
+            (item) => item.class === row.class || item.label === row.label,
+          )
+          return share ? { ...row, share_pct: share.share_pct } : row
+        })
+        const note = await sampleOverlay(lng, lat, {
+          layerId: 'silt-class',
+          layerTitle: `Silt class${period?.label ? ` · ${period.label}` : ''}`,
+          metaRef: siltMetaRef,
+          rasterUrl: period?.classification?.raster,
+          imageCoordinates: period?.imageCoordinates,
+          classes: classes.length ? classes : legendForLayer('silt-class')?.colors,
+        })
+        if (cancelled || seq !== moveSeq) return
+        if (note) {
+          publish(note)
+          return
+        }
+      }
+
+      if (showSiltVolumeLayer) {
+        try {
+          if (!siltMetaRef.current) {
+            siltMetaRef.current = await fetchAssetJson(SILT_JSON_URL, 'Silt classification')
+          }
+        } catch {
+          /* ignore */
+        }
+        if (cancelled || seq !== moveSeq) return
+        const doc = siltMetaRef.current
+        const period =
+          doc?.periods?.find((row) => row.id === siltPeriodId) || doc?.periods?.[0]
+        const volume = period?.volume
+        const note = await sampleOverlay(lng, lat, {
+          layerId: 'silt-volume',
+          layerTitle: `Silt volume${period?.label ? ` · ${period.label}` : ''}`,
+          metaRef: siltMetaRef,
+          rasterUrl: volume?.raster,
+          imageCoordinates: volume?.imageCoordinates || period?.imageCoordinates,
+          classes: legendForLayer('silt-volume')?.colors,
+          maxDelta: 96,
+        })
+        if (cancelled || seq !== moveSeq) return
+        if (note) {
+          publish(note)
           return
         }
       }
@@ -2206,57 +2740,86 @@ const MapComponent = ({
           const props = hits[0]?.properties
           if (props?.label) {
             const year = lulcPeriodRef.current?.year
-            const legend = legendForLayer(lulcLegendId(year))
-            const share = legend?.colors?.find((row) => row.label === props.label)?.value
-            publish({
-              layerId: lulcLegendId(year),
-              layer: `LULC ${year || ''}`.trim(),
+            const legendId = lulcLegendId(year)
+            const enriched = enrichClassHit(legendId, {
               label: props.label,
-              value: share || '',
               color: props.color,
             })
-            return
+            if (cancelled || seq !== moveSeq) return
+            if (enriched) {
+              publish({
+                ...enriched,
+                layer: `LULC ${year || ''}`.trim(),
+              })
+              return
+            }
           }
         } else {
           const period = lulcPeriodRef.current
           if (period?.raster && period.imageCoordinates) {
-            try {
-              const raster = await loadClassRaster(period.raster)
-              if (cancelled) return
-              const classes = period.classes?.length
-                ? period.classes
-                : legendForLayer(lulcLegendId(period.year))?.colors
-              const hit = sampleClassRaster(raster, lng, lat, period.imageCoordinates, classes)
-              if (hit) {
-                publish({
-                  layerId: lulcLegendId(period.year),
-                  layer: `LULC ${period.year || ''}`.trim(),
-                  label: hit.label,
-                  value: classNoteValue(hit),
-                  color: hit.color,
-                })
-                return
-              }
-            } catch {
-              /* ignore missing raster */
+            const legendId = lulcLegendId(period.year)
+            const classes = period.classes?.length
+              ? period.classes
+              : legendForLayer(legendId)?.colors
+            const note = await sampleOverlay(lng, lat, {
+              layerId: legendId,
+              layerTitle: `LULC ${period.year || ''}`.trim(),
+              metaRef: lulcMetaRef,
+              rasterUrl: period.raster,
+              imageCoordinates: period.imageCoordinates,
+              classes,
+            })
+            if (cancelled || seq !== moveSeq) return
+            if (note) {
+              publish(note)
+              return
             }
           }
         }
       }
 
+      if (cancelled || seq !== moveSeq) return
       publish(null)
     }
 
-    const onLeave = () => publish(null)
+    const onLeave = () => {
+      moveSeq += 1
+      publish(null)
+    }
     map.on('mousemove', onMove)
     map.getCanvas().addEventListener('mouseleave', onLeave)
     return () => {
       cancelled = true
+      moveSeq += 1
       map.off('mousemove', onMove)
       map.getCanvas().removeEventListener('mouseleave', onLeave)
       publish(null)
     }
-  }, [mapReady, showLulcLayer, showLithologyLayer, lulcPeriodId])
+  }, [
+    mapReady,
+    showLulcLayer,
+    showLithologyLayer,
+    showErosionLayer,
+    showSiltClassLayer,
+    showSiltVolumeLayer,
+    siltPeriodId,
+    showBiodiversityTypeLayer,
+    showBiodiversityHealthLayer,
+    showNdsiSalinityLayer,
+    showTssLayer,
+    showNdciLayer,
+    showNdwiLayer,
+    showWstLayer,
+    showDepthLayer,
+    showUrbanVegLayer,
+    showGarbageLayer,
+    showTributaryLayer,
+    showMainStemLayer,
+    showWrdFloodlines,
+    showClimateFloodHeat,
+    showClimateWaterHeat,
+    lulcPeriodId,
+  ])
 
   // Main-river foam streaks along the chainage centreline (always on).
   useEffect(() => {
@@ -2753,7 +3316,18 @@ const MapComponent = ({
       <div ref={containerRef} className="maplibre-map" />
 
       {classNote && (
-        <div className="map-class-note" aria-live="polite">
+        <div
+          className={[
+            'map-class-note',
+            'is-cursor',
+            classNotePos.flipX ? 'is-flip-x' : '',
+            classNotePos.flipY ? 'is-flip-y' : '',
+          ]
+            .filter(Boolean)
+            .join(' ')}
+          style={{ left: classNotePos.x, top: classNotePos.y }}
+          aria-live="polite"
+        >
           <i style={{ background: classNote.color }} />
           <span>
             <small>{classNote.layer}</small>

@@ -24,22 +24,22 @@
   font-family: var(--rv-font-body);
 }
 
-/* Only reserve the panel column while the layers menu is actually open. */
-.map-wrapper:has(.map-views-control:not(.is-docked) .map-views-menu) .chainage-scrubber {
-  --chainage-gutter-left: var(--chainage-panel-width);
+/* Only reserve the panel column while the left sidebar is open. */
+.map-stage.has-left-sidebar .chainage-scrubber {
+  --chainage-gutter-left: 60px;
 }
 
-/* Views with a bottom ribbon (water quality, depth, AQI) sit above it and
-   have their own cards down the right-hand side. */
+.map-stage.has-left-sidebar-detail .chainage-scrubber {
+  --chainage-gutter-left: min(320px, 38vw);
+}
+
+/* Views with twin / WQ ribbons reserve space for the right sidebar. */
 .chainage-scrubber.is-above-ribbon {
   --chainage-gutter-right: min(260px, calc(100% - 220px));
-  /* Ribbon is 168px; leave a small gap so ticks don't clip the chart. */
-  --chainage-gutter-bottom: 184px;
 }
 
-.dashboard.is-fullscreen .chainage-scrubber.is-above-ribbon,
-:fullscreen .chainage-scrubber.is-above-ribbon {
-  --chainage-gutter-bottom: 208px;
+.map-stage:has(.map-stage-right:not(:empty)) .chainage-scrubber.is-above-ribbon {
+  --chainage-gutter-right: min(280px, 34vw);
 }
 
 .chainage-scrubber-kicker,

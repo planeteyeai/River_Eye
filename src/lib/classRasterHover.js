@@ -1,5 +1,7 @@
 /** Sample a classed overlay PNG at a lon/lat using GroundOverlay corners. */
 
+import { legendForLayer } from './layerLegends'
+
 const cache = new Map()
 
 export const CLASS_HOVER_EVENT = 'rivereye-class-hover'
@@ -10,6 +12,11 @@ export const hexToRgb = (hex) => {
   const n = parseInt(full, 16)
   if (!Number.isFinite(n)) return null
   return [(n >> 16) & 255, (n >> 8) & 255, n & 255]
+}
+
+export const colorsMatch = (a, b) => {
+  if (!a || !b) return false
+  return String(a).replace('#', '').toLowerCase() === String(b).replace('#', '').toLowerCase()
 }
 
 export const matchClassByRgb = (r, g, b, classes, maxDelta = 54) => {
@@ -27,11 +34,52 @@ export const matchClassByRgb = (r, g, b, classes, maxDelta = 54) => {
   return best
 }
 
-export const classNoteValue = (row) => {
+export const classNoteValue = (row, legendColors) => {
   if (!row) return ''
   if (row.value != null && row.value !== '') return String(row.value)
-  if (Number.isFinite(row.share_pct)) return `${row.share_pct}%`
+  if (Number.isFinite(row.share_pct)) {
+    const n = Number(row.share_pct)
+    return `${Number.isInteger(n) ? n : n.toFixed(1)}%`
+  }
+  if (Number.isFinite(row.pct)) {
+    const n = Number(row.pct)
+    return `${Number.isInteger(n) ? n : n.toFixed(1)}%`
+  }
+  if (row.range != null && row.range !== '') return String(row.range)
+  if (row.range_label != null && row.range_label !== '') return String(row.range_label)
+  const fromLegend = (legendColors || []).find(
+    (item) =>
+      item.label === row.label ||
+      colorsMatch(item.color, row.color),
+  )
+  if (fromLegend?.value != null && fromLegend.value !== '') return String(fromLegend.value)
   return ''
+}
+
+/** Prefer Map Layers legend wording so tip + swatch highlight stay in sync. */
+export const enrichClassHit = (layerId, hit) => {
+  if (!hit) return null
+  const legend = legendForLayer(layerId)?.colors || []
+  const fromLegend =
+    legend.find((item) => colorsMatch(item.color, hit.color)) ||
+    legend.find((item) => item.label === hit.label) ||
+    null
+  const label = fromLegend?.label || hit.label
+  if (!label) return null
+  return {
+    layerId,
+    label,
+    color: fromLegend?.color || hit.color,
+    value: classNoteValue(
+      {
+        ...hit,
+        label,
+        color: fromLegend?.color || hit.color,
+        value: fromLegend?.value ?? hit.value,
+      },
+      legend,
+    ),
+  }
 }
 
 export const loadClassRaster = async (url) => {
@@ -62,7 +110,7 @@ export const loadClassRaster = async (url) => {
   }
 }
 
-export const sampleClassRaster = (raster, lng, lat, corners, classes) => {
+export const sampleClassRaster = (raster, lng, lat, corners, classes, maxDelta = 54) => {
   if (!raster || !corners?.length || lng == null || lat == null) return null
   const west = corners[0][0]
   const north = corners[0][1]
@@ -75,7 +123,7 @@ export const sampleClassRaster = (raster, lng, lat, corners, classes) => {
   const y = Math.min(raster.height - 1, Math.max(0, Math.floor(v * raster.height)))
   const i = (y * raster.width + x) * 4
   if (raster.data[i + 3] < 28) return null
-  return matchClassByRgb(raster.data[i], raster.data[i + 1], raster.data[i + 2], classes)
+  return matchClassByRgb(raster.data[i], raster.data[i + 1], raster.data[i + 2], classes, maxDelta)
 }
 
 export const publishClassHover = (note) => {

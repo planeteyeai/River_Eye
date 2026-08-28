@@ -54,7 +54,7 @@ const ClimateImpactMapOverlay = ({ periodId = 4, onPeriodChange }) => {
     <LayerPanelPortal viewId="climate">
       <div className="climate-embed panel-embed" aria-label="Climate impact flood water heatmap">
         <p className="climate-note">
-          Seven image pairs, {doc.captured}. Density of classed water and flood points — not a surveyed flood line.
+          Seven image pairs, {doc.captured}. Density of classed water and flood points.
         </p>
 
         <div className="climate-period-head">

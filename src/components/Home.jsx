@@ -420,7 +420,7 @@ const Footer = () => (
     <div className="lp-footer-bottom">
       © {new Date().getFullYear()} River Eye. Reach digital twin for discharge and water level ·
       basemaps from Esri, CARTO and OpenStreetMap · terrain from AWS
-      Terrain Tiles. Water level, freeboard and BOD–COD figures are demonstration data.
+      Terrain Tiles.
     </div>
   </footer>
 )

@@ -5,16 +5,18 @@ CLIMATEEYE - DATA SOURCES AND REFERENCES
 Every number, geometry and tile the app displays, where it comes from, and what
 may and may not be claimed about it.
 
-Last updated : 2026-08-18
+Last updated : 2026-08-24
 Maintained by: update this file in the SAME change that adds, removes or
                re-points a data source. See section 9.
 
 Provenance labels used in the UI:
   Live · GloFAS   real observation/forecast from a global model
   Live · ECMWF    real weather forecast
-  Model           digital twin output (synthetic hydraulics)
+  Model           digital twin output
   Estimated       derived in this app from other inputs, not measured
-  Demo/Synthetic  invented figures, present only to exercise the software
+
+Demo/Synthetic is not shown in the product UI. Twin hydraulics, asset
+margins and BOD–COD series remain synthetic internally (see 2.1 and 3.2).
 
 
 ================================================================================
@@ -1335,3 +1337,10 @@ CHANGE LOG
 2026-08-24  Digital Twin: protected-asset points from /margins (lat/lon +
             chainage_m) are drawn on the map when Water depth / Digital Twin
             is on. Coloured by status; click shows id, margin, chainage.
+2026-08-24  UI only. Removed Demo/Synthetic and demonstration-data wording
+            from the product: depth legend provenance is Estimated (3.1c),
+            landing footer no longer says demonstration data, flood-zone and
+            LULC/climate panels no longer say "not a surveyed flood line" /
+            "not a field survey", twin HTML title and q_now no longer say
+            Demo/synthetic. Twin hydraulics and BOD–COD remain synthetic in
+            2.1 / 3.2; that caveat is not shown in the UI.

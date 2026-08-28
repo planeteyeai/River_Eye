@@ -7,9 +7,11 @@ import { LineChart, Line, BarChart, Bar, ScatterChart, Scatter, XAxis, YAxis, Ca
 import MapComponent from './MapComponent'
 import ChainageScrubber from './ChainageScrubber'
 import MapLayersControl from './MapLayersControl'
+import MapStage from './MapStage'
 import MapViewsControl from './MapViewsControl'
 import { LayerPanelSlotProvider } from './LayerPanelSlots'
 import { legendForLayer } from '../lib/layerLegends'
+import { MULA_MUTHA_BOUNDS } from '../lib/mapSidebarCamera'
 import BodCodMapOverlay from './BodCodMapOverlay'
 import AqiMapOverlay from './AqiMapOverlay'
 import FloodMapOverlay from './FloodMapOverlay'
@@ -96,6 +98,7 @@ const Dashboard = () => {
   const [liveHourlyChartData, setLiveHourlyChartData] = useState([]) // Per-hour AQI for Live time series bar
   const [selectedHeight, setSelectedHeight] = useState(null) // '0-3meter' or '3meter-above' or null
   const [isFullscreen, setIsFullscreen] = useState(false)
+  const [expandedViewId, setExpandedViewId] = useState(null)
   const cssFullscreenRef = useRef(false)
   
   // Refs to prevent multiple simultaneous API calls
@@ -1662,6 +1665,10 @@ const Dashboard = () => {
     uploadedKML?.displayName === 'Mula-Mutha River' ||
     uploadedKML?.name?.toLowerCase().includes('mula-mutha')
 
+  const handleViewExpand = useCallback(() => {
+    if (isMulaMuthaRiver) setShowChainageLayer(true)
+  }, [isMulaMuthaRiver])
+
   const geologyLayersOn =
     showErosionLayer ||
     showLithologyLayer ||
@@ -1676,13 +1683,12 @@ const Dashboard = () => {
     showBiodiversityTypeLayer || showBiodiversityHealthLayer
   const climateLayersOn = showClimateFloodHeat || showClimateWaterHeat || showWrdFloodlines
 
-  const chainageLayer = {
-    id: 'chainage',
-    label: 'Chainage',
-    hint: '100 m stations · 0+000 to 16+400',
-    checked: showChainageLayer,
-    onToggle: setShowChainageLayer,
-  }
+  const geologyPanelOpen = expandedViewId === 'geology'
+  const waterQualityPanelOpen = expandedViewId === 'waterquality'
+  const landUsePanelOpen = expandedViewId === 'landuse'
+  const biodiversityPanelOpen = expandedViewId === 'biodiversity'
+  const climatePanelOpen = expandedViewId === 'climate'
+  const floodPanelOpen = expandedViewId === 'flood'
 
   const lulcYear = 2021 + (Number.isFinite(lulcPeriodId) ? lulcPeriodId : 4)
   const lulcLegend = legendForLayer(`lulc-${lulcYear}`) || legendForLayer('lulc')
@@ -1696,12 +1702,12 @@ const Dashboard = () => {
         checked: showAqiOverlay,
         onToggle: handleAqiLayerToggle,
       },
-      ...(isMulaMuthaRiver ? [chainageLayer] : []),
     ],
     geology: [
       {
         id: 'lithology',
         label: 'Spectral lithology',
+        shortLabel: 'Lithology',
         hint: 'Provisional surface-material classes',
         checked: showLithologyLayer,
         onToggle: setShowLithologyLayer,
@@ -1709,6 +1715,7 @@ const Dashboard = () => {
       {
         id: 'erosion',
         label: 'Bank erosion hotspots',
+        shortLabel: 'Erosion',
         hint: '2016–2026 classified overlay',
         checked: showErosionLayer,
         onToggle: setShowErosionLayer,
@@ -1716,6 +1723,7 @@ const Dashboard = () => {
       {
         id: 'tributaries',
         label: 'Joining streams',
+        shortLabel: 'Streams',
         hint: 'OSM waterways on the reach',
         checked: showTributaryLayer,
         onToggle: setShowTributaryLayer,
@@ -1723,6 +1731,7 @@ const Dashboard = () => {
       {
         id: 'mainstem',
         label: 'Main stem',
+        shortLabel: 'Main stem',
         hint: 'Mula / Mutha OSM ways',
         checked: showMainStemLayer,
         onToggle: setShowMainStemLayer,
@@ -1730,11 +1739,11 @@ const Dashboard = () => {
       {
         id: 'bathymetry',
         label: 'Bathymetry',
+        shortLabel: 'Bathymetry',
         hint: 'Satellite-derived depth 1.5–2.0 m MSL',
         checked: showBathyMapLayer,
         onToggle: setShowBathyMapLayer,
       },
-      chainageLayer,
     ],
     salinity: [
       {
@@ -1744,7 +1753,6 @@ const Dashboard = () => {
         checked: showNdsiSalinityLayer,
         onToggle: setShowNdsiSalinityLayer,
       },
-      chainageLayer,
     ],
     pollution: [
       {
@@ -1754,12 +1762,12 @@ const Dashboard = () => {
         checked: showGarbageLayer,
         onToggle: setShowGarbageLayer,
       },
-      chainageLayer,
     ],
     waterquality: [
       {
         id: 'tss',
         label: 'Turbidity / TSS',
+        shortLabel: 'TSS',
         hint: 'July 2026 classified overlay',
         checked: showTssLayer,
         onToggle: setShowTssLayer,
@@ -1767,6 +1775,7 @@ const Dashboard = () => {
       {
         id: 'ndci',
         label: 'NDCI — Chlorophyll',
+        shortLabel: 'NDCI',
         hint: 'July 2026 classified overlay',
         checked: showNdciLayer,
         onToggle: setShowNdciLayer,
@@ -1774,6 +1783,7 @@ const Dashboard = () => {
       {
         id: 'ndwi',
         label: 'NDWI — Water Detection',
+        shortLabel: 'NDWI',
         hint: 'July 2026 classified overlay',
         checked: showNdwiLayer,
         onToggle: setShowNdwiLayer,
@@ -1781,11 +1791,11 @@ const Dashboard = () => {
       {
         id: 'wst',
         label: 'WST — Temperature',
+        shortLabel: 'WST',
         hint: 'Salinity thermal proxy',
         checked: showWstLayer,
         onToggle: setShowWstLayer,
       },
-      chainageLayer,
     ],
     landuse: [
       {
@@ -1817,7 +1827,6 @@ const Dashboard = () => {
         checked: showUrbanVegLayer,
         onToggle: setShowUrbanVegLayer,
       },
-      chainageLayer,
     ],
     biodiversity: [
       {
@@ -1834,7 +1843,6 @@ const Dashboard = () => {
         checked: showBiodiversityHealthLayer,
         onToggle: setShowBiodiversityHealthLayer,
       },
-      chainageLayer,
     ],
     climate: [
       {
@@ -1858,7 +1866,6 @@ const Dashboard = () => {
         checked: showWrdFloodlines,
         onToggle: setShowWrdFloodlines,
       },
-      chainageLayer,
     ],
     flood: [
       {
@@ -1868,13 +1875,10 @@ const Dashboard = () => {
         checked: showFloodDepthLayer,
         onToggle: setShowFloodDepthLayer,
       },
-      chainageLayer,
     ],
   }), [
-    isMulaMuthaRiver,
     showAqiOverlay,
     handleAqiLayerToggle,
-    showChainageLayer,
     showErosionLayer,
     showLithologyLayer,
     showTributaryLayer,
@@ -1908,120 +1912,6 @@ const Dashboard = () => {
           <AppLogo size="md" className="app-logo--on-dark" />
         </div>
 
-        <div className="header-center">
-          <div className="header-mode-switch" role="group" aria-label="Dashboard views">
-            <button
-              type="button"
-              className={`header-mode-btn is-aqi ${showAnalysis ? 'active' : ''}`}
-              onClick={handleAnalyse}
-              disabled={loading}
-              title="Open AQI analysis"
-            >
-              <span className="header-mode-icon" aria-hidden="true">
-                <svg viewBox="0 0 32 18" fill="none">
-                  <path d="M1 16h30" stroke="currentColor" strokeOpacity="0.28" />
-                  <path d="M2 13c3-1 5-6 8-6s4 7 7 7 4-9 7-9 5 5 6 5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-                  <circle cx="24" cy="5" r="1.6" fill="currentColor" />
-                </svg>
-              </span>
-              <span className="header-mode-copy">
-                <strong>{loading ? 'Loading' : 'AQI'}</strong>
-                <small>Air quality</small>
-              </span>
-            </button>
-            {(uploadedKML?.displayName === 'Mula-Mutha River' ||
-              uploadedKML?.name?.toLowerCase().includes('mula-mutha')) && (
-              <button
-                type="button"
-                className={`header-mode-btn is-bod ${showBodCod ? 'active' : ''}`}
-                onClick={() => {
-                  setShowBodCod(true)
-                  setShowAnalysis(false)
-                  setShowBodCodOverlay(false)
-                  setShowAqiOverlay(false)
-                  setShowBathy(false)
-                  setShowGeologyOverlay(false)
-                }}
-                title="Open BOD-COD river dashboard"
-              >
-                <span className="header-mode-icon" aria-hidden="true">
-                  <svg viewBox="0 0 32 18" fill="none">
-                    <path d="M1 16h30" stroke="currentColor" strokeOpacity="0.28" />
-                    <rect x="4" y="9" width="4" height="7" rx="1" fill="currentColor" fillOpacity="0.45" />
-                    <rect x="11" y="6" width="4" height="10" rx="1" fill="currentColor" fillOpacity="0.7" />
-                    <rect x="18" y="3" width="4" height="13" rx="1" fill="currentColor" />
-                    <rect x="25" y="7" width="4" height="9" rx="1" fill="currentColor" fillOpacity="0.55" />
-                  </svg>
-                </span>
-                <span className="header-mode-copy">
-                  <strong>BOD-COD</strong>
-                  <small>Water quality</small>
-                </span>
-              </button>
-            )}
-            {(uploadedKML?.displayName === 'Mula-Mutha River' ||
-              uploadedKML?.name?.toLowerCase().includes('mula-mutha')) && (
-              <button
-                type="button"
-                className={`header-mode-btn is-flood ${showFlood ? 'active' : ''}`}
-                onClick={() => {
-                  setShowFlood(true)
-                  setShowBodCod(false)
-                  setShowAnalysis(false)
-                  setShowBodCodOverlay(false)
-                  setShowAqiOverlay(false)
-                  setShowFloodOverlay(false)
-                  setShowBathy(false)
-                  setShowGeologyOverlay(false)
-                }}
-                title="Open digital twin and flood forecast dashboard"
-              >
-                <span className="header-mode-icon" aria-hidden="true">
-                  <svg viewBox="0 0 32 18" fill="none">
-                    <path d="M1 5c3-2 5 2 8 0s5-2 8 0 5 2 8 0" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeOpacity="0.45" />
-                    <path d="M1 10c3-2 5 2 8 0s5-2 8 0 5 2 8 0" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-                    <path d="M1 15c3-2 5 2 8 0s5-2 8 0 5 2 8 0" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeOpacity="0.7" />
-                  </svg>
-                </span>
-                <span className="header-mode-copy">
-                  <strong>Digital Twin</strong>
-                  <small>Flood · WSE</small>
-                </span>
-              </button>
-            )}
-            {(uploadedKML?.displayName === 'Mula-Mutha River' ||
-              uploadedKML?.name?.toLowerCase().includes('mula-mutha')) && (
-              <button
-                type="button"
-                className={`header-mode-btn is-bathy ${showBathy ? 'active' : ''}`}
-                onClick={() => {
-                  setShowBathy(true)
-                  setShowFlood(false)
-                  setShowBodCod(false)
-                  setShowAnalysis(false)
-                  setShowBodCodOverlay(false)
-                  setShowAqiOverlay(false)
-                  setShowFloodOverlay(false)
-                  setShowGeologyOverlay(false)
-                }}
-                title="Open bathymetry dashboard"
-              >
-                <span className="header-mode-icon" aria-hidden="true">
-                  <svg viewBox="0 0 32 18" fill="none">
-                    <path d="M1 4h30" stroke="currentColor" strokeOpacity="0.28" />
-                    <path d="M2 5c4 6 7 10 10 10s5-7 8-7 5 6 9 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-                    <path d="M2 14h28" stroke="currentColor" strokeWidth="1.4" strokeOpacity="0.55" strokeLinecap="round" />
-                  </svg>
-                </span>
-                <span className="header-mode-copy">
-                  <strong>Bathymetry</strong>
-                  <small>Depth survey</small>
-                </span>
-              </button>
-            )}
-          </div>
-        </div>
-        
         <div className="header-right">
           <button
             type="button"
@@ -2087,14 +1977,18 @@ const Dashboard = () => {
             </div>
           ) : !showAnalysis ? (
             <LayerPanelSlotProvider>
+            <MapStage>
             <div className="map-wrapper">
               <MapViewsControl
                 loading={loading}
                 isMulaMutha={isMulaMuthaRiver}
                 layersByView={layersByView}
+                expandedViewId={expandedViewId}
+                onExpandedViewIdChange={setExpandedViewId}
+                onViewExpand={handleViewExpand}
               />
               <MapLayersControl mapLayer={mapLayer} onLayerChange={setMapLayer} />
-              {waterQualityLayersOn && (
+              {(waterQualityPanelOpen || waterQualityLayersOn) && (
                 <BodCodMapOverlay
                   showTssLayer={showTssLayer}
                   showNdciLayer={showNdciLayer}
@@ -2105,7 +1999,7 @@ const Dashboard = () => {
                   onSelectChainage={(station) => setFocusChainage({ ...station, at: Date.now() })}
                 />
               )}
-              {showFloodDepthLayer && (
+              {(floodPanelOpen || showFloodDepthLayer) && (
                 <FloodMapOverlay
                   onZonesChange={setFloodZones}
                   onAssetsChange={setTwinAssets}
@@ -2116,7 +2010,7 @@ const Dashboard = () => {
                   focusChainage={focusChainage}
                 />
               )}
-              {landUseLayersOn && (
+              {(landUsePanelOpen || landUseLayersOn) && (
                 <SoilLandUseMapOverlay
                   showExtentLayer={showUrbanVegLayer}
                   showSiltClassLayer={showSiltClassLayer}
@@ -2128,19 +2022,19 @@ const Dashboard = () => {
                   onLulcPeriodChange={setLulcPeriodId}
                 />
               )}
-              {biodiversityLayersOn && (
+              {(biodiversityPanelOpen || biodiversityLayersOn) && (
                 <BiodiversityMapOverlay
                   showTypeLayer={showBiodiversityTypeLayer}
                   showHealthLayer={showBiodiversityHealthLayer}
                 />
               )}
-              {climateLayersOn && (
+              {(climatePanelOpen || climateLayersOn) && (
                 <ClimateImpactMapOverlay
                   periodId={climatePeriodId}
                   onPeriodChange={setClimatePeriodId}
                 />
               )}
-              {geologyLayersOn && (
+              {isMulaMuthaRiver && (geologyPanelOpen || geologyLayersOn) && (
                 <GeologyMapOverlay
                   onOpenBathymetry={() => {
                     setShowBathy(true)
@@ -2205,6 +2099,7 @@ const Dashboard = () => {
                 onSelectTwinAsset={setSelectedTwinAssetId}
                 focusChainage={focusChainage}
                 onSelectChainage={(station) => setFocusChainage({ ...station, at: Date.now() })}
+                studyBounds={isMulaMuthaRiver ? MULA_MUTHA_BOUNDS : null}
               />
               {(uploadedKML?.displayName === 'Mula-Mutha River' ||
                 uploadedKML?.name?.toLowerCase().includes('mula-mutha')) &&
@@ -2220,6 +2115,7 @@ const Dashboard = () => {
                   />
                 )}
             </div>
+            </MapStage>
             </LayerPanelSlotProvider>
           ) : (
             <div className="analysis-content">

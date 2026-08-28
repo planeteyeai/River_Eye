@@ -51,8 +51,7 @@ export const ZONE_STYLES = {
 }
 
 export const ZONE_METHOD =
-  'Khadakwasla published annual peaks (Gumbel) scaled onto the KML channel width. ' +
-  'Estimated corridor — no DEM, not a surveyed flood line.'
+  'Khadakwasla published annual peaks (Gumbel) scaled onto the KML channel width.'
 
 // Gumbel reduced variate for return period T.
 const reducedVariate = (T) => -Math.log(-Math.log(1 - 1 / T))

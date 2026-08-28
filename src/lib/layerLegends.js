@@ -235,7 +235,7 @@ export const LAYER_LEGENDS = {
     colors: [{ color: '#2f9bd6', label: 'Surface water', value: 'heat' }],
   },
   depth: {
-    provenance: 'Demo/Synthetic',
+    provenance: 'Estimated',
     colors: [
       { color: '#0000ff', label: 'Shallow 1.5–1.6 m', value: '0.9%' },
       { color: '#00ff00', label: 'Low 1.6–1.7 m', value: '16%' },

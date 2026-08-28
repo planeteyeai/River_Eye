@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import { createPortal } from 'react-dom'
 import {
   STATUS_COLORS,
   advanceSim,
@@ -22,9 +23,31 @@ import {
 } from '../lib/floodZones'
 import { binBoundsForChainage, formatChainage } from '../lib/chainageBins'
 import { LayerPanelPortal } from './LayerPanelSlots'
+import { useMapStageFooter, useMapStageRight } from './MapStage'
 import './FloodMapOverlay.css'
 
 const LEAD_OPTIONS = [6, 24, 48, 72]
+
+const IconTwinPanel = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+    <rect x="4" y="4" width="16" height="16" rx="2" />
+    <path d="M8 9h8M8 13h5" />
+  </svg>
+)
+
+const IconClose = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" aria-hidden="true">
+    <path d="M18 6 6 18" />
+    <path d="m6 6 12 12" />
+  </svg>
+)
+
+const IconRibbon = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+    <path d="M3 12c2.5-4 5.5-6 9-6s6.5 2 9 6c-2.5 4-5.5 6-9 6s-6.5-2-9-6z" />
+    <circle cx="12" cy="12" r="2.2" />
+  </svg>
+)
 
 const OBSERVED = '#0e8f9c'
 const FORECAST = '#b3761a'
@@ -294,6 +317,10 @@ const FloodMapOverlay = ({
   const [depthSummary, setDepthSummary] = useState(null)
   const [activeZones, setActiveZones] = useState(RETURN_PERIODS)
   const [openLayerId, setOpenLayerId] = useState('10')
+  const [showSummaryPanel, setShowSummaryPanel] = useState(false)
+  const [showRibbon, setShowRibbon] = useState(false)
+  const footerNode = useMapStageFooter()
+  const rightNode = useMapStageRight()
 
   useEffect(() => {
     let cancelled = false
@@ -475,19 +502,23 @@ const FloodMapOverlay = ({
   )
 
   if (error && !meta) {
+    const errorPanel = (
+      <aside className="flood-map-panel is-stage-sidebar" aria-label="Flood forecast summary">
+        <div className="flood-panel-head">
+          <h3>
+            Flood risk
+            <small>Live twin unavailable</small>
+          </h3>
+        </div>
+        <div className="flood-loading">{error}</div>
+      </aside>
+    )
+
     return (
-      <div className="flood-map-overlays">
-        {layerPicker}
-        <aside className="flood-map-panel">
-          <div className="flood-panel-head">
-            <h3>
-              Flood risk
-              <small>Live twin unavailable</small>
-            </h3>
-          </div>
-          <div className="flood-loading">{error}</div>
-        </aside>
-      </div>
+      <>
+        <div className="flood-map-overlays">{layerPicker}</div>
+        {rightNode ? createPortal(errorPanel, rightNode) : errorPanel}
+      </>
     )
   }
 
@@ -518,15 +549,50 @@ const FloodMapOverlay = ({
     : `M${marginX.l} ${cy} L${width - marginX.r} ${cy}`
 
   return (
+    <>
     <div className="flood-map-overlays">
       {layerPicker}
-      <aside className="flood-map-panel" aria-label="Flood forecast summary">
+      <button
+        type="button"
+        className={`flood-dock-summary${showSummaryPanel ? ' is-active' : ''}`}
+        onClick={() => setShowSummaryPanel((open) => !open)}
+        aria-pressed={showSummaryPanel}
+        aria-label={showSummaryPanel ? 'Hide twin summary' : 'Show twin summary'}
+        title={showSummaryPanel ? 'Hide summary' : 'Show summary'}
+      >
+        <IconTwinPanel />
+      </button>
+      <button
+        type="button"
+        className={`flood-dock-ribbon${showRibbon ? ' is-active' : ''}`}
+        onClick={() => setShowRibbon((open) => !open)}
+        aria-pressed={showRibbon}
+        aria-label={showRibbon ? 'Hide margin board' : 'Show margin board'}
+        title={showRibbon ? 'Hide margin board' : 'Show margin board'}
+      >
+        <IconRibbon />
+      </button>
+    </div>
+
+    {rightNode && showSummaryPanel && createPortal(
+      <aside className="flood-map-panel is-stage-sidebar" aria-label="Flood forecast summary">
         <div className="flood-panel-head">
           <h3>
             Digital twin
             <small>Modelled discharge · WSE · margins · alerts</small>
           </h3>
-          <span className="flood-provenance is-model">Model</span>
+          <div className="flood-panel-head-actions">
+            <span className="flood-provenance is-model">Model</span>
+            <button
+              type="button"
+              className="flood-panel-icon-btn"
+              onClick={() => setShowSummaryPanel(false)}
+              aria-label="Hide twin summary"
+              title="Hide"
+            >
+              <IconClose />
+            </button>
+          </div>
         </div>
 
         <div className="flood-stat-chips">
@@ -768,7 +834,7 @@ const FloodMapOverlay = ({
 
         <div className="flood-zone-caveat">
           Gumbel fit on {returnPeriods.years} published annual peaks, corridor scaled from the KML
-          channel width · no DEM, not a surveyed flood line
+          channel width
         </div>
 
         <div className="flood-panel-label">Reach</div>
@@ -786,9 +852,15 @@ const FloodMapOverlay = ({
             <em>Horizon</em>{meta.forecast_hours}h
           </span>
         </div>
-      </aside>
+      </aside>,
+      rightNode,
+    )}
 
-      <section className="flood-map-ribbon" aria-label="Flood margin board">
+    {footerNode && showRibbon && createPortal(
+      <section
+        className="flood-map-ribbon is-stage-footer"
+        aria-label="Flood margin board"
+      >
         <div className="flood-ribbon-main">
           <div className="flood-ribbon-head">
             <h2>Margin to threshold, end to end</h2>
@@ -800,6 +872,15 @@ const FloodMapOverlay = ({
             >
               {overall}
             </span>
+            <button
+              type="button"
+              className="flood-panel-icon-btn"
+              onClick={() => setShowRibbon(false)}
+              aria-label="Hide margin board"
+              title="Hide"
+            >
+              <IconClose />
+            </button>
           </div>
 
           <svg
@@ -935,8 +1016,10 @@ const FloodMapOverlay = ({
             </>
           )}
         </aside>
-      </section>
-    </div>
+      </section>,
+      footerNode,
+    )}
+    </>
   )
 }
 
