@@ -6,7 +6,7 @@ export const EMPTY_MAP_STYLE = {
     {
       id: 'background',
       type: 'background',
-      paint: { 'background-color': '#f5f5f5' },
+      paint: { 'background-color': '#1a2330' },
     },
   ],
 }

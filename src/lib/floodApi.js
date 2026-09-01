@@ -16,14 +16,32 @@ const get = async (path, options) => {
   return response.json()
 }
 
-export const fetchMeta = () => get('/meta')
-export const fetchState = () => get('/state')
-export const fetchMargins = () => get('/margins')
-export const fetchAlerts = () => get('/alerts')
-export const fetchScorecard = () => get('/scorecard')
-export const fetchProfile = (leadH) => get(`/forecast/profile?lead=${leadH}`)
-export const fetchHydrograph = (cell) => get(`/hydrograph?cell=${cell}`)
-export const advanceSim = (hours = 6) => get(`/advance?hours=${hours}`, { method: 'POST' })
+const withRiver = (path, river) => {
+  if (!river) return path
+  const sep = path.includes('?') ? '&' : '?'
+  return `${path}${sep}river=${encodeURIComponent(river)}`
+}
+
+export const fetchRivers = async () => {
+  try {
+    const raw = await get('/rivers')
+    return Array.isArray(raw) ? raw : []
+  } catch {
+    return []
+  }
+}
+
+export const fetchMeta = (river) => get(withRiver('/meta', river))
+export const fetchState = (river) => get(withRiver('/state', river))
+export const fetchMargins = (river) => get(withRiver('/margins', river))
+export const fetchAlerts = (river) => get(withRiver('/alerts', river))
+export const fetchScorecard = (river) => get(withRiver('/scorecard', river))
+export const fetchProfile = (leadH, river) =>
+  get(withRiver(`/forecast/profile?lead=${leadH}`, river))
+export const fetchHydrograph = (cell, river) =>
+  get(withRiver(`/hydrograph?cell=${cell}`, river))
+export const advanceSim = (hours = 6, river) =>
+  get(withRiver(`/advance?hours=${hours}`, river), { method: 'POST' })
 
 export const cellForChainage = (meta, chainageM) => {
   const cellLengthM = (meta.reach_km * 1000) / meta.n_cells

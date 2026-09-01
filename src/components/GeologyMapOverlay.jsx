@@ -6,7 +6,7 @@ import './GeologyMapOverlay.css'
 const EROSION_SERIES_URL = '/asset/mula-mutha-bank-erosion-series.json'
 
 /** Geology detail — rendered inside the Geology group of the Layers panel. */
-const GeologyMapOverlay = ({ onOpenBathymetry }) => {
+const GeologyMapOverlay = () => {
   const [series, setSeries] = useState(null)
 
   useEffect(() => {
@@ -24,19 +24,6 @@ const GeologyMapOverlay = ({ onOpenBathymetry }) => {
   return (
     <LayerPanelPortal viewId="geology">
       <div className="geo-embed panel-embed" aria-label="Geology detail">
-        <p className="geo-note">
-          Bank erosion hotspot = number of year-to-year periods with detected erosion, clipped to
-          the Mula–Mutha AOI. Joining streams are OSM waterways. Spectral lithology is a provisional
-          classed surface-material overlay. Bathymetry draws the satellite depth raster on the map;
-          open the full dashboard for 2D measure / 3D bed / analytics.
-        </p>
-
-        {typeof onOpenBathymetry === 'function' ? (
-          <button type="button" className="geo-bathy-btn" onClick={onOpenBathymetry}>
-            Open Bathymetry Dashboard
-          </button>
-        ) : null}
-
         {series ? (
           <div className="geo-series">
             <div className="geo-series-head">

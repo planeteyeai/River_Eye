@@ -64,8 +64,10 @@ Override    : VITE_FLOOD_API_BASE (see src/lib/floodApi.js)
 Used in     : src/lib/floodApi.js, src/components/FloodMapOverlay.jsx
               public/asset/mula-mutha-twin.html (Digital Twin iframe)
 UI label    : Model
-Endpoints   : /meta  /state  /margins  /alerts  /scorecard
+Endpoints   : /meta  /state  /margins  /alerts  /scorecard  /rivers
               /forecast/profile?lead=<h>  /hydrograph?cell=<i>  /advance?hours=<h>
+              Optional ?river=<name> (or &river=) on the same routes when the
+              twin lists more than one reach.
 
 REAL data from this API:
   - reach centreline lat[] / lon[]  (derived from the KML in 3.1)
@@ -73,11 +75,16 @@ REAL data from this API:
   - real_width_m[]  per-cell channel width measured off the KML polygon
 
 SYNTHETIC data from this API - demonstration only:
-  - q_now discharge (shown as "Discharge" in FloodMapOverlay)
+  - q_now discharge (shown as "Upstream discharge now" in FloodMapOverlay)
   - water surface elevation, bed level, embankment crest
   - asset thresholds, freeboard margins, exceedance probabilities
   - alerts, scorecard, hydrographs
   - the simulation clock advanced by /advance
+
+The Digital Twin side panel (FloodMapOverlay.jsx) mirrors the twin HTML live
+controls: refresh interval, optional auto-advance on each refresh, simulation
+clock, discharge, reach/ensemble stats, river selector, and manual ± step.
+Forecast lead pills live on the bottom margin ribbon.
 
 Discharge in the flood panel is this twin q_now only. Open-Meteo / GloFAS is
 not used (see 1.1 REMOVED).
@@ -139,15 +146,14 @@ Source   : user-supplied KML e16af4da5acc48c597e4e8b1c64a5d74.kml, copied to
            public/asset/mula-mutha-chainage.kml and converted by
            scripts/convert-chainage-kml.mjs.
 Used in  : src/components/MapComponent.jsx (src-chainage: centreline, 100 m
-           ticks, km marks and labels). Toggle in FloodMapOverlay.jsx,
-           BodCodMapOverlay.jsx and ChainageLayerCard.jsx. Shown on Digital
-           Twin and water quality (default on). ChainageScrubber.jsx reads
-           the same GeoJSON for the clickable km scale (km labels plus
+           ticks, km marks and labels). Layer toggle from Dashboard layers
+           (Digital Twin / water quality; default on). ChainageScrubber.jsx
+           reads the same GeoJSON for the clickable km scale (km labels plus
            100 m ticks; step buttons move 100 m). On Digital Twin and water
            quality the scale sits above the bottom ribbon. Click a map
-           station, a chainage bin, or a scale tick to fly there; the
-           selected 1 km section is shown in the twin panel and the water-
-           quality Chainage card. MapComponent also draws 1 km riverbank
+           station, a chainage bin, or a scale tick to fly there. Twin and
+           water-quality side panels no longer show a Chainage section card.
+           MapComponent also draws 1 km riverbank
            boxes whose left/right edges are clipped to mula-mutha-river.kml
            (3.1) via src/lib/chainageBins.js. Estimated bins, river outline
            is the KML. The BOD ribbon km axis (0–42 km demo reaches in 3.2)
@@ -366,9 +372,15 @@ TO CONFIRM: the index behind "health" (NDVI? NDRE?) and its class breaks, the
 Content  : Monthly relative silt classification and volume-surface rasters
            along the Mula-Mutha, Jan-Jul 2026. Classification is discrete
            classes 1-4 (Low / Moderate / High / Very High; class 0 is no
-           data and is transparent). Volume is a continuous Earth-tone
+           data and is transparent).            Volume is a continuous Earth-tone
            surface with a colour scale fixed at 0-94.31 across months so
            they can be compared; the KMZ says the unit is unconfirmed.
+           Volume PNG colours (sampled Jun 2026 overlay, brightness ends):
+             Low    #fef8c8
+             Mid    #fba437
+             High   #722904
+           (UI legend in layerLegends.js silt-volume; panel bar uses the same
+           earth-tone ramp. Not a blue ColorBrewer scale.)
            Overlay colours sampled from the classification PNG:
              1 Low        #44ce1b
              2 Moderate   #cedd54
@@ -1344,3 +1356,17 @@ CHANGE LOG
             "not a field survey", twin HTML title and q_now no longer say
             Demo/synthetic. Twin hydraulics and BOD–COD remain synthetic in
             2.1 / 3.2; that caveat is not shown in the UI.
+2026-09-01  Silt volume legend swatches corrected to match the draped PNG
+            earth-tone ramp (Low #fef8c8 · Mid #fba437 · High #722904). The
+            previous blue ColorBrewer scale in layerLegends.js did not match
+            the KMZ volume overlay; map rasters were already correct. 3.2fa.
+2026-09-01  Digital Twin side panel now shows the twin HTML live controls
+            (refresh interval, auto-advance, sim clock, discharge, reach /
+            ensemble, river selector, manual ± step) instead of overall-
+            status / assets-by-status / reach grid. /rivers + optional river=
+            query wired in floodApi.js (2.1). Forecast lead pills moved to
+            the margin ribbon. Twin chainage section card removed earlier
+            the same day (3.1b).
+2026-09-01  Removed water-quality ChainageLayerCard (selected section /
+            station / length / location info panel). Chainage remains on the
+            map and scrubber only (3.1b).

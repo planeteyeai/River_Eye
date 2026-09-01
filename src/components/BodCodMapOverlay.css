@@ -79,12 +79,6 @@
   transform: translateY(-50%);
 }
 
-.bod-dock-ribbon {
-  left: 50%;
-  bottom: 14px;
-  transform: translateX(-50%);
-}
-
 .bod-panel-icon-btn {
   flex: 0 0 auto;
   width: 28px;
@@ -112,8 +106,8 @@
   opacity: 1;
   visibility: visible;
   transform: none;
-  height: clamp(148px, 22vh, 168px);
-  max-height: clamp(148px, 22vh, 168px);
+  height: clamp(188px, 28vh, 236px);
+  max-height: min(236px, 34vh);
 }
 
 .bod-cod-map-ribbon,
@@ -156,8 +150,8 @@
   grid-template-columns: minmax(0, 1.05fr) minmax(320px, 1.15fr);
   gap: 12px;
   align-items: stretch;
-  height: clamp(148px, 22vh, 168px);
-  max-height: clamp(148px, 22vh, 168px);
+  height: clamp(188px, 28vh, 236px);
+  max-height: min(236px, 34vh);
   overflow: hidden;
   transform: translateY(108%);
 }
@@ -171,7 +165,7 @@
   grid-template-columns: minmax(0, 1.05fr) minmax(320px, 1.15fr);
   gap: 12px;
   align-items: stretch;
-  padding: 8px 16px 6px;
+  padding: 8px 16px 10px;
   border-radius: 0;
   border-left: 0;
   border-right: 0;
@@ -235,8 +229,9 @@
 
 .dashboard.is-fullscreen .bod-cod-map-ribbon.is-stage-footer,
 :fullscreen .bod-cod-map-ribbon.is-stage-footer {
-  height: clamp(160px, 24vh, 188px);
-  max-height: clamp(160px, 24vh, 188px);
+  height: clamp(200px, 30vh, 248px);
+  max-height: min(248px, 36vh);
+  padding-bottom: 36px;
 }
 
 .tss-map-legend {
@@ -745,20 +740,28 @@
 .bod-cod-reach-panel {
   min-width: 0;
   min-height: 0;
+  height: 100%;
   border-left: 1px solid var(--rv-line);
   padding-left: 12px;
   display: grid;
   grid-template-columns: minmax(168px, 0.4fr) minmax(0, 1fr);
   gap: 10px;
   align-items: stretch;
+  overflow: hidden;
 }
 
 .bod-cod-reach-meta {
   min-width: 0;
+  min-height: 0;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  gap: 4px;
+  justify-content: flex-start;
+  gap: 3px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(13, 36, 54, 0.22) transparent;
+  padding-right: 2px;
 }
 
 .bod-cod-reach-panel h3 {
@@ -870,8 +873,8 @@
   .bod-cod-map-ribbon.is-stage-footer,
   .bod-cod-map-ribbon:not(.is-stage-footer) {
     grid-template-columns: minmax(0, 1fr) minmax(280px, 0.95fr);
-    height: clamp(140px, 26vh, 168px);
-    max-height: clamp(140px, 26vh, 168px);
+    height: clamp(180px, 30vh, 228px);
+    max-height: min(228px, 36vh);
   }
 
   .bod-cod-reach-panel {

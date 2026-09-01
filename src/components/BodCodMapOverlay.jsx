@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
 import './BodCodMapOverlay.css'
-import ChainageLayerCard from './ChainageLayerCard'
 import { LayerPanelPortal } from './LayerPanelSlots'
 import { useMapStageFooter, useMapStageRight } from './MapStage'
 import { fetchAssetJson } from '../lib/fetchAssetJson'
@@ -20,13 +19,6 @@ const IconAccuracy = () => (
     <path d="M4 19V5" />
     <path d="M4 19h16" />
     <path d="M8 15l3-5 3 3 4-7" />
-  </svg>
-)
-
-const IconRibbon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-    <path d="M3 12c2.5-4 5.5-6 9-6s6.5 2 9 6c-2.5 4-5.5 6-9 6s-6.5-2-9-6z" />
-    <circle cx="12" cy="12" r="2.2" />
   </svg>
 )
 
@@ -316,9 +308,9 @@ const BodCodMapOverlay = ({
   showNdciLayer = false,
   showNdwiLayer = false,
   showWstLayer = false,
-  showChainageLayer = false,
   focusChainage = null,
   onSelectChainage,
+  preferRibbonOpen = false,
 }) => {
   const [data, setData] = useState(null)
   const [stations, setStations] = useState([])
@@ -326,7 +318,13 @@ const BodCodMapOverlay = ({
   const [selected, setSelected] = useState(null)
   const [openInfoId, setOpenInfoId] = useState('tss')
   const [showAccuracy, setShowAccuracy] = useState(false)
-  const [showRibbon, setShowRibbon] = useState(false)
+  // Open the river end-to-end / reach-detail ribbon by default; reopen when
+  // the Water quality section is selected again.
+  const [showRibbon, setShowRibbon] = useState(true)
+
+  useEffect(() => {
+    if (preferRibbonOpen) setShowRibbon(true)
+  }, [preferRibbonOpen])
   const footerNode = useMapStageFooter()
   const rightNode = useMapStageRight()
 
@@ -546,9 +544,6 @@ const BodCodMapOverlay = ({
             </div>
           )
         })}
-        {showChainageLayer && (
-          <ChainageLayerCard inputId="layer-wq-chainage" focusChainage={focusChainage} />
-        )}
       </div>
     </LayerPanelPortal>
     <div className="bod-cod-map-overlays">
@@ -561,17 +556,6 @@ const BodCodMapOverlay = ({
         title={showAccuracy ? 'Hide accuracy' : 'Show accuracy'}
       >
         <IconAccuracy />
-      </button>
-
-      <button
-        type="button"
-        className={`bod-dock-btn bod-dock-ribbon${showRibbon ? ' is-active' : ''}`}
-        onClick={() => setShowRibbon((open) => !open)}
-        aria-pressed={showRibbon}
-        aria-label={showRibbon ? 'Hide river ribbon' : 'Show river ribbon'}
-        title={showRibbon ? 'Hide river ribbon' : 'Show river ribbon'}
-      >
-        <IconRibbon />
       </button>
     </div>
 

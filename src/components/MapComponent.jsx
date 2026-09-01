@@ -21,14 +21,23 @@ import {
   publishClassHover,
   sampleClassRaster,
 } from '../lib/classRasterHover'
-import {
-  getMapStagePadding,
-} from '../lib/mapSidebarCamera'
 import './MapComponent.css'
 import './DrawAreaComponent.css'
 
 const DEFAULT_CENTER = [78.9629, 20.5937]
 const DEFAULT_ZOOM = 5
+
+/** Keep pan/zoom enabled like a typical web map (Google Maps style). */
+const enableFlatMapNavigation = (map) => {
+  map.dragPan.enable()
+  map.scrollZoom.enable()
+  map.doubleClickZoom.enable()
+  map.touchZoomRotate.enable()
+  map.boxZoom.enable()
+  map.keyboard.enable()
+  map.dragRotate.disable()
+  map.touchZoomRotate.disableRotation()
+}
 
 const POLYGON_SOURCE = 'src-area-polygon'
 const POLYGON_FILL = 'lyr-area-fill'
@@ -99,6 +108,7 @@ const CHAINAGE_BIN_SELECTED = 'lyr-chainage-bin-selected'
 const CHAINAGE_TICKS = 'lyr-chainage-ticks'
 const CHAINAGE_MAJOR = 'lyr-chainage-major'
 const CHAINAGE_FOCUS = 'lyr-chainage-focus'
+const CHAINAGE_FOCUS_LABEL = 'lyr-chainage-focus-label'
 const CHAINAGE_LABELS_MAJOR = 'lyr-chainage-labels-km'
 const CHAINAGE_LABELS_MINOR = 'lyr-chainage-labels-100m'
 const CHAINAGE_GEOJSON_URL = '/asset/mula-mutha-chainage.geojson'
@@ -275,8 +285,8 @@ const TRIB_WIDTH = [
 
 const EMPTY_COLLECTION = { type: 'FeatureCollection', features: [] }
 
-// Chainage is a reference scale, so it has to stay legible on top of whatever
-// thematic fill or raster is open. Listed bottom-to-top within the group.
+// Chainage reference scale sits under thematic overlays (rasters / vectors).
+// Scrubber focus is re-raised above themes after stacking — see raiseTheme….
 const CHAINAGE_STACK = [
   CHAINAGE_BIN_FILL,
   CHAINAGE_BIN_ACTIVE,
@@ -286,8 +296,45 @@ const CHAINAGE_STACK = [
   CHAINAGE_TICKS,
   CHAINAGE_MAJOR,
   CHAINAGE_FOCUS,
+  CHAINAGE_FOCUS_LABEL,
   CHAINAGE_LABELS_MAJOR,
   CHAINAGE_LABELS_MINOR,
+]
+
+/** Thematic layers that must sit above chainage (bottom → top). */
+const THEME_ABOVE_CHAINAGE = [
+  TSS_RASTER,
+  NDCI_RASTER,
+  NDWI_RASTER,
+  WST_RASTER,
+  DEPTH_RASTER,
+  SILT_CLASS_RASTER,
+  SILT_VOLUME_RASTER,
+  LULC_RASTER,
+  LULC_POLY_FILL,
+  LULC_POLY_LINE,
+  EROSION_RASTER,
+  LITHOLOGY_RASTER,
+  BIODIV_TYPE_RASTER,
+  BIODIV_HEALTH_RASTER,
+  CLIMATE_WATER_HEAT,
+  CLIMATE_FLOOD_HEAT,
+  URBAN_VEG_FILL,
+  URBAN_VEG_LINE,
+  FLOOD_ZONE_FILL,
+  FLOOD_ZONE_LINE,
+  NDSI_SALINITY_FILL,
+  NDSI_SALINITY_LINE,
+  WRD_LINE_LAYER,
+  TRIB_GLOW,
+  TRIB_LINE,
+  TRIB_DASH,
+  TRIB_FLOW_SHEEN,
+  TRIB_FLOW_GLOW,
+  TRIB_FLOW,
+  TRIB_LABELS,
+  GARBAGE_LAYER,
+  GARBAGE_LABELS,
 ]
 
 const raiseTwinAssetsToTop = (map) => {
@@ -296,8 +343,13 @@ const raiseTwinAssetsToTop = (map) => {
   })
 }
 
-const raiseChainageToTop = (map) => {
-  CHAINAGE_STACK.forEach((layerId) => {
+/** Theme rasters above base chainage; scrubber playhead + its label above themes; twin pins on top. */
+const raiseThemeLayersAboveChainage = (map) => {
+  THEME_ABOVE_CHAINAGE.forEach((layerId) => {
+    if (map.getLayer(layerId)) map.moveLayer(layerId)
+  })
+  // Only the active scrubber station (point + number) stays above theme rasters.
+  ;[CHAINAGE_FOCUS, CHAINAGE_FOCUS_LABEL].forEach((layerId) => {
     if (map.getLayer(layerId)) map.moveLayer(layerId)
   })
   raiseTwinAssetsToTop(map)
@@ -922,7 +974,15 @@ const ensureOverlayLayers = (map) => {
       source: RIVER_SPARK_SOURCE,
       interactive: false,
       paint: {
-        'circle-radius': ['*', ['get', 's'], ['interpolate', ['linear'], ['zoom'], 11, 1.4, 15, 2.6]],
+        'circle-radius': [
+          'interpolate',
+          ['linear'],
+          ['zoom'],
+          11,
+          ['*', ['get', 's'], 1.4],
+          15,
+          ['*', ['get', 's'], 2.6],
+        ],
         'circle-color': '#ffffff',
         'circle-opacity': ['get', 'o'],
         'circle-blur': 0.35,
@@ -1043,6 +1103,27 @@ const ensureOverlayLayers = (map) => {
         'circle-stroke-width': 2.4,
         'circle-stroke-color': '#fff8e7',
         'circle-opacity': 0.95,
+      },
+    })
+    map.addLayer({
+      id: CHAINAGE_FOCUS_LABEL,
+      type: 'symbol',
+      source: CHAINAGE_SOURCE,
+      filter: ['==', ['get', 'name'], ''],
+      layout: {
+        visibility: 'none',
+        'text-field': ['get', 'name'],
+        'text-font': ['Open Sans Bold', 'Open Sans Regular'],
+        'text-size': 12,
+        'text-offset': [0, 1.25],
+        'text-anchor': 'top',
+        'text-allow-overlap': true,
+        'text-ignore-placement': true,
+      },
+      paint: {
+        'text-color': '#ffd166',
+        'text-halo-color': 'rgba(12, 18, 22, 0.92)',
+        'text-halo-width': 1.8,
       },
     })
     map.addLayer({
@@ -1171,8 +1252,6 @@ const MapComponent = ({
   const classNoteKeyRef = useRef('')
   const studyBoundsRef = useRef(studyBounds)
   studyBoundsRef.current = studyBounds
-  const sidebarLeftWidthRef = useRef(0)
-  const sidebarFitTimerRef = useRef(null)
   const drawPointsRef = useRef([])
   const drawHandlersRef = useRef({ click: null, dblclick: null })
   const [drawPointCount, setDrawPointCount] = React.useState(0)
@@ -1244,11 +1323,12 @@ const MapComponent = ({
       pitch: 0,
       bearing: 0,
       attributionControl: { compact: true },
+      preserveDrawingBuffer: true,
+      fadeDuration: 0,
     })
 
     map.addControl(new NavigationControl({ visualizePitch: true }), 'bottom-right')
-    map.dragRotate.disable()
-    map.touchZoomRotate.disableRotation()
+    enableFlatMapNavigation(map)
 
     const resizeObserver = new ResizeObserver(() => {
       map.resize()
@@ -1265,6 +1345,7 @@ const MapComponent = ({
     map.on('load', () => {
       mapRef.current = map
       mapReadyRef.current = true
+      enableFlatMapNavigation(map)
 
       const initialId = mapLayerRef.current || DEFAULT_BASEMAP
       const initial = BASEMAP_MAP[initialId] || BASEMAP_MAP[DEFAULT_BASEMAP]
@@ -1306,87 +1387,23 @@ const MapComponent = ({
   }, [])
 
   useEffect(() => {
-    const easing = (t) => 1 - Math.pow(1 - t, 3)
-
-    const clearSidebarFitTimer = () => {
-      if (sidebarFitTimerRef.current) {
-        window.clearTimeout(sidebarFitTimerRef.current)
-        sidebarFitTimerRef.current = null
-      }
-    }
-
-    const readLeftSidebarWidth = () => {
-      const el = document.querySelector('.map-stage-left')
-      return el?.offsetWidth || 0
-    }
-
-    const fitVisibleViewport = (map, { zoomOut = true, duration = 520 } = {}) => {
-      clearSidebarFitTimer()
-      map.resize()
-
-      const runFit = () => {
-        map.resize()
-        const padding = getMapStagePadding()
-        const bounds = studyBoundsRef.current
-        if (bounds) {
-          map.fitBounds(bounds, {
-            padding,
-            maxZoom: 14.4,
-            duration,
-            essential: true,
-            easing,
-          })
-          return
-        }
-        map.easeTo({
-          center: map.getCenter(),
-          zoom: map.getZoom(),
-          padding,
-          duration,
-          essential: true,
-          easing,
-        })
-      }
-
-      if (!zoomOut) {
-        sidebarFitTimerRef.current = window.setTimeout(runFit, 80)
-        return
-      }
-
-      const leftW = readLeftSidebarWidth()
-      map.easeTo({
-        zoom: Math.max(map.getZoom() - (leftW > 200 ? 1.05 : 0.65), 9.2),
-        duration: 240,
-        essential: true,
-        easing,
-      })
-      sidebarFitTimerRef.current = window.setTimeout(runFit, 260)
-    }
-
+    // Sidebar open/close only resizes the canvas — do not change zoom/center.
+    let resizeTimer = null
     const onLayoutChange = () => {
       const map = mapRef.current
       if (!map || !mapReadyRef.current) return
-
-      map.resize()
-      const leftW = readLeftSidebarWidth()
-      const prev = sidebarLeftWidthRef.current
-      sidebarLeftWidthRef.current = leftW
-
-      if (leftW === prev) return
-
-      map.stop()
-      if (leftW > prev) {
-        fitVisibleViewport(map)
-      } else if (leftW === 0) {
-        fitVisibleViewport(map, { zoomOut: false, duration: 420 })
-      } else {
-        fitVisibleViewport(map, { zoomOut: true, duration: 460 })
-      }
+      // Coalesce rapid layout pulses into one resize after paint.
+      if (resizeTimer) window.clearTimeout(resizeTimer)
+      resizeTimer = window.setTimeout(() => {
+        resizeTimer = null
+        map.resize()
+        map.triggerRepaint?.()
+      }, 0)
     }
 
     window.addEventListener('map-stage-layout-change', onLayoutChange)
     return () => {
-      clearSidebarFitTimer()
+      if (resizeTimer) window.clearTimeout(resizeTimer)
       window.removeEventListener('map-stage-layout-change', onLayoutChange)
     }
   }, [])
@@ -1864,6 +1881,7 @@ const MapComponent = ({
         CHAINAGE_TICKS,
         CHAINAGE_MAJOR,
         CHAINAGE_FOCUS,
+        CHAINAGE_FOCUS_LABEL,
         CHAINAGE_LABELS_MAJOR,
         CHAINAGE_LABELS_MINOR,
       ].forEach((layerId) => {
@@ -1889,7 +1907,7 @@ const MapComponent = ({
           buildChainageBins(geojson, geometryToCoordinates(drawnGeometry, uploadedKML)),
         )
         setVisibility(true)
-        raiseChainageToTop(map)
+        raiseThemeLayersAboveChainage(map)
       } catch (error) {
         console.error('Failed to load chainage layer', error)
         if (!cancelled) setVisibility(false)
@@ -1974,12 +1992,11 @@ const MapComponent = ({
     }
   }, [showChainageLayer, mapReady, drawnGeometry, uploadedKML])
 
-  // Keep chainage and twin asset pins above rasters / river animation.
+  // Theme overlays (silt, LULC, WQ, …) stay above chainage; twin pins on top.
   useEffect(() => {
     const map = mapRef.current
     if (!map || !mapReady) return
-    if (showChainageLayer) raiseChainageToTop(map)
-    raiseTwinAssetsToTop(map)
+    raiseThemeLayersAboveChainage(map)
   }, [
     mapReady,
     showChainageLayer,
@@ -2138,7 +2155,7 @@ const MapComponent = ({
         }
         if (cancelled) return
         setVisibility(true)
-        if (showChainageLayer) raiseChainageToTop(map)
+        raiseThemeLayersAboveChainage(map)
       } catch (error) {
         console.error('Failed to load NDSI salinity', error)
         if (!cancelled) setVisibility(false)
@@ -3125,8 +3142,19 @@ const MapComponent = ({
     const { lng, lat, name } = focusChainage
     if (!Number.isFinite(lng) || !Number.isFinite(lat)) return
 
-    if (map.getLayer(CHAINAGE_FOCUS) && name) {
-      map.setFilter(CHAINAGE_FOCUS, ['==', ['get', 'name'], name])
+    if (map.getLayer(CHAINAGE_FOCUS)) {
+      const focusName = focusChainage.nearestName || focusChainage.name
+      if (focusName) {
+        const nameFilter = ['==', ['get', 'name'], focusName]
+        map.setFilter(CHAINAGE_FOCUS, nameFilter)
+        if (map.getLayer(CHAINAGE_FOCUS_LABEL)) {
+          map.setFilter(CHAINAGE_FOCUS_LABEL, nameFilter)
+        }
+      }
+      ;[CHAINAGE_FOCUS, CHAINAGE_FOCUS_LABEL].forEach((layerId) => {
+        if (map.getLayer(layerId)) map.moveLayer(layerId)
+      })
+      raiseTwinAssetsToTop(map)
     }
     if (map.getLayer(CHAINAGE_BIN_ACTIVE)) {
       map.setFilter(CHAINAGE_BIN_ACTIVE, binFilterForChainage(focusChainage.chainage_m))
@@ -3147,7 +3175,7 @@ const MapComponent = ({
     map.flyTo({
       center: [lng, lat],
       zoom: Math.max(map.getZoom(), 15.2),
-      duration: 900,
+      duration: focusChainage.scrub ? 0 : 900,
       essential: true,
       padding: { top: 48, bottom: 96, left: 48, right: 96 },
     })
@@ -3240,10 +3268,13 @@ const MapComponent = ({
     if (!map || !mapReady || !map.getLayer(TWIN_ASSET_LAYER)) return
     const selectedId = selectedTwinAssetId || ''
     map.setPaintProperty(TWIN_ASSET_LAYER, 'circle-radius', [
-      'case',
-      ['==', ['get', 'id'], selectedId],
-      ['interpolate', ['linear'], ['zoom'], 11, 10, 15, 14],
-      ['interpolate', ['linear'], ['zoom'], 11, 7, 15, 11],
+      'interpolate',
+      ['linear'],
+      ['zoom'],
+      11,
+      ['case', ['==', ['get', 'id'], selectedId], 10, 7],
+      15,
+      ['case', ['==', ['get', 'id'], selectedId], 14, 11],
     ])
     map.setPaintProperty(TWIN_ASSET_LAYER, 'circle-stroke-width', [
       'case',

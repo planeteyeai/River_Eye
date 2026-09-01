@@ -1,0 +1,94 @@
+.time-series-bar {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1250;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: min(860px, calc(100% - 360px));
+  padding: 6px 8px 6px 12px;
+  border: 1px solid var(--rv-line, #dde6ee);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: var(--rv-shadow, 0 6px 18px rgba(13, 36, 54, 0.12));
+  backdrop-filter: blur(10px);
+  pointer-events: auto;
+  box-sizing: border-box;
+}
+
+.time-series-bar-label {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  flex: 0 0 auto;
+  font-size: 11px;
+  font-weight: 650;
+  line-height: 1.15;
+  color: var(--rv-ink, #0d2436);
+  white-space: nowrap;
+}
+
+.time-series-bar-label em {
+  font-style: normal;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--rv-muted, #6b8798);
+}
+
+.time-series-bar-track {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  padding-right: 2px;
+}
+
+.time-series-chip {
+  flex: 0 0 auto;
+  margin: 0;
+  padding: 6px 10px;
+  border: 1px solid var(--rv-line, #dde6ee);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--rv-ink, #0d2436);
+  font-family: var(--rv-font-body, sans-serif);
+  font-size: 12px;
+  font-weight: 650;
+  line-height: 1.2;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.time-series-chip:hover {
+  border-color: var(--rv-blue, #2f9bd6);
+  background: var(--rv-blue-soft, #e8f4fb);
+}
+
+.time-series-chip.is-on {
+  border-color: var(--rv-blue, #2f9bd6);
+  background: var(--rv-blue-soft, #e8f4fb);
+  color: var(--rv-blue-dark, #0a4f70);
+}
+
+.time-series-empty {
+  font-size: 11px;
+  color: var(--rv-muted, #6b8798);
+  padding: 0 4px;
+}
+
+@media (max-width: 900px) {
+  .time-series-bar {
+    left: 12px;
+    right: 12px;
+    transform: none;
+    max-width: none;
+    width: auto;
+  }
+}

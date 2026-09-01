@@ -20,10 +20,12 @@ import BiodiversityMapOverlay from './BiodiversityMapOverlay'
 import ClimateImpactMapOverlay from './ClimateImpactMapOverlay'
 import GeologyMapOverlay from './GeologyMapOverlay'
 import AppLogo from './AppLogo'
+import TimeSeriesBar from './TimeSeriesBar'
 import WeatherSection from './WeatherSection'
 import AQISection from './AQISection'
 import LiveDashboardCards from './LiveDashboardCards'
 import { calculateGeometryCenter, fetchAQIData, fetchWeatherData, fetchHourlyAQIDataRange, fetchHourlyWeatherData, fetchHourlyAQIData } from '../services/api'
+import { RETURN_PERIODS, ZONE_STYLES } from '../lib/floodZones'
 import './Dashboard.css'
 import './DatePicker.css'
 // HeightSelectionScreen.css was deleted - remove import if HeightSelectionScreen is not used
@@ -60,6 +62,8 @@ const Dashboard = () => {
   const [showChainageLayer, setShowChainageLayer] = useState(false)
   const [focusChainage, setFocusChainage] = useState(null)
   const [showFloodDepthLayer, setShowFloodDepthLayer] = useState(false)
+  const [showTwinLayer, setShowTwinLayer] = useState(false)
+  const [activeFloodZones, setActiveFloodZones] = useState([])
   const [twinAssets, setTwinAssets] = useState(null)
   const [selectedTwinAssetId, setSelectedTwinAssetId] = useState(null)
   const [showBathyMapLayer, setShowBathyMapLayer] = useState(false)
@@ -99,6 +103,8 @@ const Dashboard = () => {
   const [selectedHeight, setSelectedHeight] = useState(null) // '0-3meter' or '3meter-above' or null
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [expandedViewId, setExpandedViewId] = useState(null)
+  const [layersOpenToken, setLayersOpenToken] = useState(0)
+  const [twinLeadH, setTwinLeadH] = useState(24)
   const cssFullscreenRef = useRef(false)
   
   // Refs to prevent multiple simultaneous API calls
@@ -1015,6 +1021,8 @@ const Dashboard = () => {
         setShowGarbageLayer(false)
         setShowWrdFloodlines(false)
         setShowFloodDepthLayer(false)
+        setShowTwinLayer(false)
+        setActiveFloodZones([])
         setShowFlood(false)
         setShowFloodOverlay(false)
         setShowLandUseOverlay(false)
@@ -1669,6 +1677,44 @@ const Dashboard = () => {
     if (isMulaMuthaRiver) setShowChainageLayer(true)
   }, [isMulaMuthaRiver])
 
+  // Top bar shows time spans only for layers that have a period series.
+  const activeTimeSeries = useMemo(() => {
+    const prefer = expandedViewId
+    const siltOn = showSiltClassLayer || showSiltVolumeLayer
+    const climateOn = showClimateFloodHeat || showClimateWaterHeat
+
+    if (prefer === 'landuse' && showLulcLayer) {
+      return { key: 'lulc', periodId: lulcPeriodId, onChange: setLulcPeriodId }
+    }
+    if (prefer === 'landuse' && siltOn) {
+      return { key: 'silt', periodId: siltPeriodId, onChange: setSiltPeriodId }
+    }
+    if (prefer === 'climate' && climateOn) {
+      return { key: 'climate', periodId: climatePeriodId, onChange: setClimatePeriodId }
+    }
+
+    if (showLulcLayer) {
+      return { key: 'lulc', periodId: lulcPeriodId, onChange: setLulcPeriodId }
+    }
+    if (siltOn) {
+      return { key: 'silt', periodId: siltPeriodId, onChange: setSiltPeriodId }
+    }
+    if (climateOn) {
+      return { key: 'climate', periodId: climatePeriodId, onChange: setClimatePeriodId }
+    }
+    return null
+  }, [
+    expandedViewId,
+    showLulcLayer,
+    showSiltClassLayer,
+    showSiltVolumeLayer,
+    showClimateFloodHeat,
+    showClimateWaterHeat,
+    lulcPeriodId,
+    siltPeriodId,
+    climatePeriodId,
+  ])
+
   const geologyLayersOn =
     showErosionLayer ||
     showLithologyLayer ||
@@ -1869,12 +1915,44 @@ const Dashboard = () => {
     ],
     flood: [
       {
+        id: 'twin',
+        group: 'Digital Twin',
+        label: 'Digital Twin',
+        hint: 'Margins, assets, hydrograph and alerts',
+        checked: showTwinLayer,
+        onToggle: (on) => {
+          setShowTwinLayer(on)
+          if (on && isMulaMuthaRiver) setShowChainageLayer(true)
+        },
+        colors: legendForLayer('twin')?.colors,
+      },
+      {
         id: 'depth',
+        group: 'Water depth',
         label: 'Water depth',
         hint: 'Classed depth 1.5–2.0 m',
         checked: showFloodDepthLayer,
         onToggle: setShowFloodDepthLayer,
+        colors: legendForLayer('depth')?.colors,
       },
+      ...RETURN_PERIODS.map((years) => {
+        const style = ZONE_STYLES[years]
+        return {
+          id: `flood-${years}`,
+          group: 'Flood zones',
+          label: `${style.label} flood`,
+          hint: style.note,
+          checked: activeFloodZones.includes(years),
+          onToggle: (on) => {
+            setActiveFloodZones((current) =>
+              on
+                ? current.includes(years) ? current : [...current, years]
+                : current.filter((value) => value !== years),
+            )
+          },
+          colors: legendForLayer(`flood-${years}`)?.colors,
+        }
+      }),
     ],
   }), [
     showAqiOverlay,
@@ -1903,6 +1981,9 @@ const Dashboard = () => {
     showWrdFloodlines,
     showGarbageLayer,
     showFloodDepthLayer,
+    showTwinLayer,
+    activeFloodZones,
+    isMulaMuthaRiver,
   ])
 
   return (
@@ -1979,6 +2060,11 @@ const Dashboard = () => {
             <LayerPanelSlotProvider>
             <MapStage>
             <div className="map-wrapper">
+              <TimeSeriesBar
+                seriesKey={activeTimeSeries?.key || null}
+                periodId={activeTimeSeries?.periodId ?? null}
+                onPeriodChange={activeTimeSeries?.onChange}
+              />
               <MapViewsControl
                 loading={loading}
                 isMulaMutha={isMulaMuthaRiver}
@@ -1986,28 +2072,52 @@ const Dashboard = () => {
                 expandedViewId={expandedViewId}
                 onExpandedViewIdChange={setExpandedViewId}
                 onViewExpand={handleViewExpand}
+                onOpenTwinDashboard={() => {
+                  setShowFlood(true)
+                  setShowBathy(false)
+                  setShowBodCod(false)
+                  setShowAnalysis(false)
+                  setShowBodCodOverlay(false)
+                  setShowAqiOverlay(false)
+                  setShowFloodOverlay(false)
+                  setShowGeologyOverlay(false)
+                }}
+                onOpenBathymetry={() => {
+                  setShowBathy(true)
+                  setShowFlood(false)
+                  setShowBodCod(false)
+                  setShowAnalysis(false)
+                  setShowBodCodOverlay(false)
+                  setShowAqiOverlay(false)
+                  setShowFloodOverlay(false)
+                  setShowGeologyOverlay(false)
+                }}
+                openToken={layersOpenToken}
               />
               <MapLayersControl mapLayer={mapLayer} onLayerChange={setMapLayer} />
               {(waterQualityPanelOpen || waterQualityLayersOn) && (
                 <BodCodMapOverlay
+                  preferRibbonOpen={waterQualityPanelOpen}
                   showTssLayer={showTssLayer}
                   showNdciLayer={showNdciLayer}
                   showNdwiLayer={showNdwiLayer}
                   showWstLayer={showWstLayer}
-                  showChainageLayer={showChainageLayer}
                   focusChainage={focusChainage}
                   onSelectChainage={(station) => setFocusChainage({ ...station, at: Date.now() })}
                 />
               )}
-              {(floodPanelOpen || showFloodDepthLayer) && (
+              {(floodPanelOpen || showTwinLayer || showFloodDepthLayer || activeFloodZones.length > 0) && (
                 <FloodMapOverlay
+                  preferPanelsOpen={showTwinLayer}
+                  activeZones={activeFloodZones}
                   onZonesChange={setFloodZones}
                   onAssetsChange={setTwinAssets}
                   selectedAssetId={selectedTwinAssetId}
                   onSelectedAssetChange={setSelectedTwinAssetId}
-                  showChainageLayer={showChainageLayer}
                   showDepthLayer={showFloodDepthLayer}
-                  focusChainage={focusChainage}
+                  showTwinLayer={showTwinLayer}
+                  leadH={twinLeadH}
+                  onLeadChange={setTwinLeadH}
                 />
               )}
               {(landUsePanelOpen || landUseLayersOn) && (
@@ -2035,18 +2145,7 @@ const Dashboard = () => {
                 />
               )}
               {isMulaMuthaRiver && (geologyPanelOpen || geologyLayersOn) && (
-                <GeologyMapOverlay
-                  onOpenBathymetry={() => {
-                    setShowBathy(true)
-                    setShowFlood(false)
-                    setShowBodCod(false)
-                    setShowAnalysis(false)
-                    setShowBodCodOverlay(false)
-                    setShowAqiOverlay(false)
-                    setShowFloodOverlay(false)
-                    setShowGeologyOverlay(false)
-                  }}
-                />
+                <GeologyMapOverlay />
               )}
               {showAqiOverlay && (
                 <AqiMapOverlay
@@ -2093,9 +2192,9 @@ const Dashboard = () => {
                     uploadedKML?.name?.toLowerCase().includes('mula-mutha')) &&
                   showChainageLayer
                 }
-                floodZones={showFloodDepthLayer ? floodZones : null}
-                twinAssets={showFloodDepthLayer ? twinAssets : null}
-                selectedTwinAssetId={showFloodDepthLayer ? selectedTwinAssetId : null}
+                floodZones={activeFloodZones.length > 0 ? floodZones : null}
+                twinAssets={showTwinLayer ? twinAssets : null}
+                selectedTwinAssetId={showTwinLayer ? selectedTwinAssetId : null}
                 onSelectTwinAsset={setSelectedTwinAssetId}
                 focusChainage={focusChainage}
                 onSelectChainage={(station) => setFocusChainage({ ...station, at: Date.now() })}
@@ -2106,11 +2205,16 @@ const Dashboard = () => {
                 showChainageLayer && (
                   <ChainageScrubber
                     variant={
-                      showFloodDepthLayer || waterQualityLayersOn || showAqiOverlay
+                      showTwinLayer ||
+                      showFloodDepthLayer ||
+                      activeFloodZones.length > 0 ||
+                      waterQualityLayersOn ||
+                      showAqiOverlay
                         ? 'above-ribbon'
                         : 'map-edge'
                     }
-                    activeName={focusChainage?.name}
+                    activeName={focusChainage?.nearestName || focusChainage?.name}
+                    activeMetres={focusChainage?.chainage_m}
                     onSelect={(station) => setFocusChainage({ ...station, at: Date.now() })}
                   />
                 )}

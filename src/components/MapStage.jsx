@@ -26,6 +26,8 @@ const RIGHT_PANEL_WIDTH = 'min(280px, 34vw)'
 /**
  * Map stage: left sidebar · map · right sidebar, with an optional footer row.
  * Portaled panels shrink the map instead of covering it.
+ * Layer category icons float on the map (MapViewsControl); left column is
+ * reserved for future docked panels.
  */
 const MapStage = ({ children }) => {
   const [leftNode, setLeftNode] = useState(null)
@@ -33,6 +35,7 @@ const MapStage = ({ children }) => {
   const [footerNode, setFooterNode] = useState(null)
   const bodyRef = useRef(null)
   const stageRef = useRef(null)
+  const lastColumnsRef = useRef({ left: null, right: null })
 
   const syncGridColumns = useCallback(() => {
     const body = bodyRef.current
@@ -46,6 +49,12 @@ const MapStage = ({ children }) => {
     }
 
     const rightWidth = rightNode?.childElementCount > 0 ? RIGHT_PANEL_WIDTH : '0px'
+
+    const prev = lastColumnsRef.current
+    const changed = prev.left !== leftWidth || prev.right !== rightWidth
+    if (!changed) return
+
+    lastColumnsRef.current = { left: leftWidth, right: rightWidth }
     body.style.setProperty('--map-stage-left-width', leftWidth)
     body.style.setProperty('--map-stage-right-width', rightWidth)
 
@@ -55,8 +64,11 @@ const MapStage = ({ children }) => {
       stage.classList.toggle('has-right-sidebar', rightWidth !== '0px')
     }
 
+    // After layout paints, ask the map to resize once (avoids mid-frame white clear).
     requestAnimationFrame(() => {
-      window.dispatchEvent(new Event('map-stage-layout-change'))
+      requestAnimationFrame(() => {
+        window.dispatchEvent(new Event('map-stage-layout-change'))
+      })
     })
   }, [leftNode, rightNode])
 
@@ -67,10 +79,11 @@ const MapStage = ({ children }) => {
   useEffect(() => {
     syncGridColumns()
 
-    const onLayoutChange = () => syncGridColumns()
-    window.addEventListener('map-stage-layout-change', onLayoutChange)
-
-    const observer = new MutationObserver(onLayoutChange)
+    // Only watch structural / class changes that can open or close sidebars.
+    // Do not re-enter via map-stage-layout-change (that caused a resize loop).
+    const observer = new MutationObserver(() => {
+      syncGridColumns()
+    })
     const observerConfig = {
       childList: true,
       subtree: true,
@@ -81,12 +94,12 @@ const MapStage = ({ children }) => {
     if (rightNode) observer.observe(rightNode, observerConfig)
 
     return () => {
-      window.removeEventListener('map-stage-layout-change', onLayoutChange)
       observer.disconnect()
       if (bodyRef.current) {
         bodyRef.current.style.removeProperty('--map-stage-left-width')
         bodyRef.current.style.removeProperty('--map-stage-right-width')
       }
+      lastColumnsRef.current = { left: null, right: null }
     }
   }, [leftNode, rightNode, syncGridColumns])
 

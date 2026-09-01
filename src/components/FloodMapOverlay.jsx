@@ -1,15 +1,15 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import {
   STATUS_COLORS,
   advanceSim,
   cellForChainage,
-  countByStatus,
   downsample,
   fetchHydrograph,
   fetchMargins,
   fetchMeta,
   fetchProfile,
+  fetchRivers,
   fetchState,
   shortName,
   worstStatus,
@@ -21,31 +21,30 @@ import {
   buildFloodZones,
   getReturnPeriods,
 } from '../lib/floodZones'
-import { binBoundsForChainage, formatChainage } from '../lib/chainageBins'
-import { LayerPanelPortal } from './LayerPanelSlots'
 import { useMapStageFooter, useMapStageRight } from './MapStage'
 import './FloodMapOverlay.css'
 
 const LEAD_OPTIONS = [6, 24, 48, 72]
-
-const IconTwinPanel = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-    <rect x="4" y="4" width="16" height="16" rx="2" />
-    <path d="M8 9h8M8 13h5" />
-  </svg>
-)
+const REFRESH_OPTIONS = [
+  { value: 30, label: '30 s' },
+  { value: 60, label: '1 min' },
+  { value: 300, label: '5 min' },
+  { value: 600, label: '10 min' },
+  { value: 0, label: 'Off' },
+]
+const AUTO_ADV_OPTIONS = [
+  { value: 0, label: 'Off' },
+  { value: 1, label: '+1 h / refresh' },
+  { value: 3, label: '+3 h / refresh' },
+  { value: 6, label: '+6 h / refresh' },
+  { value: 12, label: '+12 h / refresh' },
+  { value: 24, label: '+24 h / refresh' },
+]
 
 const IconClose = () => (
   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" aria-hidden="true">
     <path d="M18 6 6 18" />
     <path d="m6 6 12 12" />
-  </svg>
-)
-
-const IconRibbon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-    <path d="M3 12c2.5-4 5.5-6 9-6s6.5 2 9 6c-2.5 4-5.5 6-9 6s-6.5-2-9-6z" />
-    <circle cx="12" cy="12" r="2.2" />
   </svg>
 )
 
@@ -179,131 +178,17 @@ const AssetHydrograph = ({ hydro, meta, threshold }) => {
   )
 }
 
-const TwinLayerPicker = ({
-  activeZones,
-  onToggleZone,
-  showDepthLayer,
-  showChainageLayer,
-  returnPeriods,
-  zones,
-  depthSummary,
-  openLayerId,
-  onToggleInfo,
-  chainageSelection = null,
-}) => {
-  const layers = [
-    ...RETURN_PERIODS.map((years) => {
-      const style = ZONE_STYLES[years]
-      const stats = zones?.summary?.find((row) => row.years === years)
-      return {
-        id: String(years),
-        title: `${style.label} flood`,
-        checked: activeZones.includes(years),
-        onChange: (checked) => {
-          if (checked !== activeZones.includes(years)) onToggleZone(years)
-        },
-        subtitle: style.note,
-        rows: [
-          {
-            label: `${Math.round(returnPeriods.levels[years])} m³/s`,
-            color: style.color,
-          },
-          stats
-            ? {
-                label: `${Math.round(stats.meanWidthM)} m · ${stats.areaKm2.toFixed(1)} km²`,
-                color: style.color,
-              }
-            : null,
-        ].filter(Boolean),
-      }
-    }),
-    {
-      id: 'depth',
-      title: 'Water depth',
-      checked: showDepthLayer,
-      hideCheck: true,
-      subtitle: 'Classed depth 1.5–2.0 m · smoothed raster',
-      rows: (depthSummary?.classes || []).map((row) => ({
-        label: `${row.label} · ${row.range_label}`,
-        color: row.color,
-      })),
-    },
-    {
-      id: 'chainage',
-      title: 'Chainage',
-      checked: showChainageLayer,
-      hideCheck: true,
-      subtitle: chainageSelection
-        ? `Selected ${chainageSelection.bin.name} · station ${chainageSelection.station}`
-        : 'Centreline stations every 100 m · 0+000 to 16+400',
-      rows: [{ label: 'km marks and 100 m ticks', color: '#ffd166' }],
-    },
-    // The zone rows carry their own checkbox, so they stay listed when off.
-  ].filter((layer) => !layer.hideCheck || layer.checked)
-
-  return (
-    <div className="flood-map-layers panel-embed" aria-label="Digital twin layers">
-      {layers.map((layer) => {
-        const isOpen = openLayerId === layer.id
-        const inputId = `twin-layer-${layer.id}`
-        return (
-          <div
-            key={layer.id}
-            className={`flood-layer-card${layer.checked ? '' : ' is-off'}${isOpen ? ' is-open' : ''}`}
-          >
-            <div className="flood-layer-head">
-              {layer.hideCheck ? (
-                <span className="flood-layer-check-text">{layer.title}</span>
-              ) : (
-                <label className="flood-layer-check" htmlFor={inputId}>
-                  <input
-                    id={inputId}
-                    type="checkbox"
-                    checked={Boolean(layer.checked)}
-                    onChange={(event) => layer.onChange(event.target.checked)}
-                  />
-                  <span className="flood-layer-check-text">{layer.title}</span>
-                </label>
-              )}
-              <button
-                type="button"
-                className="flood-layer-info"
-                aria-expanded={isOpen}
-                aria-controls={`twin-info-${layer.id}`}
-                onClick={() => onToggleInfo(layer.id)}
-              >
-                Info
-                <span className="flood-layer-caret" aria-hidden="true" />
-              </button>
-            </div>
-            {isOpen ? (
-              <div className="flood-layer-body" id={`twin-info-${layer.id}`}>
-                {layer.subtitle ? <small className="flood-layer-sub">{layer.subtitle}</small> : null}
-                <div className="flood-layer-rows">
-                  {layer.rows.map((row) => (
-                    <span key={row.label}>
-                      <i style={{ background: row.color }} />
-                      {row.label}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            ) : null}
-          </div>
-        )
-      })}
-    </div>
-  )
-}
-
 const FloodMapOverlay = ({
   onZonesChange,
   onAssetsChange,
   selectedAssetId = null,
   onSelectedAssetChange,
-  showChainageLayer = true,
-  showDepthLayer = true,
-  focusChainage = null,
+  showDepthLayer = false,
+  showTwinLayer = false,
+  leadH = null,
+  onLeadChange = null,
+  preferPanelsOpen = false,
+  activeZones: activeZonesProp = null,
 }) => {
   const [meta, setMeta] = useState(null)
   const [state, setState] = useState(null)
@@ -311,16 +196,46 @@ const FloodMapOverlay = ({
   const [profile, setProfile] = useState(null)
   const [hydro, setHydro] = useState(null)
   const [selected, setSelected] = useState(null)
-  const [lead, setLead] = useState(24)
+  const [leadInternal, setLeadInternal] = useState(24)
+  const lead = leadH != null ? leadH : leadInternal
+  const setLead = (value) => {
+    if (typeof onLeadChange === 'function') onLeadChange(value)
+    else setLeadInternal(value)
+  }
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState(null)
+  const [fetchingTwin, setFetchingTwin] = useState(true)
   const [depthSummary, setDepthSummary] = useState(null)
-  const [activeZones, setActiveZones] = useState(RETURN_PERIODS)
-  const [openLayerId, setOpenLayerId] = useState('10')
-  const [showSummaryPanel, setShowSummaryPanel] = useState(false)
-  const [showRibbon, setShowRibbon] = useState(false)
+  const activeZones = activeZonesProp ?? []
+  const [showSummaryPanel, setShowSummaryPanel] = useState(Boolean(preferPanelsOpen))
+  const [showRibbon, setShowRibbon] = useState(Boolean(preferPanelsOpen))
+  const [refreshEverySec, setRefreshEverySec] = useState(60)
+  const [autoAdvH, setAutoAdvH] = useState(6)
+  const [stepHours, setStepHours] = useState(6)
+  const [lastUpdated, setLastUpdated] = useState(null)
+  const [nextInSec, setNextInSec] = useState(null)
+  const [clockPulse, setClockPulse] = useState(false)
+  const [rivers, setRivers] = useState([])
+  const [activeRiver, setActiveRiver] = useState(null)
+  const [simHour, setSimHour] = useState(null)
   const footerNode = useMapStageFooter()
   const rightNode = useMapStageRight()
+  const activeRiverRef = useRef(null)
+  const autoAdvRef = useRef(autoAdvH)
+
+  useEffect(() => {
+    activeRiverRef.current = activeRiver
+  }, [activeRiver])
+
+  useEffect(() => {
+    autoAdvRef.current = autoAdvH
+  }, [autoAdvH])
+
+  // Right summary + bottom margin/asset panels follow the Digital Twin layer toggle.
+  useEffect(() => {
+    setShowSummaryPanel(Boolean(preferPanelsOpen))
+    setShowRibbon(Boolean(preferPanelsOpen))
+  }, [preferPanelsOpen])
 
   useEffect(() => {
     let cancelled = false
@@ -336,30 +251,55 @@ const FloodMapOverlay = ({
     }
   }, [])
 
-  const loadLive = useCallback(async (metaData) => {
-    const [stateData, marginData] = await Promise.all([fetchState(), fetchMargins()])
+  const markUpdated = useCallback(() => {
+    setLastUpdated(new Date())
+  }, [])
+
+  const loadLive = useCallback(async (metaData, river = activeRiverRef.current) => {
+    const [stateData, marginData] = await Promise.all([
+      fetchState(river),
+      fetchMargins(river),
+    ])
     setState(stateData)
     setMargins(marginData)
     onAssetsChange?.(marginData)
-    if (metaData) setMeta(metaData)
+    if (metaData) {
+      setMeta(metaData)
+      if (Number.isFinite(metaData.sim_hour)) setSimHour(metaData.sim_hour)
+    }
+    markUpdated()
     return marginData
-  }, [onAssetsChange])
+  }, [onAssetsChange, markUpdated])
 
   useEffect(() => {
     let cancelled = false
     const load = async () => {
+      setFetchingTwin(true)
+      setError(null)
       try {
-        const metaData = await fetchMeta()
+        const riverList = await fetchRivers()
+        if (cancelled) return
+        setRivers(riverList)
+        const riverName = riverList[0]?.name || null
+        if (riverName) {
+          setActiveRiver(riverName)
+          activeRiverRef.current = riverName
+        }
+        const metaData = await fetchMeta(riverName)
         if (cancelled) return
         setMeta(metaData)
-        const marginData = await loadLive(metaData)
+        if (Number.isFinite(metaData.sim_hour)) setSimHour(metaData.sim_hour)
+        const marginData = await loadLive(metaData, riverName)
         if (cancelled) return
         const worst = [...marginData].sort(
           (a, b) => (b.p_exceed_72h ?? 0) - (a.p_exceed_72h ?? 0) || a.margin_now_m - b.margin_now_m
         )[0]
-        setSelected(worst?.id || marginData[0]?.id || null)
+        // Only seed a default once — do not fight map / user selection.
+        setSelected((current) => current || selectedAssetId || worst?.id || marginData[0]?.id || null)
       } catch (err) {
         if (!cancelled) setError(err.message)
+      } finally {
+        if (!cancelled) setFetchingTwin(false)
       }
     }
     load()
@@ -368,6 +308,8 @@ const FloodMapOverlay = ({
       onAssetsChange?.(null)
       onSelectedAssetChange?.(null)
     }
+    // selectedAssetId is read only for the initial seed; do not re-fetch when it changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- mount / loader identity only
   }, [loadLive, onAssetsChange, onSelectedAssetChange])
 
   // The return periods come from a fixed published gauge record, so the fit is a
@@ -387,121 +329,176 @@ const FloodMapOverlay = ({
 
   useEffect(() => {
     let cancelled = false
-    fetchProfile(lead)
+    fetchProfile(lead, activeRiver)
       .then((data) => !cancelled && setProfile(data))
       .catch((err) => !cancelled && setError(err.message))
     return () => {
       cancelled = true
     }
-  }, [lead, state])
+  }, [lead, state, activeRiver])
 
   const asset = useMemo(
     () => margins.find((row) => row.id === selected) || margins[0] || null,
     [margins, selected]
   )
 
-  const chainageSelection = useMemo(() => {
-    if (!focusChainage) return null
-    const bin = binBoundsForChainage(focusChainage.chainage_m)
-    if (!bin) return null
-    const isLast = bin.end_m >= 16400
-    const inBin = margins.filter((row) => {
-      const metres = Number(row.chainage_m)
-      if (!Number.isFinite(metres)) return false
-      return isLast
-        ? metres >= bin.start_m && metres <= bin.end_m
-        : metres >= bin.start_m && metres < bin.end_m
-    })
-    const nearest = [...inBin].sort(
-      (a, b) =>
-        Math.abs(a.chainage_m - focusChainage.chainage_m) -
-        Math.abs(b.chainage_m - focusChainage.chainage_m),
-    )[0]
-    return {
-      bin,
-      station: focusChainage.name || formatChainage(focusChainage.chainage_m),
-      chainage_m: focusChainage.chainage_m,
-      lng: focusChainage.lng,
-      lat: focusChainage.lat,
-      assets: inBin,
-      nearest,
-      cell: meta ? cellForChainage(meta, focusChainage.chainage_m) : null,
-    }
-  }, [focusChainage, margins, meta])
-
-  useEffect(() => {
-    if (!chainageSelection?.nearest) return
-    setSelected(chainageSelection.nearest.id)
-  }, [chainageSelection])
+  const selectedEmitRef = useRef(null)
 
   useEffect(() => {
     if (!selectedAssetId || selectedAssetId === selected) return
+    // Ignore echo of what we just pushed to the parent.
+    if (selectedAssetId === selectedEmitRef.current) return
     if (!margins.some((row) => row.id === selectedAssetId)) return
     setSelected(selectedAssetId)
   }, [selectedAssetId, selected, margins])
 
   useEffect(() => {
-    if (selected) onSelectedAssetChange?.(selected)
+    if (!selected || selected === selectedEmitRef.current) return
+    selectedEmitRef.current = selected
+    onSelectedAssetChange?.(selected)
   }, [selected, onSelectedAssetChange])
 
   const selectAsset = (id) => {
     if (!id) return
+    selectedEmitRef.current = id
     setSelected(id)
     onSelectedAssetChange?.(id)
   }
 
+  const hydroCell = meta && asset ? cellForChainage(meta, asset.chainage_m) : null
+  const hydroSimKey = simHour ?? state?.sim_hour ?? state?.t ?? ''
+
   useEffect(() => {
-    if (!meta || !asset) return undefined
+    if (!meta || hydroCell == null || !showTwinLayer) return undefined
     let cancelled = false
-    setHydro(null)
-    fetchHydrograph(cellForChainage(meta, asset.chainage_m))
+    fetchHydrograph(hydroCell, activeRiver)
       .then((data) => !cancelled && setHydro(data))
       .catch((err) => !cancelled && setError(err.message))
     return () => {
       cancelled = true
     }
-  }, [meta, asset, state])
+  }, [meta, hydroCell, hydroSimKey, showTwinLayer, activeRiver])
 
-  const toggleZone = (years) => {
-    setActiveZones((current) =>
-      current.includes(years) ? current.filter((v) => v !== years) : [...current, years]
-    )
-  }
-
-  const toggleLayerInfo = (id) => {
-    setOpenLayerId((current) => (current === id ? null : id))
-  }
-
-  const handleAdvance = async () => {
+  const handleAdvance = useCallback(async (hours) => {
+    const step = Number(hours)
+    if (!Number.isFinite(step) || step === 0) return
     setBusy(true)
     try {
-      await advanceSim(6)
+      const result = await advanceSim(step, activeRiverRef.current)
+      if (Number.isFinite(result?.sim_hour)) {
+        setSimHour(result.sim_hour)
+        setClockPulse(true)
+        window.setTimeout(() => setClockPulse(false), 500)
+      }
       await loadLive()
     } catch (err) {
       setError(err.message)
     } finally {
       setBusy(false)
     }
-  }
+  }, [loadLive])
 
-  const layerPicker = (
-    <LayerPanelPortal viewId="flood">
-      <TwinLayerPicker
-        activeZones={activeZones}
-        onToggleZone={toggleZone}
-        showDepthLayer={showDepthLayer}
-        showChainageLayer={showChainageLayer}
-        returnPeriods={returnPeriods}
-        zones={zones}
-        depthSummary={depthSummary}
-        openLayerId={openLayerId}
-        onToggleInfo={toggleLayerInfo}
-        chainageSelection={chainageSelection}
-      />
-    </LayerPanelPortal>
+  const switchRiver = useCallback(async (name) => {
+    if (!name || name === activeRiverRef.current) return
+    setBusy(true)
+    setError(null)
+    try {
+      setActiveRiver(name)
+      activeRiverRef.current = name
+      const metaData = await fetchMeta(name)
+      setMeta(metaData)
+      if (Number.isFinite(metaData.sim_hour)) setSimHour(metaData.sim_hour)
+      const marginData = await loadLive(metaData, name)
+      const worst = [...marginData].sort(
+        (a, b) => (b.p_exceed_72h ?? 0) - (a.p_exceed_72h ?? 0) || a.margin_now_m - b.margin_now_m
+      )[0]
+      setSelected(worst?.id || marginData[0]?.id || null)
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setBusy(false)
+    }
+  }, [loadLive])
+
+  // Periodic refresh (+ optional auto-advance), matching the twin HTML dashboard.
+  useEffect(() => {
+    if (!showTwinLayer || !meta) return undefined
+    if (!refreshEverySec || refreshEverySec <= 0) {
+      setNextInSec(null)
+      return undefined
+    }
+
+    let nextAt = Date.now() + refreshEverySec * 1000
+    setNextInSec(refreshEverySec)
+
+    const tickCountdown = () => {
+      setNextInSec(Math.max(0, Math.round((nextAt - Date.now()) / 1000)))
+    }
+
+    const doRefresh = async () => {
+      nextAt = Date.now() + refreshEverySec * 1000
+      const advH = autoAdvRef.current
+      if (advH > 0) {
+        try {
+          const result = await advanceSim(advH, activeRiverRef.current)
+          if (Number.isFinite(result?.sim_hour)) {
+            setSimHour(result.sim_hour)
+            setClockPulse(true)
+            window.setTimeout(() => setClockPulse(false), 500)
+          }
+        } catch (err) {
+          setError(err.message)
+        }
+      }
+      try {
+        await loadLive()
+      } catch (err) {
+        setError(err.message)
+      }
+      tickCountdown()
+    }
+
+    const refreshTimer = window.setInterval(doRefresh, refreshEverySec * 1000)
+    const countdownTimer = window.setInterval(tickCountdown, 1000)
+    tickCountdown()
+
+    return () => {
+      window.clearInterval(refreshTimer)
+      window.clearInterval(countdownTimer)
+    }
+  }, [refreshEverySec, showTwinLayer, meta, loadLive])
+
+  const twinLoading = showTwinLayer && fetchingTwin
+  const twinUiReady = showTwinLayer && !fetchingTwin && Boolean(meta) && margins.length > 0
+
+  const twinLoadingRight = (
+    <aside className="flood-map-panel is-stage-sidebar is-loading" aria-label="Flood forecast summary" aria-busy="true">
+      <div className="flood-panel-head">
+        <h3>
+          Digital twin
+          <small>Fetching modelled discharge · WSE · margins</small>
+        </h3>
+        <div className="flood-panel-head-actions">
+          <span className="flood-provenance is-model">Model</span>
+        </div>
+      </div>
+      <div className="flood-loading-block">
+        <span className="flood-spinner" aria-hidden="true" />
+        <p>Loading twin data…</p>
+      </div>
+    </aside>
   )
 
-  if (error && !meta) {
+  const twinLoadingFooter = (
+    <section className="flood-map-ribbon is-stage-footer is-loading" aria-label="Flood margin board" aria-busy="true">
+      <div className="flood-loading-block is-ribbon">
+        <span className="flood-spinner" aria-hidden="true" />
+        <p>Loading margin board…</p>
+      </div>
+    </section>
+  )
+
+  if (error && !meta && !fetchingTwin) {
     const errorPanel = (
       <aside className="flood-map-panel is-stage-sidebar" aria-label="Flood forecast summary">
         <div className="flood-panel-head">
@@ -516,18 +513,33 @@ const FloodMapOverlay = ({
 
     return (
       <>
-        <div className="flood-map-overlays">{layerPicker}</div>
-        {rightNode ? createPortal(errorPanel, rightNode) : errorPanel}
+        {showTwinLayer && rightNode && showSummaryPanel ? createPortal(errorPanel, rightNode) : null}
+        {showTwinLayer && footerNode && showRibbon ? createPortal(
+          <section className="flood-map-ribbon is-stage-footer is-loading" aria-label="Flood margin board">
+            <div className="flood-loading-block is-ribbon">
+              <p>Twin data unavailable</p>
+            </div>
+          </section>,
+          footerNode,
+        ) : null}
       </>
     )
   }
 
-  if (!meta || !margins.length) {
-    return <div className="flood-map-overlays">{layerPicker}</div>
+  if (twinLoading) {
+    return (
+      <>
+        {rightNode && showSummaryPanel ? createPortal(twinLoadingRight, rightNode) : null}
+        {footerNode && showRibbon ? createPortal(twinLoadingFooter, footerNode) : null}
+      </>
+    )
   }
 
-  const overall = worstStatus(margins)
-  const counts = countByStatus(margins)
+  if (!meta) {
+    return null
+  }
+
+  const overall = margins.length ? worstStatus(margins) : 'SAFE'
   const reachM = meta.reach_km * 1000
 
   const width = 1200
@@ -548,33 +560,25 @@ const FloodMapOverlay = ({
         .join(' ')
     : `M${marginX.l} ${cy} L${width - marginX.r} ${cy}`
 
+  const displaySimHour = Number.isFinite(simHour) ? simHour : meta.sim_hour
+  const ensembleMembers = meta.members ?? 50
+  const forecastHorizon = meta.forecast_hours ?? 72
+  const riverOptions = rivers.length
+    ? rivers
+    : [{ name: 'Mula-Mutha', reach_km: meta.reach_km }]
+  const lastUpdatedLabel = lastUpdated
+    ? lastUpdated.toLocaleTimeString()
+    : '—'
+  const nextRefreshLabel =
+    refreshEverySec > 0
+      ? nextInSec != null && nextInSec > 0
+        ? `next in ${nextInSec}s`
+        : 'refreshing…'
+      : ''
+
   return (
     <>
-    <div className="flood-map-overlays">
-      {layerPicker}
-      <button
-        type="button"
-        className={`flood-dock-summary${showSummaryPanel ? ' is-active' : ''}`}
-        onClick={() => setShowSummaryPanel((open) => !open)}
-        aria-pressed={showSummaryPanel}
-        aria-label={showSummaryPanel ? 'Hide twin summary' : 'Show twin summary'}
-        title={showSummaryPanel ? 'Hide summary' : 'Show summary'}
-      >
-        <IconTwinPanel />
-      </button>
-      <button
-        type="button"
-        className={`flood-dock-ribbon${showRibbon ? ' is-active' : ''}`}
-        onClick={() => setShowRibbon((open) => !open)}
-        aria-pressed={showRibbon}
-        aria-label={showRibbon ? 'Hide margin board' : 'Show margin board'}
-        title={showRibbon ? 'Hide margin board' : 'Show margin board'}
-      >
-        <IconRibbon />
-      </button>
-    </div>
-
-    {rightNode && showSummaryPanel && createPortal(
+    {twinUiReady && rightNode && showSummaryPanel && createPortal(
       <aside className="flood-map-panel is-stage-sidebar" aria-label="Flood forecast summary">
         <div className="flood-panel-head">
           <h3>
@@ -595,72 +599,118 @@ const FloodMapOverlay = ({
           </div>
         </div>
 
-        <div className="flood-stat-chips">
-          <span>
-            <em>Sim hour</em>t+{meta.sim_hour}
+        <div className="flood-refresh-bar">
+          <span className="flood-live-status">
+            <span className="flood-live-pulse" aria-hidden="true" />
+            <strong>Live</strong>
           </span>
           <span>
-            <em>Discharge</em>
-            {Number.isFinite(state?.q_now) ? `${state.q_now} m³/s` : '—'}
+            Last updated: <b>{lastUpdatedLabel}</b>
           </span>
-          <span>
-            <em>Lead</em>+{lead}h
-          </span>
-        </div>
-
-        <div className="flood-lead-pills">
-          {LEAD_OPTIONS.map((option) => (
-            <button
-              key={option}
-              type="button"
-              className={option === lead ? 'is-on' : ''}
-              onClick={() => setLead(option)}
+          <label className="flood-refresh-field">
+            Refresh every
+            <select
+              value={refreshEverySec}
+              onChange={(event) => setRefreshEverySec(Number(event.target.value))}
             >
-              +{option}h
+              {REFRESH_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className={`flood-aa-pill${autoAdvH === 0 ? ' is-off' : ''}`}>
+            Auto-advance sim
+            <select
+              value={autoAdvH}
+              onChange={(event) => setAutoAdvH(Number(event.target.value))}
+            >
+              {AUTO_ADV_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </label>
+          {nextRefreshLabel ? (
+            <span className="flood-next-refresh">{nextRefreshLabel}</span>
+          ) : null}
+        </div>
+
+        <div className="flood-twin-stats">
+          <div className={`flood-twin-stat${clockPulse ? ' is-advancing' : ''}`}>
+            Simulation clock
+            <b>{Number.isFinite(displaySimHour) ? `${displaySimHour} h` : '—'}</b>
+          </div>
+          <div className="flood-twin-stat">
+            Upstream discharge now
+            <b>{Number.isFinite(state?.q_now) ? `${state.q_now} m³/s` : '—'}</b>
+          </div>
+          <div className="flood-twin-stat">
+            Reach
+            <b>
+              {meta.reach_km} km · {meta.n_cells} stations
+            </b>
+          </div>
+          <div className="flood-twin-stat">
+            Ensemble
+            <b>
+              {ensembleMembers} members · {forecastHorizon} h
+            </b>
+          </div>
+        </div>
+
+        <div className="flood-twin-controls">
+          <label className="flood-river-sel">
+            <span>River</span>
+            <select
+              value={activeRiver || riverOptions[0]?.name || ''}
+              onChange={(event) => switchRiver(event.target.value)}
+              disabled={busy || riverOptions.length <= 1}
+            >
+              {riverOptions.map((row) => (
+                <option key={row.name} value={row.name}>
+                  {row.name} ({row.reach_km ?? meta.reach_km} km)
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <div className="flood-stepper" role="group" aria-label="Manual simulation step">
+            <span className="flood-stepper-label">Manual step</span>
+            <button
+              type="button"
+              onClick={() => handleAdvance(-Math.max(1, Number(stepHours) || 6))}
+              disabled={busy}
+              title="Go back"
+            >
+              −
             </button>
-          ))}
+            <input
+              type="number"
+              min={1}
+              max={24}
+              value={stepHours}
+              onChange={(event) => setStepHours(Math.max(1, Math.min(24, Number(event.target.value) || 1)))}
+              aria-label="Hours per manual step"
+            />
+            <button
+              type="button"
+              onClick={() => handleAdvance(Math.max(1, Number(stepHours) || 6))}
+              disabled={busy}
+              title="Go forward"
+            >
+              +
+            </button>
+          </div>
         </div>
 
-        <button type="button" className="flood-advance" onClick={handleAdvance} disabled={busy}>
-          {busy ? 'Advancing…' : 'Advance simulation +6 h ▸'}
-        </button>
-
-        <div className="flood-panel-label">Overall status</div>
-        <div className="flood-stat-chips">
-          <span
-            style={{
-              color: STATUS_COLORS[overall],
-              borderColor: STATUS_COLORS[overall],
-            }}
-          >
-            <em>Worst asset</em>
-            {overall}
-          </span>
-        </div>
-
-        <div className="flood-panel-label">Assets by status</div>
-        <div className="flood-status-bars">
-          {['DANGER', 'WARNING', 'WATCH', 'SAFE'].map((status) => (
-            <div className="flood-status-row" key={status}>
-              <div className="flood-status-meta">
-                <span>{status}</span>
-                <strong>{counts[status] || 0}</strong>
-              </div>
-              <div className="flood-status-track">
-                <div
-                  className="flood-status-fill"
-                  style={{
-                    width: `${((counts[status] || 0) / margins.length) * 100}%`,
-                    background: STATUS_COLORS[status],
-                  }}
-                />
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <div className="flood-panel-label">Water depth distribution</div>
-        {depthSummary ? (
+        {showDepthLayer ? (
+          <>
+            <div className="flood-panel-divider" />
+            <div className="flood-panel-label">Water depth distribution</div>
+            {depthSummary ? (
           <>
             <div className="flood-stat-chips">
               <span>
@@ -696,167 +746,16 @@ const FloodMapOverlay = ({
             </div>
             <p className="flood-depth-note">Colour on map matches depth class · smoothed raster overlay</p>
           </>
-        ) : (
-          <div className="flood-loading">Loading depth distribution…</div>
-        )}
-
-        <div className="flood-panel-divider" />
-
-        <div className="flood-live-section-head">
-          <div>
-            <h4>Chainage</h4>
-            <small>
-              {chainageSelection
-                ? `Selected section ${chainageSelection.bin.name}`
-                : 'Centreline stations every 100 m · 0+000 to 16+400'}
-            </small>
-          </div>
-          {chainageSelection ? <span className="flood-provenance is-derived">Estimated</span> : null}
-        </div>
-        <div className="flood-zone-rows">
-          <div className="flood-zone-row">
-            <label className="flood-zone-check" htmlFor="flood-chainage">
-              <input
-                id="flood-chainage"
-                type="checkbox"
-                checked={showChainageLayer}
-                onChange={() => onToggleChainage?.(!showChainageLayer)}
-              />
-              <span className="sw" style={{ background: '#ffd166' }} />
-              <strong>Show chainage on map</strong>
-            </label>
-            <em>km boxes + 100 m ticks</em>
-          </div>
-        </div>
-        {chainageSelection ? (
-          <>
-            <div className="flood-mini-grid">
-              <span>
-                <em>Section</em>
-                {chainageSelection.bin.name}
-              </span>
-              <span>
-                <em>Station</em>
-                {chainageSelection.station}
-              </span>
-              <span>
-                <em>Length</em>
-                {(chainageSelection.bin.length_m / 1000).toFixed(1)} km
-              </span>
-              <span>
-                <em>Twin cell</em>
-                {chainageSelection.cell ?? '—'}
-              </span>
-            </div>
-            <div className="flood-stat-chips" style={{ marginTop: 8 }}>
-              <span>
-                <em>Assets in section</em>
-                {chainageSelection.assets.length}
-              </span>
-              <span>
-                <em>Worst</em>
-                {chainageSelection.assets.length
-                  ? worstStatus(chainageSelection.assets)
-                  : '—'}
-              </span>
-              {Number.isFinite(chainageSelection.lng) ? (
-                <span>
-                  <em>Location</em>
-                  {chainageSelection.lat.toFixed(4)}, {chainageSelection.lng.toFixed(4)}
-                </span>
-              ) : null}
-            </div>
-            {chainageSelection.assets.length ? (
-              <div className="flood-chainage-assets">
-                {chainageSelection.assets.map((row) => (
-                  <button
-                    key={row.id}
-                    type="button"
-                    className={`flood-chainage-asset${row.id === asset?.id ? ' is-on' : ''}`}
-                    onClick={() => selectAsset(row.id)}
-                  >
-                    <span className="sw" style={{ background: STATUS_COLORS[row.status] }} />
-                    <strong>{shortName(row.name || row.id)}</strong>
-                    <em>{row.margin_now_m > 0 ? '+' : ''}{Number(row.margin_now_m).toFixed(2)} m</em>
-                  </button>
-                ))}
-              </div>
             ) : (
-              <p className="flood-depth-note">No twin assets sit in this kilometre.</p>
+              <div className="flood-loading">Loading depth distribution…</div>
             )}
           </>
-        ) : (
-          <p className="flood-depth-note">
-            Click a yellow kilometre box, a station, or the scale to see that section here.
-          </p>
-        )}
-
-        <div className="flood-panel-divider" />
-
-        <div className="flood-live-section-head">
-          <div>
-            <h4>Return-period flood zones</h4>
-            <small>
-              Khadakwasla annual peaks {returnPeriods.firstYear}–{returnPeriods.lastYear}
-            </small>
-          </div>
-          <span className="flood-provenance is-derived">Estimated</span>
-        </div>
-
-        <div className="flood-zone-rows">
-          {RETURN_PERIODS.map((years) => {
-            const style = ZONE_STYLES[years]
-            const stats = zones?.summary.find((row) => row.years === years)
-            const inputId = `flood-zone-${years}`
-            return (
-              <div className="flood-zone-row" key={years}>
-                <label className="flood-zone-check" htmlFor={inputId}>
-                  <input
-                    id={inputId}
-                    type="checkbox"
-                    checked={activeZones.includes(years)}
-                    onChange={() => toggleZone(years)}
-                  />
-                  <span className="sw" style={{ background: style.color }} />
-                  <strong>{style.label}</strong>
-                </label>
-                <em>{Math.round(returnPeriods.levels[years])} m³/s</em>
-                {stats && (
-                  <>
-                    <span>{Math.round(stats.meanWidthM)} m wide</span>
-                    <span>{stats.areaKm2.toFixed(1)} km²</span>
-                  </>
-                )}
-              </div>
-            )
-          })}
-        </div>
-
-        <div className="flood-zone-caveat">
-          Gumbel fit on {returnPeriods.years} published annual peaks, corridor scaled from the KML
-          channel width
-        </div>
-
-        <div className="flood-panel-label">Reach</div>
-        <div className="flood-mini-grid">
-          <span>
-            <em>Length</em>{meta.reach_km} km
-          </span>
-          <span>
-            <em>Cells</em>{meta.n_cells}
-          </span>
-          <span>
-            <em>Members</em>{meta.members}
-          </span>
-          <span>
-            <em>Horizon</em>{meta.forecast_hours}h
-          </span>
-        </div>
+        ) : null}
       </aside>,
       rightNode,
     )}
 
-    {footerNode && showRibbon && createPortal(
+    {twinUiReady && footerNode && showRibbon && createPortal(
       <section
         className="flood-map-ribbon is-stage-footer"
         aria-label="Flood margin board"
@@ -865,7 +764,18 @@ const FloodMapOverlay = ({
           <div className="flood-ribbon-head">
             <h2>Margin to threshold, end to end</h2>
             <span className="flood-provenance is-model">Model</span>
-            <span className="flood-ribbon-lead">+{lead} h lead</span>
+            <div className="flood-lead-pills flood-ribbon-leads" aria-label="Forecast lead">
+              {LEAD_OPTIONS.map((option) => (
+                <button
+                  key={option}
+                  type="button"
+                  className={option === lead ? 'is-on' : ''}
+                  onClick={() => setLead(option)}
+                >
+                  +{option}h
+                </button>
+              ))}
+            </div>
             <span
               className="flood-mode-pill"
               style={{ color: STATUS_COLORS[overall], borderColor: STATUS_COLORS[overall] }}

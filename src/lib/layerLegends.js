@@ -193,9 +193,9 @@ export const LAYER_LEGENDS = {
   'silt-volume': {
     provenance: 'Estimated',
     colors: [
-      { color: '#f7fbff', label: 'Low volume', value: '0' },
-      { color: '#6baed6', label: 'Mid', value: '—' },
-      { color: '#08306b', label: 'High volume', value: '94' },
+      { color: '#fef8c8', label: 'Low volume', value: '0' },
+      { color: '#fba437', label: 'Mid', value: '—' },
+      { color: '#722904', label: 'High volume', value: '94' },
     ],
   },
   'urban-veg': {
@@ -242,6 +242,27 @@ export const LAYER_LEGENDS = {
       { color: '#ffff00', label: 'Moderate 1.7–1.8 m', value: '57.8%' },
       { color: '#ff8000', label: 'High 1.8–1.9 m', value: '20.4%' },
       { color: '#ff0000', label: 'Very high 1.9–2.0 m', value: '4.9%' },
+    ],
+  },
+  'flood-10': {
+    provenance: 'Estimated',
+    colors: [{ color: '#1668b3', label: '10-year corridor', value: '10%' }],
+  },
+  'flood-25': {
+    provenance: 'Estimated',
+    colors: [{ color: '#d2701a', label: '25-year corridor', value: "4% · blue line" }],
+  },
+  'flood-100': {
+    provenance: 'Estimated',
+    colors: [{ color: '#c2372a', label: '100-year corridor', value: "1% · red line" }],
+  },
+  twin: {
+    provenance: 'Model',
+    colors: [
+      { color: '#1c8a55', label: 'SAFE' },
+      { color: '#b8860b', label: 'WATCH' },
+      { color: '#d2701a', label: 'WARNING' },
+      { color: '#c2372a', label: 'DANGER' },
     ],
   },
   bathymetry: {

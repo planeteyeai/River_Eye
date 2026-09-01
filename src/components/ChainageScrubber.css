@@ -1,39 +1,55 @@
-/* Gutters keep the scale clear of the map chrome in every view: the layers
-   panel on the left, the zoom controls on the right, and the fullscreen
-   button along the bottom. */
+/* Chainage scrubber — transparent strip over the map (scale · yellow knob · value pill). */
 .chainage-scrubber {
   --chainage-gutter-left: 16px;
   --chainage-gutter-right: 58px;
   --chainage-gutter-bottom: 68px;
-  --chainage-panel-width: min(372px, 44vw);
+  --chainage-line: #f4f9fc;
+  --chainage-accent: #ffd166;
 
   position: absolute;
-  z-index: 1200;
+  z-index: 1100;
   left: var(--chainage-gutter-left);
   right: var(--chainage-gutter-right);
   bottom: var(--chainage-gutter-bottom);
   display: flex;
-  align-items: flex-end;
-  gap: 10px;
-  min-height: 48px;
-  padding: 0;
-  pointer-events: none;
-  background: none;
+  align-items: center;
+  gap: 12px;
+  height: 52px;
+  padding: 0 14px 0 16px;
   border: 0;
+  border-radius: 0;
+  background: transparent;
   box-shadow: none;
+  backdrop-filter: none;
+  pointer-events: auto;
   font-family: var(--rv-font-body);
+  box-sizing: border-box;
+  user-select: none;
+  touch-action: none;
 }
 
-/* Only reserve the panel column while the left sidebar is open. */
+/* Clear the floating layers rail (on-map, not a stage column). */
+.map-wrapper:has(.map-views-control:not(.is-docked)) .chainage-scrubber {
+  --chainage-gutter-left: 76px;
+}
+
+/* Clear the floating layers rail + open detail panel. */
+.map-wrapper:has(.map-views-control.has-detail:not(.is-docked)) .chainage-scrubber {
+  --chainage-gutter-left: calc(92px + min(300px, 36vw));
+}
+
 .map-stage.has-left-sidebar .chainage-scrubber {
   --chainage-gutter-left: 60px;
 }
 
 .map-stage.has-left-sidebar-detail .chainage-scrubber {
-  --chainage-gutter-left: min(320px, 38vw);
+  --chainage-gutter-left: 60px;
 }
 
-/* Views with twin / WQ ribbons reserve space for the right sidebar. */
+.map-stage.has-bottom-detail .chainage-scrubber {
+  --chainage-gutter-bottom: 12px;
+}
+
 .chainage-scrubber.is-above-ribbon {
   --chainage-gutter-right: min(260px, calc(100% - 220px));
 }
@@ -42,33 +58,46 @@
   --chainage-gutter-right: min(280px, 34vw);
 }
 
-.chainage-scrubber-kicker,
-.chainage-scrubber-unit {
+.chainage-scrubber-kicker {
   flex: 0 0 auto;
-  padding-bottom: 2px;
-  font-size: 10px;
-  font-weight: 750;
-  letter-spacing: 0.08em;
+  margin: 0;
+  padding: 0 0 10px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: #f4f9fc;
-  text-shadow: 0 0 4px rgba(8, 18, 24, 0.95), 0 1px 2px rgba(8, 18, 24, 0.9);
+  color: var(--chainage-line);
+  line-height: 1;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85), 0 0 6px rgba(0, 0, 0, 0.55);
 }
 
 .chainage-scrubber-track {
   position: relative;
   flex: 1 1 auto;
   min-width: 0;
-  height: 34px;
+  height: 42px;
+  cursor: grab;
+  outline: none;
+}
+
+.chainage-scrubber-track:active {
+  cursor: grabbing;
+}
+
+.chainage-scrubber-track:focus-visible {
+  box-shadow: inset 0 0 0 2px rgba(255, 209, 102, 0.55);
+  border-radius: 8px;
 }
 
 .chainage-scale-line {
   position: absolute;
   left: 0;
   right: 0;
-  top: 9px;
-  height: 2px;
-  background: #f4f9fc;
-  box-shadow: 0 0 0 1px rgba(8, 18, 24, 0.55);
+  top: 10px;
+  height: 1.5px;
+  background: var(--chainage-line);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.55);
+  pointer-events: none;
 }
 
 .chainage-tick {
@@ -78,75 +107,86 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  width: 22px;
-  height: 34px;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  pointer-events: auto;
-  cursor: pointer;
+  width: 32px;
+  height: 42px;
+  pointer-events: none;
 }
 
 .chainage-tick-mark {
+  width: 1px;
+  height: 7px;
+  margin-top: 7px;
+  background: var(--chainage-line);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.55);
+}
+
+.chainage-tick.is-major .chainage-tick-mark {
   width: 1.5px;
-  height: 14px;
-  margin: 3px 0 0;
-  background: #f4f9fc;
-  box-shadow: 0 0 0 1px rgba(8, 18, 24, 0.55);
+  height: 13px;
+  margin-top: 4px;
 }
 
 .chainage-tick-label {
-  margin-top: 2px;
+  margin-top: 4px;
   font-size: 10px;
-  font-weight: 700;
-  line-height: 1;
-  color: #f4f9fc;
-  text-shadow: 0 0 4px rgba(8, 18, 24, 0.95), 0 1px 2px rgba(8, 18, 24, 0.9);
-}
-
-.chainage-tick.is-active .chainage-tick-mark {
-  width: 2px;
-  height: 16px;
-  background: #ffd166;
-}
-
-.chainage-tick.is-active .chainage-tick-label {
-  color: #ffd166;
-}
-
-.chainage-step {
-  flex: 0 0 auto;
-  width: 44px;
-  height: 44px;
-  margin-bottom: 0;
-  padding: 0;
-  border: 2px solid #f4f9fc;
-  border-radius: 8px;
-  background: rgba(13, 36, 54, 0.7);
-  color: #f4f9fc;
-  font-size: 28px;
   font-weight: 600;
   line-height: 1;
-  pointer-events: auto;
-  cursor: pointer;
+  color: var(--chainage-line);
+  white-space: nowrap;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85), 0 0 6px rgba(0, 0, 0, 0.55);
 }
 
-.chainage-step:hover {
-  background: rgba(13, 36, 54, 0.92);
+.chainage-playhead {
+  position: absolute;
+  top: 0;
+  z-index: 2;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  pointer-events: none;
 }
 
-.chainage-step:disabled {
-  opacity: 0.35;
-  cursor: default;
+.chainage-playhead-knob {
+  width: 11px;
+  height: 11px;
+  margin-top: 4.5px;
+  border-radius: 1.5px;
+  border: 0;
+  background: var(--chainage-accent);
+  box-shadow: 0 0 0 1px rgba(8, 18, 24, 0.4);
+}
+
+.chainage-playhead-label {
+  margin-top: 12px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(14, 22, 32, 0.92);
+  border: 1px solid var(--chainage-accent);
+  color: var(--chainage-accent);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  line-height: 1.25;
 }
 
 @media (max-width: 1100px) {
   .chainage-scrubber {
     --chainage-gutter-left: 10px;
-    --chainage-panel-width: min(300px, 40vw);
+    --chainage-gutter-right: 54px;
+    padding: 0 10px 0 12px;
   }
 
-  .chainage-scrubber.is-above-ribbon {
-    --chainage-gutter-right: 10px;
+  .map-wrapper:has(.map-views-control:not(.is-docked)) .chainage-scrubber {
+    --chainage-gutter-left: 68px;
+  }
+
+  .map-wrapper:has(.map-views-control.has-detail:not(.is-docked)) .chainage-scrubber {
+    --chainage-gutter-left: calc(84px + min(280px, 42vw));
+  }
+
+  .chainage-tick-label {
+    font-size: 9px;
   }
 }
