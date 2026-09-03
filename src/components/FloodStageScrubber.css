@@ -1,0 +1,112 @@
+.flood-stage-scrubber {
+  pointer-events: auto;
+  position: absolute;
+  z-index: 1150;
+  left: 50%;
+  bottom: 88px;
+  transform: translateX(-50%);
+  width: min(520px, calc(100% - 48px));
+  padding: 10px 14px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--rv-line);
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(12px);
+  box-shadow: var(--rv-shadow-lg);
+  color: var(--rv-ink);
+  font-family: var(--rv-font-body);
+  box-sizing: border-box;
+}
+
+.map-wrapper:has(.chainage-scrubber.is-above-ribbon) .flood-stage-scrubber {
+  bottom: 100px;
+}
+
+.map-stage:has(.map-stage-footer:not(:empty)) .flood-stage-scrubber {
+  bottom: 12px;
+}
+
+.flood-stage-scrubber-head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.flood-stage-scrubber-head strong {
+  font-family: var(--rv-font-display);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.flood-stage-provenance {
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--rv-muted);
+}
+
+.flood-stage-scrubber-head em {
+  margin-left: auto;
+  font-style: normal;
+  font-family: var(--rv-font-mono);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--rv-blue-dark, #0b3556);
+}
+
+.flood-stage-scrubber input[type='range'] {
+  width: 100%;
+  accent-color: #1f77b4;
+  height: 18px;
+  margin: 0;
+  cursor: pointer;
+}
+
+.flood-stage-scrubber-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 4px;
+  font-family: var(--rv-font-mono);
+  font-size: 10px;
+  color: var(--rv-muted);
+}
+
+.flood-stage-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--rv-line);
+}
+
+.flood-stage-stats > div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.flood-stage-stats-label {
+  font-size: 9px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--rv-muted);
+}
+
+.flood-stage-stats strong {
+  font-family: var(--rv-font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--rv-blue-dark, #0b3556);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.flood-stage-error {
+  margin: 0;
+  font-size: 12px;
+  color: #c2372a;
+}

@@ -1,0 +1,43 @@
+{
+  "id": "mula-mutha-fabdem-dtm",
+  "label": "Mula-Mutha FABDEM DTM",
+  "source": "FABDEM_DTM_FINAL.tif (user-supplied zip 0ed0ea04750847f98ddc2b90079d9e4c)",
+  "product": "FABDEM",
+  "crs": "EPSG:4326",
+  "width": 542,
+  "height": 192,
+  "dtype": "float32",
+  "byte_order": "little",
+  "nodata": null,
+  "elevation_min_m": 529.0,
+  "elevation_max_m": 592.25,
+  "elevation_unit": "m",
+  "pixel_size_deg": 0.00026949458523585647,
+  "bounds": {
+    "west": 73.85014018135222,
+    "south": 18.509966092339564,
+    "east": 73.99620624655005,
+    "north": 18.56170905270485
+  },
+  "coordinates": [
+    [
+      73.85014018135222,
+      18.56170905270485
+    ],
+    [
+      73.99620624655005,
+      18.56170905270485
+    ],
+    [
+      73.99620624655005,
+      18.509966092339564
+    ],
+    [
+      73.85014018135222,
+      18.509966092339564
+    ]
+  ],
+  "bin": "/asset/mula-mutha-dtm.bin",
+  "ui_label": "Estimated",
+  "caveat": "Bathtub inundation against FABDEM elevations. Not a hydraulic flood model; embankments, drains and connectivity are ignored."
+}

@@ -190,6 +190,28 @@ Status   : classed product, displayed as a smoothed raster. Not a sounding
            which uses the same July 2026 SDB range but a continuous grid.
 
 --------------------------------------------------------------------------------
+3.1d  public/asset/mula-mutha-dtm.bin (+ .json, .tif)
+--------------------------------------------------------------------------------
+Content  : FABDEM digital terrain model for the Mula–Mutha corridor AOI.
+           Float32 elevations (m), EPSG:4326, 542×192 cells
+           (~0.0002695° ≈ 30 m). Elevation range 529.0–592.25 m.
+           Bounds W 73.85014 S 18.50997 E 73.99621 N 18.56171.
+           Row-major little-endian bin; meta in mula-mutha-dtm.json
+           (coordinates for MapLibre image source). GeoTIFF copy kept as
+           mula-mutha-dtm.tif for reprocessing.
+Source   : user-supplied zip 0ed0ea04750847f98ddc2b90079d9e4c
+           (Mulla_Mutha_DTM/FABDEM_DTM_FINAL.tif). Converted by
+           scripts/convert-fabdem-dtm.py.
+Used in  : src/lib/dtmInundation.js → FloodStageScrubber.jsx +
+           MapComponent.jsx lyr-flood-stage (bathtub inundation).
+Method   : see 6.4.
+UI label : Estimated
+Kind     : MODELLED terrain (FABDEM forest-bias-corrected DEM product).
+           Not a surveyed DTM. Bathtub fill ignores embankments, drains
+           and hydraulic connectivity.
+Attribution: FABDEM (Hawker et al.); cite product terms when redistributing.
+
+--------------------------------------------------------------------------------
 3.2  public/asset/dashboard_data.json
 --------------------------------------------------------------------------------
 Content  : BOD/COD water-quality figures for 7 reaches, Sangam-Bund Garden to
@@ -925,6 +947,32 @@ Consumed by : src/components/FloodMapOverlay.jsx (checkbox per return period,
 UI label    : Estimated
 
 
+--------------------------------------------------------------------------------
+6.4  Bathtub inundation from FABDEM DTM  ** ADDED 2026-09-03 **
+--------------------------------------------------------------------------------
+Computed in : src/lib/dtmInundation.js -> renderInundationDataUrl(),
+              summarizeInundation()
+Inputs      : public/asset/mula-mutha-dtm.bin + .json (3.1d); water-surface
+              stage (m) from FloodStageScrubber.
+Method      : each DTM cell with elev ≤ stage is painted as inundated
+              (alpha-blended blue). Depth colour scales with
+              (stage − elev) up to ~8 m. Display upsamples ×4 and applies
+              a light Gaussian blur (~1.6 px) so ~30 m cell stairs soften
+              on the map; wet/dry remains the native-cell bathtub test.
+              Area = wet_cells × cell_area_m2, where cell_area uses
+              pixel_size_deg at mid-latitude (≈30 m × 30 m).
+              Volume = Σ (stage − elev) × cell_area_m2 (m³); also shown as
+              Mm³ and mean depth. No flow routing, no embankment breach,
+              no connectivity to the channel — pure bathtub fill.
+Current DTM: 542×192, elev 529.0–592.25 m, ~30 m cells, EPSG:4326.
+Consumed by : FloodStageScrubber.jsx (stage control + area/volume chips) →
+              Dashboard.jsx → MapComponent.jsx lyr-flood-stage.
+UI label    : Estimated
+Caveats     : Not a hydraulic flood map. Volume/area are bathtub storage on
+              the DTM footprint only. Distinct from return-period corridors
+              (6.2), which still use corridor widths without DEM.
+
+
 ================================================================================
 7. KNOWN GAPS - DATA WE DO NOT HAVE
 ================================================================================
@@ -936,10 +984,11 @@ Not integrated, and each would materially improve accuracy:
   - CWC / Khadakwasla observed daily gauge archive. Would replace the single
     published mean in 5.1 with a real series and remove the reliance on a
     mirrored slide deck.
-  - A surveyed DEM or in-situ bathymetry for the reach, needed before any
-    inundation extent can be claimed rather than a corridor width. Section 3.3b
-    is satellite-derived bathymetry for visualization only and is not used in
-    the flood-corridor calculation.
+  - A surveyed DEM or in-situ bathymetry for the reach. FABDEM (3.1d) now
+    powers an Estimated bathtub flood-stage scrubber (6.4), but it is not a
+    survey, ~30 m resolution, and does not replace hydraulics. Corridor
+    widths (6.2) still ignore terrain. Section 3.3b bathymetry remains
+    visualization-only.
   - Real hydraulics for water surface elevation, freeboard and thresholds,
     which are currently synthetic (2.1).
   - CPCB / MPCB observed BOD and COD, to replace the synthetic figures in 3.2.
@@ -970,6 +1019,8 @@ Not acceptable:
     (it is classed sample-point density from 3.2h, not a flood line)
   the geology bathymetry as a hydrographic survey or navigation chart
     (it is satellite-derived SDB from 3.3b)
+  the Flood stage (DTM) bathtub as a hydraulic flood map or surveyed
+    inundation (FABDEM 3.1d + elev ≤ stage only — see 6.4)
   any use for emergency response, land-use decisions or property-level risk
 
 
@@ -1370,3 +1421,16 @@ CHANGE LOG
 2026-09-01  Removed water-quality ChainageLayerCard (selected section /
             station / length / location info panel). Chainage remains on the
             map and scrubber only (3.1b).
+2026-09-03  FABDEM DTM for Mula–Mutha corridor bundled as 3.1d
+            (mula-mutha-dtm.bin/.json/.tif from user zip
+            0ed0ea04750847f98ddc2b90079d9e4c). Digital Twin Layers adds
+            Flood stage (DTM) with bathtub inundation (6.4) via
+            FloodStageScrubber + lyr-flood-stage. UI label Estimated.
+            scripts/convert-fabdem-dtm.py for reprocessing. Section 7 DEM
+            gap updated: FABDEM enables bathtub only, not surveyed
+            hydraulics; corridors (6.2) still ignore terrain.
+2026-09-03  Flood-stage overlay display smoothed: 4× upsample + light blur
+            in renderInundationDataUrl; MapLibre raster-resampling linear
+            (6.4). Bathtub cell test unchanged.
+2026-09-03  Flood-stage scrubber shows Estimated bathtub area, volume
+            (Mm³) and mean depth from summarizeInundation() (6.4).

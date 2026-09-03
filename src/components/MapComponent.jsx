@@ -4,6 +4,7 @@ import 'maplibre-gl/dist/maplibre-gl.css'
 import { EMPTY_MAP_STYLE, BASEMAP_MAP, DEFAULT_BASEMAP } from '../lib/basemaps'
 import { applyBasemap, applyTerrain3d, ensureBasemapLayers } from '../lib/applyBasemap'
 import { fetchAssetJson } from '../lib/fetchAssetJson'
+import { loadDtmGrid, renderInundationDataUrl } from '../lib/dtmInundation'
 import { binFilterForChainage, buildChainageBins, formatChainage } from '../lib/chainageBins'
 import { STATUS_COLORS as TWIN_STATUS_COLORS, shortName as twinShortName } from '../lib/floodApi'
 import {
@@ -57,6 +58,11 @@ const WQ_JSON_URL = '/asset/mula-mutha-wq-overlays.json'
 const DEPTH_SOURCE = 'src-depth-overlay'
 const DEPTH_RASTER = 'lyr-depth-raster'
 const DEPTH_META_URL = '/asset/mula-mutha-depth-summary.json'
+const FLOOD_STAGE_SOURCE = 'src-flood-stage'
+const FLOOD_STAGE_RASTER = 'lyr-flood-stage'
+/** 1×1 transparent PNG — placeholder until the bathtub canvas is ready. */
+const TRANSPARENT_1PX =
+  'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=='
 const URBAN_VEG_SOURCE = 'src-urban-veg'
 const URBAN_VEG_FILL = 'lyr-urban-veg-fill'
 const URBAN_VEG_LINE = 'lyr-urban-veg-line'
@@ -308,6 +314,7 @@ const THEME_ABOVE_CHAINAGE = [
   NDWI_RASTER,
   WST_RASTER,
   DEPTH_RASTER,
+  FLOOD_STAGE_RASTER,
   SILT_CLASS_RASTER,
   SILT_VOLUME_RASTER,
   LULC_RASTER,
@@ -772,6 +779,24 @@ const ensureOverlayLayers = (map) => {
     'raster-opacity': 0.88,
     'raster-resampling': 'nearest',
   })
+  if (!map.getSource(FLOOD_STAGE_SOURCE)) {
+    map.addSource(FLOOD_STAGE_SOURCE, {
+      type: 'image',
+      url: TRANSPARENT_1PX,
+      coordinates: MULA_MUTHA_IMAGE_COORDS,
+    })
+    map.addLayer({
+      id: FLOOD_STAGE_RASTER,
+      type: 'raster',
+      source: FLOOD_STAGE_SOURCE,
+      layout: { visibility: 'none' },
+      paint: {
+        'raster-opacity': 1,
+        'raster-fade-duration': 0,
+        'raster-resampling': 'linear',
+      },
+    })
+  }
 
   const ensureHeatmap = (sourceId, layerId, colors) => {
     if (map.getSource(sourceId)) return
@@ -1186,6 +1211,8 @@ const MapComponent = ({
   showNdwiLayer = false,
   showWstLayer = false,
   showDepthLayer = false,
+  showFloodStageLayer = false,
+  floodStageM = null,
   showUrbanVegLayer = false,
   showSiltClassLayer = false,
   showSiltVolumeLayer = false,
@@ -1577,6 +1604,58 @@ const MapComponent = ({
       cancelled = true
     }
   }, [showDepthLayer, mapReady])
+
+  useEffect(() => {
+    const map = mapRef.current
+    if (!map || !mapReady) return undefined
+
+    const setVisibility = (visible) => {
+      if (map.getLayer(FLOOD_STAGE_RASTER)) {
+        map.setLayoutProperty(FLOOD_STAGE_RASTER, 'visibility', visible ? 'visible' : 'none')
+      }
+    }
+
+    if (!showFloodStageLayer || !Number.isFinite(floodStageM)) {
+      setVisibility(false)
+      return undefined
+    }
+
+    let cancelled = false
+    let frame = 0
+    const load = async () => {
+      try {
+        const { meta, elevations } = await loadDtmGrid()
+        if (cancelled) return
+        const url = renderInundationDataUrl(elevations, meta, floodStageM)
+        if (cancelled) return
+        const source = map.getSource(FLOOD_STAGE_SOURCE)
+        const coords = meta?.coordinates
+        if (source?.updateImage && isValidImageCoordinates(coords)) {
+          source.updateImage({ url, coordinates: coords })
+        }
+        if (!cancelled) {
+          setVisibility(true)
+          if (map.getLayer(FLOOD_STAGE_RASTER)) {
+            map.setPaintProperty(FLOOD_STAGE_RASTER, 'raster-resampling', 'linear')
+            map.setPaintProperty(FLOOD_STAGE_RASTER, 'raster-opacity', 1)
+          }
+          raiseTwinAssetsToTop(map)
+        }
+      } catch (error) {
+        console.error('Failed to render flood-stage inundation', error)
+        if (!cancelled) setVisibility(false)
+      }
+    }
+
+    frame = window.requestAnimationFrame(() => {
+      load()
+    })
+
+    return () => {
+      cancelled = true
+      window.cancelAnimationFrame(frame)
+    }
+  }, [showFloodStageLayer, floodStageM, mapReady])
 
   useEffect(() => {
     const map = mapRef.current
@@ -2006,6 +2085,7 @@ const MapComponent = ({
     showNdwiLayer,
     showWstLayer,
     showDepthLayer,
+    showFloodStageLayer,
     showUrbanVegLayer,
     showSiltClassLayer,
     showSiltVolumeLayer,
@@ -2291,6 +2371,7 @@ const MapComponent = ({
       showNdwiLayer ||
       showWstLayer ||
       showDepthLayer ||
+      showFloodStageLayer ||
       showUrbanVegLayer ||
       showGarbageLayer ||
       showTributaryLayer ||
@@ -2828,6 +2909,7 @@ const MapComponent = ({
     showNdwiLayer,
     showWstLayer,
     showDepthLayer,
+    showFloodStageLayer,
     showUrbanVegLayer,
     showGarbageLayer,
     showTributaryLayer,

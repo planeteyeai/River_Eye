@@ -28,14 +28,9 @@
   touch-action: none;
 }
 
-/* Clear the floating layers rail (on-map, not a stage column). */
-.map-wrapper:has(.map-views-control:not(.is-docked)) .chainage-scrubber {
-  --chainage-gutter-left: 76px;
-}
-
-/* Clear the floating layers rail + open detail panel. */
+/* Clear the floating layers detail panel (rail lives in the header). */
 .map-wrapper:has(.map-views-control.has-detail:not(.is-docked)) .chainage-scrubber {
-  --chainage-gutter-left: calc(92px + min(300px, 36vw));
+  --chainage-gutter-left: calc(28px + min(300px, 36vw));
 }
 
 .map-stage.has-left-sidebar .chainage-scrubber {
@@ -178,12 +173,8 @@
     padding: 0 10px 0 12px;
   }
 
-  .map-wrapper:has(.map-views-control:not(.is-docked)) .chainage-scrubber {
-    --chainage-gutter-left: 68px;
-  }
-
   .map-wrapper:has(.map-views-control.has-detail:not(.is-docked)) .chainage-scrubber {
-    --chainage-gutter-left: calc(84px + min(280px, 42vw));
+    --chainage-gutter-left: calc(24px + min(280px, 42vw));
   }
 
   .chainage-tick-label {

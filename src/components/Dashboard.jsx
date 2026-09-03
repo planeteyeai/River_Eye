@@ -15,6 +15,7 @@ import { MULA_MUTHA_BOUNDS } from '../lib/mapSidebarCamera'
 import BodCodMapOverlay from './BodCodMapOverlay'
 import AqiMapOverlay from './AqiMapOverlay'
 import FloodMapOverlay from './FloodMapOverlay'
+import FloodStageScrubber from './FloodStageScrubber'
 import SoilLandUseMapOverlay from './SoilLandUseMapOverlay'
 import BiodiversityMapOverlay from './BiodiversityMapOverlay'
 import ClimateImpactMapOverlay from './ClimateImpactMapOverlay'
@@ -62,6 +63,8 @@ const Dashboard = () => {
   const [showChainageLayer, setShowChainageLayer] = useState(false)
   const [focusChainage, setFocusChainage] = useState(null)
   const [showFloodDepthLayer, setShowFloodDepthLayer] = useState(false)
+  const [showFloodStageLayer, setShowFloodStageLayer] = useState(false)
+  const [floodStageM, setFloodStageM] = useState(null)
   const [showTwinLayer, setShowTwinLayer] = useState(false)
   const [activeFloodZones, setActiveFloodZones] = useState([])
   const [twinAssets, setTwinAssets] = useState(null)
@@ -103,6 +106,7 @@ const Dashboard = () => {
   const [selectedHeight, setSelectedHeight] = useState(null) // '0-3meter' or '3meter-above' or null
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [expandedViewId, setExpandedViewId] = useState(null)
+  const [layersHeaderNode, setLayersHeaderNode] = useState(null)
   const [layersOpenToken, setLayersOpenToken] = useState(0)
   const [twinLeadH, setTwinLeadH] = useState(24)
   const cssFullscreenRef = useRef(false)
@@ -1935,6 +1939,15 @@ const Dashboard = () => {
         onToggle: setShowFloodDepthLayer,
         colors: legendForLayer('depth')?.colors,
       },
+      {
+        id: 'flood-stage',
+        group: 'Flood stage',
+        label: 'Flood stage (DTM)',
+        hint: 'Bathtub fill vs FABDEM · Estimated',
+        checked: showFloodStageLayer,
+        onToggle: setShowFloodStageLayer,
+        colors: legendForLayer('flood-stage')?.colors,
+      },
       ...RETURN_PERIODS.map((years) => {
         const style = ZONE_STYLES[years]
         return {
@@ -1981,6 +1994,7 @@ const Dashboard = () => {
     showWrdFloodlines,
     showGarbageLayer,
     showFloodDepthLayer,
+    showFloodStageLayer,
     showTwinLayer,
     activeFloodZones,
     isMulaMuthaRiver,
@@ -1992,6 +2006,8 @@ const Dashboard = () => {
         <div className="header-left">
           <AppLogo size="md" className="app-logo--on-dark" />
         </div>
+
+        <div className="header-layers" ref={setLayersHeaderNode} />
 
         <div className="header-right">
           <button
@@ -2072,6 +2088,7 @@ const Dashboard = () => {
                 expandedViewId={expandedViewId}
                 onExpandedViewIdChange={setExpandedViewId}
                 onViewExpand={handleViewExpand}
+                headerSlot={layersHeaderNode}
                 onOpenTwinDashboard={() => {
                   setShowFlood(true)
                   setShowBathy(false)
@@ -2169,6 +2186,8 @@ const Dashboard = () => {
                 showNdwiLayer={showNdwiLayer}
                 showWstLayer={showWstLayer}
                 showDepthLayer={showFloodDepthLayer || showBathyMapLayer}
+                showFloodStageLayer={showFloodStageLayer}
+                floodStageM={floodStageM}
                 showUrbanVegLayer={showUrbanVegLayer}
                 showSiltClassLayer={showSiltClassLayer}
                 showSiltVolumeLayer={showSiltVolumeLayer}
@@ -2207,6 +2226,7 @@ const Dashboard = () => {
                     variant={
                       showTwinLayer ||
                       showFloodDepthLayer ||
+                      showFloodStageLayer ||
                       activeFloodZones.length > 0 ||
                       waterQualityLayersOn ||
                       showAqiOverlay
@@ -2218,6 +2238,13 @@ const Dashboard = () => {
                     onSelect={(station) => setFocusChainage({ ...station, at: Date.now() })}
                   />
                 )}
+              {isMulaMuthaRiver && (
+                <FloodStageScrubber
+                  enabled={showFloodStageLayer}
+                  stageM={floodStageM}
+                  onStageChange={({ metres }) => setFloodStageM(metres)}
+                />
+              )}
             </div>
             </MapStage>
             </LayerPanelSlotProvider>

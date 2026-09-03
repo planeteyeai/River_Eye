@@ -244,6 +244,13 @@ export const LAYER_LEGENDS = {
       { color: '#ff0000', label: 'Very high 1.9–2.0 m', value: '4.9%' },
     ],
   },
+  'flood-stage': {
+    provenance: 'Estimated',
+    colors: [
+      { color: '#1e6ec8', label: 'Inundated (elev ≤ stage)', value: 'bathtub' },
+      { color: '#0e4a8a', label: 'Deeper relative fill', value: '≤ stage' },
+    ],
+  },
   'flood-10': {
     provenance: 'Estimated',
     colors: [{ color: '#1668b3', label: '10-year corridor', value: '10%' }],

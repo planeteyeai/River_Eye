@@ -12,7 +12,7 @@
 /* The header is the one surface that stays dark — it anchors the light UI below it. */
 .dashboard-header {
   display: grid;
-  grid-template-columns: auto 1fr;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
   gap: 12px;
   padding: 12px 24px;
@@ -33,6 +33,32 @@
   justify-self: start;
   min-width: 0;
   max-width: min(108px, 22vw);
+}
+
+.header-layers {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  justify-self: center;
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(207, 227, 242, 0.35) transparent;
+}
+
+.header-layers:empty {
+  display: none;
+}
+
+.header-layers::-webkit-scrollbar {
+  height: 4px;
+}
+
+.header-layers::-webkit-scrollbar-thumb {
+  background: rgba(207, 227, 242, 0.35);
+  border-radius: 99px;
 }
 
 .header-left .app-logo {
@@ -1705,12 +1731,16 @@ html.app-fullscreen:not(:fullscreen) .dashboard {
   .dashboard-header {
     padding: 12px 16px;
     min-height: 60px;
-    grid-template-columns: auto 1fr;
+    grid-template-columns: auto minmax(0, 1fr) auto;
     row-gap: 8px;
   }
 
   .header-left {
     margin-bottom: 0;
+  }
+
+  .header-layers {
+    justify-self: stretch;
   }
 
   .header-right {
